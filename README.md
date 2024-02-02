@@ -1,1 +1,1 @@
-# Imprimis - Autonomous Vehicle for IGVC
+# Development for Autonomous Vehicle - Imprimis
