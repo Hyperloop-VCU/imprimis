@@ -30,6 +30,7 @@ class PIDController:
         PID = (self.kP * error) + (self.kI * self.integral) * (self.kD * D)
         self.speed_output = min(100, max(0, PID))
         self.direction_output = actualDir if setDir == actualDir else not actualDir
+        self.prev_error = error
 
 
 
