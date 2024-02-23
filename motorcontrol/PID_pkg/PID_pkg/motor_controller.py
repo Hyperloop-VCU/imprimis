@@ -35,8 +35,8 @@ from geometry_msgs.msg import Twist
 import math
 
 # TODO figure out what all these are
-WHEEL_RADIUS_METERS = None
-WHEEL_TRACK_LENGTH = None
+WHEEL_RADIUS = 0.1651  # meters
+WHEEL_TRACK_LENGTH = 0.8865  # meters
 MAX_RPM = 160
 ENCODER_PULSES_PER_REV = 500  # I want to measure this manually, as they did in the articulated robotics video
 
@@ -54,7 +54,7 @@ RIGHT_DIRECTION_OUTPUT_PIN = None  # digital
 PID_LOOPS_PER_SEC = 30
 
 # commonly used values
-wheel_circumference = math.tau * WHEEL_RADIUS_METERS
+wheel_circumference = math.tau * WHEEL_RADIUS
 inplace_turn_radius = WHEEL_TRACK_LENGTH / 2
 
 def twist_to_PID_setpoint(twist_msg):
@@ -64,8 +64,8 @@ def twist_to_PID_setpoint(twist_msg):
     :returns: A tuple of two tuples of (desired encoder pulses per PID loop, desired direction), one for each motor."""
     base_rps = twist_msg.linear.x / wheel_circumference
 
-    left_rps = -twist_msg.angular.z * inplace_turn_radius
-    right_rps = twist_msg.angular.z * inplace_turn_radius
+    left_rps = (-twist_msg.angular.z * inplace_turn_radius) / wheel_circumference
+    right_rps = (twist_msg.angular.z * inplace_turn_radius) / wheel_circumference
 
     left_rps += base_rps
     right_rps += base_rps
@@ -75,5 +75,7 @@ def twist_to_PID_setpoint(twist_msg):
     left_dir = True if left_ppl >= 0 else False
     right_dir = True if right_ppl >= 0 else False
     return (abs(left_ppl), left_dir), (abs(right_ppl), right_dir)
+
+
 
 # TODO set up subscriber node, read from encoders, write to pins

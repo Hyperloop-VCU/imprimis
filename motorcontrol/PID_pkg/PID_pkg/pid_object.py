@@ -24,11 +24,10 @@ class PIDController:
         if self.prev_error * error < 0:  # Zero the integral when the error crosses zero (changes sign)
             self.integral = 0
 
-        P = self.kP * error
         self.integral += error * self.dt
         D = (error - self.prev_error) / self.dt
 
-        PID = P + self.integral * self.kI + D
+        PID = (self.kP * error) + (self.kI * self.integral) * (self.kD * D)
         self.speed_output = min(100, max(0, PID))
         self.direction_output = actualDir if setDir == actualDir else not actualDir
 
