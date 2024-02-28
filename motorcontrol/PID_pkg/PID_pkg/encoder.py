@@ -1,5 +1,6 @@
 #import RPI.GPIO as GPIO
-
+import pigpio
+import time
 
 """
 # PINS FOR INPUT
@@ -43,21 +44,21 @@ class Encoders:
         self.leftClockwise = False
         self.rightClockwise = False
 
-    def setupEncoders(self): 
-        #allows the use of the pins in multiple scripts
-        GPIO.setmode(GPIO.BCM)
+        self.rpi = pigpio.pi()
 
-        GPIO.setmode(5, GPIO.IN)
-        GPIO.setmode(6, GPIO.IN)
-        GPIO.setmode(16, GPIO.IN)
-        GPIO.setmode(24, GPIO.IN)
-        GPIO.setmode(25, GPIO.IN)
-        GPIO.setmode(26, GPIO.IN)
+    def setupEncoders(self): 
+        self.rpi.set_mode(5, pigpio.INPUT)
+        self.rpi.set_mode(6, pigpio.INPUT)
+        self.rpi.set_mode(16, pigpio.INPUT)
+        self.rpi.set_mode(24, pigpio.INPUT)
+        self.rpi.set_mode(25, pigpio.INPUT)
+        self.rpi.set_mode(26, pigpio.INPUT)
+        time.sleep(.1)
 
 
     def updateLeftEncoder(self):
         if(not self.leftEncoderRunning): 
-            if(GPIO.input(16)):
+            if(self.rpi.input(16)):
                 self.leftEncoderRunning = True
 
         currentEncoderState = 0x0
@@ -65,7 +66,7 @@ class Encoders:
         if(not self.leftEncoderRunning):   
             return(None)
         
-        currentEncoderState = (GPIO.input(6)<<1) | (GPIO.input(5))
+        currentEncoderState = (self.rpi.input(6)<<1) | (self.rpi.input(5))
         
         # if the previous state had just A // counterclockwise
         if((self.leftPreviousEncoderState == 0x1) & (currentEncoderState == 0x3)):
@@ -80,7 +81,7 @@ class Encoders:
 
     def updateRightEncoder(self): 
         if(not self.rightEncoderRunning):
-            if(GPIO.input(26)):
+            if(self.rpi.input(26)):
                 self.rightEncoderRunning = True
 
         currentEncoderState = 0x0
@@ -88,7 +89,7 @@ class Encoders:
         if(not self.rightEncoderRunning):   
             return(None)
         
-        currentEncoderState = (GPIO.input(25)<<1) | (GPIO.input(24))
+        currentEncoderState = (self.rpi.input(25)<<1) | (self.rpi.input(24))
         
         # if the previous state had just A // counterclockwise
         if((self.rightPreviousEncoderState == 0x1) & (currentEncoderState == 0x3)):
