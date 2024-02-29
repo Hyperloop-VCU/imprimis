@@ -58,7 +58,7 @@ class Encoders:
 
     def updateLeftEncoder(self):
         if(not self.leftEncoderRunning): 
-            if(self.rpi.input(16)):
+            if(self.rpi.read(16)):
                 self.leftEncoderRunning = True
 
         currentEncoderState = 0x0
@@ -66,7 +66,7 @@ class Encoders:
         if(not self.leftEncoderRunning):   
             return(None)
         
-        currentEncoderState = (self.rpi.input(6)<<1) | (self.rpi.input(5))
+        currentEncoderState = (self.rpi.read(6)<<1) | (self.rpi.read(5))
         
         # if the previous state had just A // counterclockwise
         if((self.leftPreviousEncoderState == 0x1) & (currentEncoderState == 0x3)):
@@ -81,7 +81,7 @@ class Encoders:
 
     def updateRightEncoder(self): 
         if(not self.rightEncoderRunning):
-            if(self.rpi.input(26)):
+            if(self.rpi.read(26)):
                 self.rightEncoderRunning = True
 
         currentEncoderState = 0x0
@@ -89,7 +89,7 @@ class Encoders:
         if(not self.rightEncoderRunning):   
             return(None)
         
-        currentEncoderState = (self.rpi.input(25)<<1) | (self.rpi.input(24))
+        currentEncoderState = (self.rpi.read(25)<<1) | (self.rpi.read(24))
         
         # if the previous state had just A // counterclockwise
         if((self.rightPreviousEncoderState == 0x1) & (currentEncoderState == 0x3)):
@@ -123,6 +123,6 @@ if __name__ == "__main__":
     encoders = Encoders()
     encoders.setupEncoders()
     while(1):
-        print(f"[RIGHT] {encoders.pulseRightEncoder=} {encoders.rightClockwise=}")
-        print(f"[LEFT] {encoders.pulseLeftEncoder=} {encoders.leftClockwise=}")
+        print(f"[RIGHT] {encoders.pulseRightEncoder()=} {encoders.rightClockwise=}")
+        print(f"[LEFT] {encoders.pulseLeftEncoder()=} {encoders.leftClockwise=}")
         
