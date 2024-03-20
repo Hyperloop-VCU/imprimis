@@ -1,0 +1,5 @@
+[0.059s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot -- -j6 -l6
+[0.068s] CMake Error: The source directory "/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/timmy_bot" does not exist.
+[0.068s] Specify --help for usage, or press the help button on the CMake GUI.
+[0.068s] make: *** [Makefile:222: cmake_check_build_system] Error 1
+[0.069s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot -- -j6 -l6

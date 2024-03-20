@@ -1,0 +1,8 @@
+source;share/imprimis/hook/cmake_prefix_path.ps1
+source;share/imprimis/hook/cmake_prefix_path.dsv
+source;share/imprimis/hook/cmake_prefix_path.sh
+source;share/imprimis/local_setup.bash
+source;share/imprimis/local_setup.dsv
+source;share/imprimis/local_setup.ps1
+source;share/imprimis/local_setup.sh
+source;share/imprimis/local_setup.zsh

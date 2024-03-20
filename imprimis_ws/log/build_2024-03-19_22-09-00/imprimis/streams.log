@@ -1,0 +1,31 @@
+[0.056s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis -DCMAKE_INSTALL_PREFIX=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis
+[0.086s] -- The C compiler identification is GNU 9.4.0
+[0.115s] -- The CXX compiler identification is GNU 9.4.0
+[0.118s] -- Check for working C compiler: /usr/bin/cc
+[0.151s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.152s] -- Detecting C compiler ABI info
+[0.185s] -- Detecting C compiler ABI info - done
+[0.190s] -- Detecting C compile features
+[0.190s] -- Detecting C compile features - done
+[0.192s] -- Check for working CXX compiler: /usr/bin/c++
+[0.228s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.229s] -- Detecting CXX compiler ABI info
+[0.267s] -- Detecting CXX compiler ABI info - done
+[0.273s] -- Detecting CXX compile features
+[0.273s] -- Detecting CXX compile features - done
+[0.275s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.286s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[0.286s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.366s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[0.389s] CMake Error at /opt/ros/foxy/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:53 (message):
+[0.389s]   ament_package_xml() package name 'imprimis' in '/package.xml' does not
+[0.389s]   match current PROJECT_NAME 'timmy_bot'.  You must call project() with the
+[0.389s]   same package name before.
+[0.389s] Call Stack (most recent call first):
+[0.389s]   /opt/ros/foxy/share/ament_lint_auto/cmake/ament_lint_auto_find_test_dependencies.cmake:31 (ament_package_xml)
+[0.389s]   CMakeLists.txt:32 (ament_lint_auto_find_test_dependencies)
+[0.389s] 
+[0.389s] 
+[0.389s] -- Configuring incomplete, errors occurred!
+[0.389s] See also "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/CMakeFiles/CMakeOutput.log".
+[0.391s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis -DCMAKE_INSTALL_PREFIX=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis
