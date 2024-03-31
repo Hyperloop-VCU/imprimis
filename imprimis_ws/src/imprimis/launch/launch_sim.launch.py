@@ -37,11 +37,28 @@ def generate_launch_description():
                                    '-entity', 'my_bot'],
                         output='screen')
 
+    robot_localization_node = Node(
+	       package='robot_localization',
+	       executable='ekf_node',
+	       name='ekf_filter_node',
+	       output='screen',
+	       parameters=[os.path.join(get_package_share_directory(package_name), 'config/ekf.yaml'), {'use_sim_time': True}])
+	       
+    diff_drive_spawner = Node(package="controller_manager", executable="spawner.py",arguments=["diff_cont"])
 
+    joint_broad_spawner = Node(
+	    package="controller_manager",
+	    executable="spawner.py",
+	    arguments=["joint_broad"],
+	)
 
     # Launch them all!
     return LaunchDescription([
         rsp,
         gazebo,
         spawn_entity,
+        #robot_localization_node,
+        diff_drive_spawner,
+    joint_broad_spawner
     ])
+

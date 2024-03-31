@@ -1,0 +1,4 @@
+Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j6 -l6
+Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j6 -l6
+Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis
+Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis

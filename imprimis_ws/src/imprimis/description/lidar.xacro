@@ -1,28 +1,29 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
     <joint name="laser_joint" type="fixed">
-        <parent link="base_link" />
-        <child link="laser_frame" />
-        <origin xyz="0.1 0 0.175" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="laser_frame"/>
+          <origin xyz="0 0 ${base_height+0.02}" rpy="0 0 0"/>
     </joint>
 
     <link name="laser_frame">
         <visual>
             <geometry>
-                <cylinder radius="0.05" length="0.04" />
+                <cylinder radius="0.05" length="0.04"/>
             </geometry>
-            <material name="red" />
+            <material name="red"/>
         </visual>
         <collision>
             <geometry>
-                <cylinder radius="0.05" length="0.04" />
+                <cylinder radius="0.05" length="0.04"/>
             </geometry>
         </collision>
         <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.05">
-            <origin xyz="0 0 0" rpy="0 0 0" />
+            <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
     </link>
+
 
 
     <gazebo reference="laser_frame">
@@ -30,7 +31,7 @@
 
         <sensor name="laser" type="ray">
             <pose> 0 0 0 0 0 0 </pose>
-            <visualize>false</visualize>
+            <visualize>true</visualize>
             <update_rate>10</update_rate>
             <ray>
                 <scan>
@@ -56,3 +57,4 @@
     </gazebo>
 
 </robot>
+

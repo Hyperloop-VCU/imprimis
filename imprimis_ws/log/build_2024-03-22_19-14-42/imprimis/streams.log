@@ -1,0 +1,36 @@
+[0.065s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j6 -l6
+[0.086s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j6 -l6
+[0.102s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis
+[0.105s] -- Install configuration: ""
+[0.105s] -- Execute custom install script
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro
+[0.106s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world
+[0.107s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh
+[0.108s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv
+[0.109s] -- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv
+[0.113s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis
+[0.113s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake
+[0.113s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake
+[0.114s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml
+[0.115s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis
