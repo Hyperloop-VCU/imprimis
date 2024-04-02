@@ -4,22 +4,25 @@ import serial
 import struct
 from time import sleep
 
-ser = serial.Serial('COM4', 115200, timeout=0.5, bytesize=8)
+ser = serial.Serial('COM3', 115200, timeout=0.5, bytesize=8)
+ser.set_buffer_size(rx_size = 12800, tx_size = 12800)
 
 def getData():
     ser.write(b'd')
-    # Read bytes from serial
-    data_bytes = ser.read(12)  # read three floats
-
-    if len(data_bytes) == 12:
-        # Decode bytes to float
-        f1, f2, f3 = struct.unpack('fff', data_bytes)
-        return f1, f2, f3
+    data_bytes = ser.read(16)  # two floats 
+    if len(data_bytes) == 16:
+        return struct.unpack('ffff', data_bytes)
 
 def newSetpoint(linX, angZ):
     ser.write(b't')
     data = struct.pack('ff', linX, angZ)
     ser.write(data)
+    
+def getInts():
+    ser.write(b'p')
+    data_bytes = ser.read(4)
+    if len(data_bytes) == 4:
+        return struct.unpack('hh', data_bytes)
 
 while True:
     command = input('>')
@@ -28,7 +31,13 @@ while True:
         newSetpoint(float(arg1), float(arg2))
     elif command == 'd':
         print(getData())
-    elif command == 'WAIT':
-        print(ser.in_waiting)
+    elif command == 'dd':
+        for i in range(10000):
+            print(getData())
+    elif command == 'p':
+       print(getInts())
+    elif command == 'pp':
+        for i in range(1000):
+            print(getInts())
     else:
         ser.write(command.encode('ascii'))

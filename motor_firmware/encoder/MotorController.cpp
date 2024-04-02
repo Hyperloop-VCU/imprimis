@@ -11,11 +11,11 @@ class MotorController {
 private:
   const float KP, KI, KD;
   int SPEEDOUT, DIROUT; // pins
-  int prevError;
   int *currCountPtr;
 
 public:
-  float linearVel, integral;
+  float integral, angPos, angVel;
+  int prevError;
   int setpointCPL, speedOutput;
   bool dirOutput;
   bool doWriting;
@@ -28,6 +28,8 @@ public:
     doWriting = true;
     prevError = 0;
     integral = 0;
+    angPos = 0;
+    angVel = 0;
 
     if (left) {
       SPEEDOUT = LSPEED;
@@ -47,9 +49,13 @@ public:
     does not accumulate integral if the output is maxed.
     If doWriting is false, does not write to outputs but still keeps track of movement. */
 
-    this->linearVel = CPL_2_LINVEL * *(this->currCountPtr);
-    int currError = this->setpointCPL - *(this->currCountPtr);
-    *(currCountPtr) = 0;
+    this->angVel = CPL_2_ANGVEL * *currCountPtr;
+    this->angPos += this->angVel * DT;
+    if (this->angPos > 2*M_PI) this->angPos = 0;
+    else if (this->angPos < 0) this->angPos = 2*M_PI;
+  
+    int currError = this->setpointCPL - *currCountPtr;
+    *currCountPtr = 0;
 
     if (!doWriting) return;
 

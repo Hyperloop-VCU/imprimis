@@ -3,26 +3,21 @@
 
 int rightEncoderCount, leftEncoderCount;
 unsigned long t0;
-double odom;
-float robotLinearX, robotAngularZ;
-MotorController leftController(1, 0.5, 0, &leftEncoderCount, true);
-MotorController rightController(1, 0.5, 0, &rightEncoderCount, false);
+MotorController leftController(0.02, 0.01, 0, &leftEncoderCount, true);
+MotorController rightController(0.02, 0.01, 0, &rightEncoderCount, false);
 
 void doCommand() {
   // reads the first character from serial data, and executes the command associated with that character.
 
   if (!Serial.available()) return; // do nothing if there is no serial data to read
   char chr = Serial.read();
-
   switch(chr) {
 
-    // Resets the odometer to 0.
-    case RESET_ODOM:
-      odom = 0;
-      break;
-
-    // Set the motor speeds to 0; don't change them again until re-enabled.
-    case DISABLE_MOTORS:
+    case RESET_ANGPOS: // Set the angular position of both wheels to 0.
+      leftController.angPos = 0;
+      rightController.angPos = 0;
+      
+    case DISABLE_MOTORS: // Set the motor speeds to 0; don't change them again until re-enabled.
       analogWrite(LSPEED, 0);
       analogWrite(RSPEED, 0);
       leftController.doWriting = false;
@@ -30,65 +25,59 @@ void doCommand() {
       digitalWrite(13, LOW); // turn off onboard LED
       break;
 
-    // Allow PID controllers to change the motor speeds.
-    case ENABLE_MOTORS:
+    case ENABLE_MOTORS: // Allow PID controllers to change the motor speeds.
       leftController.doWriting = true;
       rightController.doWriting = true;
       digitalWrite(13, HIGH); // turn on onboard LED
       break;
 
-    // Send current twist message data over serial.
-    case GET_DATA:
-      Serial.write((byte*)&robotLinearX, sizeof(float));
-      Serial.write((byte*)&robotAngularZ, sizeof(float));
-      Serial.write((byte*)&odom, sizeof(float));
+    case GET_DATA: // Send current joint-state data over serial.
+      Serial.write((byte*)(&leftController.angPos), sizeof(float));
+      Serial.write((byte*)(&leftController.angVel), sizeof(float));
+      Serial.write((byte*)(&rightController.angPos), sizeof(float));
+      Serial.write((byte*)(&rightController.angVel), sizeof(float));
       break;
 
-    // Update the PID controllers with new counts-per-loop setpoints.
-    case TWIST_SETPOINT: {
-      byte receivedBytes[2 * sizeof(float)]; // serial byte buffer
+    case 'p': // debug
+      Serial.write((byte*)(&leftController.speedOutput), sizeof(int));
+      Serial.write((byte*)(&rightController.speedOutput), sizeof(int));
+      break;
+
+    case TWIST_SETPOINT: { // Update the PID controllers with new velocity setpoints.
       float receivedLinX, receivedAngZ;
-      Serial.readBytes(receivedBytes, 2 * sizeof(float)); // fill the buffer
-      memcpy(&receivedLinX, &receivedBytes[0], sizeof(float)); // copy the read values
-      memcpy(&receivedAngZ, &receivedBytes[sizeof(float)], sizeof(float));
-      getNewSetpoints(receivedLinX, receivedAngZ); // set new PID setpoints
+      serialReadFloat(receivedLinX);
+      serialReadFloat(receivedAngZ);
+      getNewSetpoints(receivedLinX, receivedAngZ);
     }
   }
-  while (Serial.available()) Serial.read(); // clear serial input after command is processed
 }
 
 inline void getNewSetpoints(float setLinearX, float setAngularZ) {
   /* uses a twist message to calculate the counts-per-loop values for the PID controllers, and sets them.
   Zeroes PID integrals to prevent error interference. */
 
-  leftController.setpointCPL = ANGVEL_2_CPL * (setLinearX - setAngularZ * HALF_WHEEL_TRACK_LENGTH);
+  leftController.setpointCPL = round(ANGVEL_2_CPL * (setLinearX - setAngularZ * HALF_WHEEL_TRACK_LENGTH));
   leftController.integral = 0;
-  rightController.setpointCPL = ANGVEL_2_CPL * (setLinearX + setAngularZ * HALF_WHEEL_TRACK_LENGTH);
+  rightController.setpointCPL = round(ANGVEL_2_CPL * (setLinearX + setAngularZ * HALF_WHEEL_TRACK_LENGTH));
   rightController.integral = 0;
 }
 
-void readRightEncoder() {
-  // Interrupt that updates the right encoder count.
+float serialReadFloat(float &f1) {
+  // reads a float from the serial input and stores it in f1.
 
+  byte receivedBytes[sizeof(float)];
+  Serial.readBytes(receivedBytes, sizeof(float));
+  memcpy(&f1, &receivedBytes[0], sizeof(float));
+}
+
+void readRightEncoder() { // Interrupt that updates the right encoder count.
   if (digitalRead(RB)) rightEncoderCount--;
   else rightEncoderCount++;
 }
 
-void readLeftEncoder() {
-  // Interrupt that updates the left encoder count.
-
+void readLeftEncoder() { // Interrupt that updates the left encoder count.
   if(digitalRead(LB)) leftEncoderCount--;
   else leftEncoderCount++;
-}
-
-inline void updateState() {
-  // Updates both PID controllers, current linear velocity (linearX) turning rate (angularZ), and odometer.
-
-  rightController.update();
-  leftController.update();
-  robotLinearX = (rightController.linearVel + leftController.linearVel) * 0.5;
-  robotAngularZ = (leftController.linearVel - robotLinearX) / HALF_WHEEL_TRACK_LENGTH;
-  odom += robotLinearX * DT;
 }
 
 void setup() {  
@@ -103,7 +92,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(RA), readRightEncoder, RISING);
   attachInterrupt(digitalPinToInterrupt(LA), readLeftEncoder, RISING);
   Serial.begin(SERIAL_BAUD_RATE);
-  odom = 0;
+
   t0 = millis();
 }
 
@@ -112,7 +101,8 @@ void loop() {
 
   if (millis() - t0 > DT_MILLIS) {
     noInterrupts();
-    updateState();
+    rightController.update();
+    leftController.update();
     interrupts();
     t0 = millis();
   }

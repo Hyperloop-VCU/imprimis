@@ -17,18 +17,19 @@
 #define LSPEED 11 // must be PWM capable
 #define LDIR 9
 
-#define DT 0.005 // time in between each PID update in seconds (does not include execution time)
+#define DT 0.05 // time in between each PID update in seconds (does not include execution time)
 #define SERIAL_BAUD_RATE 115200
 
 // serial commands
 #define DISABLE_MOTORS 's'
 #define ENABLE_MOTORS 'g'
 #define TWIST_SETPOINT 't'
+#define RESET_ANGPOS 'r'
 #define GET_DATA 'd'
-#define RESET_ODOM 'r'
+#define NEW_GAINS 'u'
 
 // useful constants
-const float CPL_2_LINVEL = (WHEEL_RADIUS * 2*M_PI) / (COUNTS_PER_REV * DT);
+const float CPL_2_ANGVEL = (2*M_PI) / (COUNTS_PER_REV * DT);
 const float ANGVEL_2_CPL = (COUNTS_PER_REV * DT) / 2*M_PI;
 const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
 const int loopsPerSec = 1 / DT;
