@@ -39,8 +39,8 @@ void doCommand() {
       break;
 
     case 'p': // debug
-      Serial.write((byte*)(&leftController.speedOutput), sizeof(int));
-      Serial.write((byte*)(&rightController.speedOutput), sizeof(int));
+      Serial.write((byte*)(&leftEncoderCount), sizeof(int));
+      Serial.write((byte*)(&rightEncoderCount), sizeof(int));
       break;
 
     case TWIST_SETPOINT: { // Update the PID controllers with new velocity setpoints.
