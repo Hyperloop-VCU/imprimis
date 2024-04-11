@@ -2,20 +2,27 @@ from sys import path
 path.insert(0, r'C:\Users\Raymond\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages')
 import serial
 import struct
+import time
 
-ser = serial.Serial('COM3', 115200, timeout=0.5, bytesize=8)
+ser = serial.Serial('COM5', 115200, timeout=0.5, bytesize=8)
 ser.set_buffer_size(rx_size=12800, tx_size=12800)
-
+print(struct.calcsize('hlhl'))
 def getData():
     ser.write(b'd')
-    data_bytes = ser.read(16)  # two floats
+    data_bytes = ser.read(16)  # 4 longs
     if len(data_bytes) == 16:
-        return struct.unpack('ffff', data_bytes)
+        return struct.unpack('llll', data_bytes)
 
 def newSetpoint(linX, angZ):
-    ser.write(b't')
+    ser.write(b's')
     data = struct.pack('ff', linX, angZ)
     ser.write(data)
+
+def getFloats():
+    ser.write(b'p')
+    data_bytes = ser.read(8)
+    if len(data_bytes) == 8:
+        return struct.unpack('ff', data_bytes)
 
 def getInts():
     ser.write(b'p')
@@ -25,18 +32,30 @@ def getInts():
 
 while True:
     command = input('>')
-    if command[0] == 't':
+    
+    if command[0] == 's':
         arg1, arg2 = command.split(" ")[1:]
         newSetpoint(float(arg1), float(arg2))
+        
     elif command == 'd':
         print(getData())
     elif command == 'dd':
-        for i in range(1000):
+        for i in range(100):
+            time.sleep(0.1)
             print(getData())
-    elif command == 'p':
+            
+    elif command == 'f':
+        print(getFloats())
+    elif command == 'ff':
+        for i in range(100):
+            time.sleep(0.1)
+            print(getFloats())
+    elif command == 'i':
         print(getInts())
-    elif command == 'pp':
-        for i in range(1000):
+    elif command == 'ii':
+        for i in range(100):
+            time.sleep(0.1)
             print(getInts())
+            
     else:
         ser.write(command.encode('ascii'))
