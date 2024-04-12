@@ -8,7 +8,7 @@ bool manual; // true if manual mode, false if autonomous mode
 unsigned long t0, t1;
 MotorController leftController(LSPEED, LDIR, 0.02, 0.01, 0, &leftEncoderCount);
 MotorController rightController(RSPEED, RDIR, 0.02, 0.01, 0, &rightEncoderCount);
-// chsnrd
+
 void doCommand() {
   // Read the first character from serial data, and execute the command associated with that character.
 
