@@ -12,7 +12,6 @@ void setup() {
 
 void loop() {
   int pulse = pulseIn(RC_INPUT, HIGH, 30000);
-  Serial.println(pulse);
-  if (pulse > 1500) digitalWrite(MODE_OUTPUT, HIGH);
+  if (pulse > 1500) digitalWrite(MODE_OUTPUT, HIGH); // high if manual, low otherwise
   else digitalWrite(MODE_OUTPUT, LOW);
 }

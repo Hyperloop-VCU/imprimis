@@ -6,7 +6,7 @@
 #define COUNTS_PER_REV 11765 // encoder counts per full revolution of the wheel
 #define MAX_SPEED -1 // TODO
 
-#define MANUAL_TURNING_FACTOR 0.5 // should be between 0 and 1. Sets how "hard" to turn while at max speed.
+#define MANUAL_TURNING_FACTOR 0.5 // should be between 0 and 1. Sets how "hard" to turn at high speeds.
 
 // pins for uno
 #define RA 2 // must be interrupt capable
@@ -33,6 +33,7 @@
 // useful constants
 //const float CPL_2_ANGVEL = (2*M_PI) / (COUNTS_PER_REV * DT);
 const float ANGVEL_2_CPL = (COUNTS_PER_REV * DT) / 2*M_PI;
+//const float CPL_2_LINVEL = CPL_2_ANGVEL * WHEEL_RADIUS;
 //const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
 const float MANUAL_TURN_COEFF = (1 - MANUAL_TURNING_FACTOR) / 255;
 const int DT_MILLIS = 1000*DT;
