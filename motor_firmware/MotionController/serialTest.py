@@ -4,9 +4,9 @@ import serial
 import struct
 import time
 
-ser = serial.Serial('COM5', 115200, timeout=0.5, bytesize=8)
+ser = serial.Serial('COM6', 115200, timeout=0.5, bytesize=8)
 ser.set_buffer_size(rx_size=12800, tx_size=12800)
-print(struct.calcsize('hlhl'))
+
 def getData():
     ser.write(b'd')
     data_bytes = ser.read(16)  # 4 longs

@@ -2,10 +2,9 @@
 #include "config.h"
 
 long leftEncoderCount = 0, rightEncoderCount = 0;
-int leftManualInput = 0, rightManualInput = 0;
-float receivedLinX = 0, receivedAngZ = 0, total_dt = 0;
-bool manual; // true if manual mode, false if autonomous mode
-unsigned long t0, t1;
+float receivedLinX = 0, receivedAngZ = 0;
+int manual;
+unsigned long t0;
 MotorController leftController(LSPEED, LDIR, 0.02, 0.01, 0, &leftEncoderCount);
 MotorController rightController(RSPEED, RDIR, 0.02, 0.01, 0, &rightEncoderCount);
 
@@ -31,7 +30,9 @@ void doCommand() {
       Serial.write((byte*)(&rightController.currCPL), sizeof(long));
       break;
 
-    case DEBUG: {// debug
+    case DEBUG: { // debug
+      Serial.write((byte*)&leftController.currCPL, sizeof(int));
+      Serial.write((byte*)&manual, sizeof(int));
       break;
     }
 
@@ -40,6 +41,13 @@ void doCommand() {
       serialReadFloat(receivedAngZ);
       updateSetpoints(receivedLinX, receivedAngZ);
   }
+}
+
+void serialReadFloat(float &f) { 
+  // Read a float from the serial input and store it in f.
+  byte receivedBytes[sizeof(float)];
+  Serial.readBytes(receivedBytes, sizeof(float));
+  memcpy(&f, &receivedBytes[0], sizeof(float));
 }
 
 void updateSetpoints(float setLinearX, float setAngularZ) {
@@ -51,26 +59,22 @@ void updateSetpoints(float setLinearX, float setAngularZ) {
   rightController.integral = 0;
 }
 
-void updateManualMotorInput() { 
-  // Get differential drive input from the RC receiver.
+void setManualMotorInput() { 
+  // Get differential drive input from the RC receiver, and set the motor speeds.
   int linearInput = pulseIn(RC_MANUAL_LIN, HIGH, 30000); // 30 millisecond timeout
   int angularInput = pulseIn(RC_MANUAL_ANG, HIGH, 30000);
+  if (linearInput < 950 || linearInput > 2050) { // ensure motor speeds are 0 if the RC signal is invalid
+    linearInput = 1500;
+  }
+  if (angularInput < 950 || angularInput > 2050) {
+    angularInput = 1500;
+  }
   int linNormalized = map(linearInput, 1000, 2000, -255, 255);
   int angNormalized = map(angularInput, 1000, 2000, -255, 255);
-  if (abs(linNormalized) > 255 || abs(angNormalized) > 255) {
-    leftManualInput = 0;
-    rightManualInput = 0;
-    return;
-  }
-  leftManualInput = linNormalized + angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized);
-  rightManualInput = linNormalized - angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized);
-}
-
-void serialReadFloat(float &f) { 
-  // Read a float from the serial input and store it in f.
-  byte receivedBytes[sizeof(float)];
-  Serial.readBytes(receivedBytes, sizeof(float));
-  memcpy(&f, &receivedBytes[0], sizeof(float));
+  int leftManualInput = round(linNormalized + angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized));
+  int rightManualInput = round(linNormalized - angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized));
+  leftController.setSpeed(leftManualInput);
+  rightController.setSpeed(rightManualInput);
 }
 
 void readRightEncoder() { 
@@ -106,18 +110,17 @@ void loop() {
   if (millis() - t0 >= DT_MILLIS) {
     noInterrupts();
 
-    // set current mode
     if (!digitalRead(MANUAL_ENABLE)) {
-      manual = true;
-      updateManualMotorInput();
+      manual = 1;
+      leftEncoderCount = 0;
+      rightEncoderCount = 0;
+      setManualMotorInput();
     }
     else {
-      manual = false;
+      manual = 0;
+      leftController.update();
+      rightController.update();
     }
-    // set motor speeds
-    leftController.update(leftManualInput, manual);
-    rightController.update(rightManualInput, manual);
-    
 
     interrupts();
     t0 = millis();
