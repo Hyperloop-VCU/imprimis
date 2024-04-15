@@ -43,6 +43,7 @@ void doCommand() {
   }
 }
 
+
 void serialReadFloat(float &f) { 
   // Read a float from the serial input and store it in f.
   byte receivedBytes[sizeof(float)];
