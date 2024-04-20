@@ -26,6 +26,7 @@
 
 // serial commands
 #define TWIST_SETPOINT 's'
+#define RAW_PWM 'o'
 #define RESET_ENCODERS 'r'
 #define GET_DATA 'd'
 #define DEBUG 'p'

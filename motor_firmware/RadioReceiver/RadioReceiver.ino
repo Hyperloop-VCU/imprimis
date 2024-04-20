@@ -9,10 +9,9 @@ This is done on a separate board to prevent delays from pulseIn messing with enc
 #define MODE_INPUT A0
 #define RED_LIGHT_INPUT A1
 #define RED_LIGHT 3
-#define YELLOW_LIGHT 1
+#define YELLOW_LIGHT 2
 
 unsigned long t0;
-int pulse;
 
 void setup() {
   pinMode(MODE_OUTPUT, OUTPUT);

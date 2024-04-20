@@ -2,8 +2,7 @@
 #include "config.h"
 
 long leftEncoderCount = 0, rightEncoderCount = 0;
-float receivedLinX = 0, receivedAngZ = 0;
-int manual;
+int isManual = 0, isOpenLoop = 0;
 unsigned long t0;
 MotorController leftController(LSPEED, LDIR, 0.02, 0.01, 0, &leftEncoderCount);
 MotorController rightController(RSPEED, RDIR, 0.02, 0.01, 0, &rightEncoderCount);
@@ -30,25 +29,44 @@ void doCommand() {
       Serial.write((byte*)(&rightController.currCPL), sizeof(long));
       break;
 
-    case DEBUG: { // debug
-      Serial.write((byte*)&leftController.currCPL, sizeof(int));
-      Serial.write((byte*)&manual, sizeof(int));
+    case DEBUG: // debug info
+      Serial.write((byte*)&isOpenLoop, sizeof(int));
+      Serial.write((byte*)&isManual, sizeof(int));
       break;
-    }
 
-    case TWIST_SETPOINT: // Update the PID controllers with new velocity setpoints.
+    case TWIST_SETPOINT: { // Update the PID controllers with new velocity setpoints.
+      float receivedLinX, receivedAngZ;
       serialReadFloat(receivedLinX);
       serialReadFloat(receivedAngZ);
       updateSetpoints(receivedLinX, receivedAngZ);
+      isOpenLoop = false;
+      break;
+    }
+    case RAW_PWM: { // Directly sets the motor speeds to the input.
+      int leftSpeed, rightSpeed;
+      serialReadInt(leftSpeed);
+      serialReadInt(rightSpeed);
+      leftController.setSpeed(leftSpeed);
+      rightController.setSpeed(rightSpeed);
+      isOpenLoop = true;
+      break;
+    }
   }
-}
 
+}
 
 void serialReadFloat(float &f) { 
   // Read a float from the serial input and store it in f.
   byte receivedBytes[sizeof(float)];
   Serial.readBytes(receivedBytes, sizeof(float));
   memcpy(&f, &receivedBytes[0], sizeof(float));
+}
+
+void serialReadInt(int &i) {
+  // Read an int from the serial input and store it in i.
+  byte receivedBytes[sizeof(int)];
+  Serial.readBytes(receivedBytes, sizeof(int));
+  memcpy(&i, &receivedBytes[0], sizeof(int));
 }
 
 void updateSetpoints(float setLinearX, float setAngularZ) {
@@ -112,15 +130,15 @@ void loop() {
     noInterrupts();
 
     if (!digitalRead(MANUAL_ENABLE)) {
-      manual = 1;
+      isManual = true;
       leftEncoderCount = 0;
       rightEncoderCount = 0;
       setManualMotorInput();
     }
     else {
-      manual = 0;
-      leftController.update();
-      rightController.update();
+      isManual = false;
+      leftController.update(isOpenLoop);
+      rightController.update(isOpenLoop);
     }
 
     interrupts();

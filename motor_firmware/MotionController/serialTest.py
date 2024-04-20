@@ -4,7 +4,7 @@ import serial
 import struct
 import time
 
-ser = serial.Serial('COM6', 115200, timeout=0.5, bytesize=8)
+ser = serial.Serial('COM4', 115200, timeout=0.5, bytesize=8)
 ser.set_buffer_size(rx_size=12800, tx_size=12800)
 
 def getData():
@@ -16,6 +16,11 @@ def getData():
 def newSetpoint(linX, angZ):
     ser.write(b's')
     data = struct.pack('ff', linX, angZ)
+    ser.write(data)
+
+def newSpeed(left, right):
+    ser.write(b'o')
+    data = struct.pack('ii', left, right)
     ser.write(data)
 
 def getFloats():
@@ -36,6 +41,9 @@ while True:
     if command[0] == 's':
         arg1, arg2 = command.split(" ")[1:]
         newSetpoint(float(arg1), float(arg2))
+    if command[0] == 'o':
+        arg1, arg2 = command.split(" ")[1:]
+        newSpeed(int(arg1), int(arg2))
         
     elif command == 'd':
         print(getData())
@@ -50,12 +58,13 @@ while True:
         for i in range(100):
             time.sleep(0.1)
             print(getFloats())
+
     elif command == 'i':
         print(getInts())
     elif command == 'ii':
         for i in range(100):
             time.sleep(0.1)
             print(getInts())
-            
+
     else:
         ser.write(command.encode('ascii'))
