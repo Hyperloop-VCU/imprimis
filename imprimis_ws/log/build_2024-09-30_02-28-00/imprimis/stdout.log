@@ -1,0 +1,68 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /imprimis_project/imprimis/imprimis_ws/build/imprimis
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf1.yaml
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.gv
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.pdf
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/my_controllers.yaml
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/urdf_config.rviz
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/ros2_control.xacro
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/sam_bot_description.urdf
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/display.launch.py
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/my_world.sdf
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake
+-- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml

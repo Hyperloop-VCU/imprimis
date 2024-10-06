@@ -1,0 +1,2 @@
+Invoking command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /imprimis_project/imprimis/imprimis_ws/build/imprimis -- -j20 -l20
+Invoked command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis' returned '2': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /imprimis_project/imprimis/imprimis_ws/build/imprimis -- -j20 -l20

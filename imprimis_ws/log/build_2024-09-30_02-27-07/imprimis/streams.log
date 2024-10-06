@@ -1,0 +1,74 @@
+[0.068s] Invoking command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /imprimis_project/imprimis/imprimis_ws/src/imprimis -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/imprimis_project/imprimis/imprimis_ws/install/imprimis
+[0.395s] -- The C compiler identification is GNU 9.4.0
+[0.625s] -- The CXX compiler identification is GNU 9.4.0
+[0.672s] -- Check for working C compiler: /usr/bin/cc
+[1.123s] -- Check for working C compiler: /usr/bin/cc -- works
+[1.127s] -- Detecting C compiler ABI info
+[1.554s] -- Detecting C compiler ABI info - done
+[1.578s] -- Detecting C compile features
+[1.579s] -- Detecting C compile features - done
+[1.632s] -- Check for working CXX compiler: /usr/bin/c++
+[2.065s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[2.070s] -- Detecting CXX compiler ABI info
+[2.542s] -- Detecting CXX compiler ABI info - done
+[2.574s] -- Detecting CXX compile features
+[2.575s] -- Detecting CXX compile features - done
+[3.034s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[3.063s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+[3.064s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[3.258s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[3.395s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[3.845s] -- Added test 'copyright' to check source files copyright and LICENSE
+[5.361s] -- Added test 'flake8' to check Python code syntax and style conventions
+[5.628s] -- Added test 'lint_cmake' to check CMake code style
+[5.845s] -- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+[6.614s] -- Added test 'xmllint' to check XML markup files
+[6.761s] -- Configuring done
+[7.032s] -- Generating done
+[7.112s] -- Build files have been written to: /imprimis_project/imprimis/imprimis_ws/build/imprimis
+[7.116s] Invoked command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /imprimis_project/imprimis/imprimis_ws/src/imprimis -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/imprimis_project/imprimis/imprimis_ws/install/imprimis
+[7.133s] Invoking command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /imprimis_project/imprimis/imprimis_ws/build/imprimis -- -j20 -l20
+[7.228s] Invoked command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /imprimis_project/imprimis/imprimis_ws/build/imprimis -- -j20 -l20
+[7.278s] Invoking command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /imprimis_project/imprimis/imprimis_ws/build/imprimis
+[7.288s] -- Install configuration: ""
+[7.294s] -- Execute custom install script
+[7.335s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz
+[7.375s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml
+[7.415s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf1.yaml
+[7.452s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml
+[7.488s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.gv
+[7.528s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.pdf
+[7.565s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml
+[7.605s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/my_controllers.yaml
+[7.642s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/urdf_config.rviz
+[7.711s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro
+[7.757s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro
+[7.805s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro
+[7.843s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro
+[8.032s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro
+[8.072s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro
+[8.114s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro
+[8.153s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/ros2_control.xacro
+[8.187s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/sam_bot_description.urdf
+[8.236s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/display.launch.py
+[8.272s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py
+[8.313s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py
+[8.359s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world
+[8.396s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world
+[8.435s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/my_world.sdf
+[8.478s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis
+[8.524s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis
+[8.565s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh
+[8.608s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv
+[8.649s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh
+[8.685s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv
+[8.722s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash
+[8.755s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh
+[8.790s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh
+[8.827s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv
+[8.861s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv
+[8.897s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis
+[8.940s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake
+[8.971s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake
+[9.011s] -- Symlinking: /imprimis_project/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml
+[9.042s] Invoked command in '/imprimis_project/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /imprimis_project/imprimis/imprimis_ws/build/imprimis
