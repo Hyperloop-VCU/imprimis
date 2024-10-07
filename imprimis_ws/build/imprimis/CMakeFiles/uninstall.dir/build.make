@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis
+CMAKE_SOURCE_DIR = /home/vboxuser/imprimis/imprimis_ws/src/imprimis
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis
+CMAKE_BINARY_DIR = /home/vboxuser/imprimis/imprimis_ws/build/imprimis
 
 # Utility rule file for uninstall.
 
@@ -67,6 +67,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/vboxuser/imprimis/imprimis_ws/build/imprimis && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/vboxuser/imprimis/imprimis_ws/src/imprimis /home/vboxuser/imprimis/imprimis_ws/src/imprimis /home/vboxuser/imprimis/imprimis_ws/build/imprimis /home/vboxuser/imprimis/imprimis_ws/build/imprimis /home/vboxuser/imprimis/imprimis_ws/build/imprimis/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

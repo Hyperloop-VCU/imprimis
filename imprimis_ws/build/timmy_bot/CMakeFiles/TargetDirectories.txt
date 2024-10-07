@@ -1,9 +1,0 @@
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/install/strip.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/install/local.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/install.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/list_install_components.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/rebuild_cache.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/edit_cache.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/test.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/timmy_bot_uninstall.dir
-/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/timmy_bot/CMakeFiles/uninstall.dir

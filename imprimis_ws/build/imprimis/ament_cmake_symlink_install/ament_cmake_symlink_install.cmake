@@ -23,7 +23,7 @@ function(ament_cmake_symlink_install_directory cmake_current_source_dir)
 
   # make destination absolute path and ensure that it exists
   if(NOT IS_ABSOLUTE "${ARG_DESTINATION}")
-    set(ARG_DESTINATION "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
+    set(ARG_DESTINATION "/home/vboxuser/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
   endif()
   if(NOT EXISTS "${ARG_DESTINATION}")
     file(MAKE_DIRECTORY "${ARG_DESTINATION}")
@@ -123,7 +123,7 @@ function(ament_cmake_symlink_install_files cmake_current_source_dir)
 
   # make destination an absolute path and ensure that it exists
   if(NOT IS_ABSOLUTE "${ARG_DESTINATION}")
-    set(ARG_DESTINATION "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
+    set(ARG_DESTINATION "/home/vboxuser/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
   endif()
   if(NOT EXISTS "${ARG_DESTINATION}")
     file(MAKE_DIRECTORY "${ARG_DESTINATION}")
@@ -181,7 +181,7 @@ function(ament_cmake_symlink_install_programs cmake_current_source_dir)
 
   # make destination an absolute path and ensure that it exists
   if(NOT IS_ABSOLUTE "${ARG_DESTINATION}")
-    set(ARG_DESTINATION "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
+    set(ARG_DESTINATION "/home/vboxuser/imprimis/imprimis_ws/install/imprimis/${ARG_DESTINATION}")
   endif()
   if(NOT EXISTS "${ARG_DESTINATION}")
     file(MAKE_DIRECTORY "${ARG_DESTINATION}")
@@ -251,7 +251,7 @@ function(ament_cmake_symlink_install_targets)
 
     # make destination an absolute path and ensure that it exists
     if(NOT IS_ABSOLUTE "${destination}")
-      set(destination "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/${destination}")
+      set(destination "/home/vboxuser/imprimis/imprimis_ws/install/imprimis/${destination}")
     endif()
     if(NOT EXISTS "${destination}")
       file(MAKE_DIRECTORY "${destination}")
@@ -311,46 +311,46 @@ message(STATUS "Execute custom install script")
 # begin of custom install code
 
 # install(DIRECTORY "config" "description" "launch" "worlds" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_directory("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" DIRECTORY "config" "description" "launch" "worlds" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_directory("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" DIRECTORY "config" "description" "launch" "worlds" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/imprimis" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/imprimis" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/imprimis" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/imprimis" "DESTINATION" "share/ament_index/resource_index/package_run_dependencies")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/imprimis" "DESTINATION" "share/ament_index/resource_index/parent_prefix_path")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/imprimis" "DESTINATION" "share/ament_index/resource_index/parent_prefix_path")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/imprimis" "DESTINATION" "share/ament_index/resource_index/parent_prefix_path")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/parent_prefix_path/imprimis" "DESTINATION" "share/ament_index/resource_index/parent_prefix_path")
 
 # install(FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/ament_prefix_path.sh" "DESTINATION" "share/imprimis/environment")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/ament_prefix_path.sh" "DESTINATION" "share/imprimis/environment")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/ament_prefix_path.sh" "DESTINATION" "share/imprimis/environment")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/ament_prefix_path.dsv" "DESTINATION" "share/imprimis/environment")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/ament_prefix_path.dsv" "DESTINATION" "share/imprimis/environment")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/ament_prefix_path.dsv" "DESTINATION" "share/imprimis/environment")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/ament_prefix_path.dsv" "DESTINATION" "share/imprimis/environment")
 
 # install(FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/path.sh" "DESTINATION" "share/imprimis/environment")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/path.sh" "DESTINATION" "share/imprimis/environment")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/opt/ros/foxy/share/ament_cmake_core/cmake/environment_hooks/environment/path.sh" "DESTINATION" "share/imprimis/environment")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/path.dsv" "DESTINATION" "share/imprimis/environment")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/path.dsv" "DESTINATION" "share/imprimis/environment")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/path.dsv" "DESTINATION" "share/imprimis/environment")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/path.dsv" "DESTINATION" "share/imprimis/environment")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.bash" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.bash" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.bash" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.bash" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.sh" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.sh" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.sh" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.sh" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.zsh" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.zsh" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.zsh" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.zsh" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.dsv" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.dsv" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.dsv" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.dsv" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/package.dsv" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/package.dsv" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/package.dsv" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/package.dsv" "DESTINATION" "share/imprimis")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/packages/imprimis" "DESTINATION" "share/ament_index/resource_index/packages")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/packages/imprimis" "DESTINATION" "share/ament_index/resource_index/packages")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/packages/imprimis" "DESTINATION" "share/ament_index/resource_index/packages")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_index/share/ament_index/resource_index/packages/imprimis" "DESTINATION" "share/ament_index/resource_index/packages")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig.cmake" "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig-version.cmake" "DESTINATION" "share/imprimis/cmake")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig.cmake" "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig-version.cmake" "DESTINATION" "share/imprimis/cmake")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig.cmake" "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig-version.cmake" "DESTINATION" "share/imprimis/cmake")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig.cmake" "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_core/imprimisConfig-version.cmake" "DESTINATION" "share/imprimis/cmake")
 
-# install(FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis/package.xml" "DESTINATION" "share/imprimis")
-ament_cmake_symlink_install_files("/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" FILES "/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis/package.xml" "DESTINATION" "share/imprimis")
+# install(FILES "/home/vboxuser/imprimis/imprimis_ws/src/imprimis/package.xml" "DESTINATION" "share/imprimis")
+ament_cmake_symlink_install_files("/home/vboxuser/imprimis/imprimis_ws/src/imprimis" FILES "/home/vboxuser/imprimis/imprimis_ws/src/imprimis/package.xml" "DESTINATION" "share/imprimis")

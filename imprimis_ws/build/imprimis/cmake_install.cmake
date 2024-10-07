@@ -1,8 +1,8 @@
-# Install script for directory: /home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis
+# Install script for directory: /home/vboxuser/imprimis/imprimis_ws/src/imprimis
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis")
+  set(CMAKE_INSTALL_PREFIX "/home/vboxuser/imprimis/imprimis_ws/install/imprimis")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,7 +38,7 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/ament_cmake_symlink_install/ament_cmake_symlink_install.cmake")
+  include("/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_symlink_install/ament_cmake_symlink_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -49,5 +49,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/vboxuser/imprimis/imprimis_ws/build/imprimis/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
