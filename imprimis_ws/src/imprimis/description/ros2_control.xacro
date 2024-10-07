@@ -26,7 +26,7 @@
 
 <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-        <parameters>/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis/config/my_controllers.yaml</parameters>
+        <parameters>$(find imprimis)/config/my_controllers.yaml</parameters>
     </plugin>
 </gazebo>
 

@@ -1,0 +1,57 @@
+[0.022s] Invoking command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/vboxuser/imprimis/imprimis_ws/build/imprimis -- -j4 -l4
+[0.116s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.145s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.257s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.293s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[0.371s] -- Added test 'copyright' to check source files copyright and LICENSE
+[0.374s] -- Added test 'flake8' to check Python code syntax and style conventions
+[0.377s] -- Added test 'lint_cmake' to check CMake code style
+[0.378s] -- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
+[0.380s] -- Added test 'xmllint' to check XML markup files
+[0.385s] -- Configuring done
+[0.394s] -- Generating done
+[0.395s] -- Build files have been written to: /home/vboxuser/imprimis/imprimis_ws/build/imprimis
+[0.417s] Invoked command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/vboxuser/imprimis/imprimis_ws/build/imprimis -- -j4 -l4
+[0.447s] Invoking command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/vboxuser/imprimis/imprimis_ws/build/imprimis
+[0.454s] -- Install configuration: ""
+[0.455s] -- Execute custom install script
+[0.455s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz
+[0.456s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml
+[0.456s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf1.yaml
+[0.457s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml
+[0.457s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.gv
+[0.458s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.pdf
+[0.458s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml
+[0.458s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/my_controllers.yaml
+[0.459s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/urdf_config.rviz
+[0.459s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro
+[0.459s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro
+[0.460s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro
+[0.460s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro
+[0.460s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro
+[0.460s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro
+[0.460s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro
+[0.461s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/ros2_control.xacro
+[0.461s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/sam_bot_description.urdf
+[0.461s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/display.launch.py
+[0.461s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py
+[0.462s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py
+[0.462s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/my_world.sdf
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh
+[0.463s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv
+[0.464s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh
+[0.464s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv
+[0.464s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash
+[0.464s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh
+[0.464s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh
+[0.465s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv
+[0.465s] -- Symlinking: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv
+[0.470s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis
+[0.471s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake
+[0.471s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake
+[0.471s] -- Up-to-date symlink: /home/vboxuser/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml
+[0.473s] Invoked command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/vboxuser/imprimis/imprimis_ws/build/imprimis
