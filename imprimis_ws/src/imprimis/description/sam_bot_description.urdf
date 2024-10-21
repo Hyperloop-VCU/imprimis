@@ -326,6 +326,8 @@
       </geometry>
     </collision>
 
+
+
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <mass value="0.035"/>
