@@ -1,0 +1,1324 @@
+[0.000000] (-) TimerEvent: {}
+[0.000176] (motor_interface) JobQueued: {'identifier': 'motor_interface', 'dependencies': OrderedDict()}
+[0.000226] (robot_localization) JobQueued: {'identifier': 'robot_localization', 'dependencies': OrderedDict()}
+[0.000255] (imprimis) JobQueued: {'identifier': 'imprimis', 'dependencies': OrderedDict([('robot_localization', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization')])}
+[0.000303] (robot_localization) JobStarted: {'identifier': 'robot_localization'}
+[0.099945] (-) TimerEvent: {}
+[0.200664] (-) TimerEvent: {}
+[0.264545] (motor_interface) JobStarted: {'identifier': 'motor_interface'}
+[0.300883] (-) TimerEvent: {}
+[0.401315] (-) TimerEvent: {}
+[0.501765] (-) TimerEvent: {}
+[0.595241] (robot_localization) JobProgress: {'identifier': 'robot_localization', 'progress': 'cmake'}
+[0.595740] (robot_localization) Command: {'cmd': ['/usr/bin/cmake', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/robot_localization', '-DAMENT_CMAKE_SYMLINK_INSTALL=1', '-DCMAKE_INSTALL_PREFIX=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('OPENBLAS_CORETYPE', 'ARMV8'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'hyperlabs'), ('SSH_AGENT_PID', '4210'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/hyperlabs'), ('OLDPWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '4004'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'hyperlabs'), ('JOURNAL_STREAM', '8:73348'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'hyperlabs'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint'), ('SESSION_MANAGER', 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322'), ('INVOCATION_ID', '845bfc3ece9b4706a28fa8fe5eb2d4d2'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.981'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('ROS_DOMAIN_ID', '97'), ('AMENT_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy')]), 'shell': False}
+[0.602522] (-) TimerEvent: {}
+[0.610026] (robot_localization) StdoutLine: {'line': b"-- robot_localization: You did not request a specific build type: selecting 'RelWithDebInfo'.\n"}
+[0.610427] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)\n'}
+[0.631388] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[0.702565] (-) TimerEvent: {}
+[0.757719] (robot_localization) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[0.768851] (robot_localization) StdoutLine: {'line': b'-- Found rclcpp: 2.4.3 (/opt/ros/foxy/share/rclcpp/cmake)\n'}
+[0.795104] (robot_localization) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.797338] (robot_localization) StdoutLine: {'line': b'-- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)\n'}
+[0.802733] (-) TimerEvent: {}
+[0.899311] (robot_localization) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.902933] (-) TimerEvent: {}
+[0.931790] (robot_localization) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)\n'}
+[0.933433] (robot_localization) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[1.003069] (-) TimerEvent: {}
+[1.026694] (robot_localization) StdoutLine: {'line': b'-- Found diagnostic_msgs: 2.0.5 (/opt/ros/foxy/share/diagnostic_msgs/cmake)\n'}
+[1.048972] (robot_localization) StdoutLine: {'line': b'-- Found diagnostic_updater: 3.1.2 (/opt/ros/foxy/share/diagnostic_updater/cmake)\n'}
+[1.061255] (robot_localization) StdoutLine: {'line': b'-- Found geographic_msgs: 1.0.4 (/opt/ros/foxy/share/geographic_msgs/cmake)\n'}
+[1.103198] (-) TimerEvent: {}
+[1.168610] (robot_localization) StdoutLine: {'line': b'-- Found nav_msgs: 2.0.5 (/opt/ros/foxy/share/nav_msgs/cmake)\n'}
+[1.203309] (-) TimerEvent: {}
+[1.219100] (robot_localization) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.0.1 (/opt/ros/foxy/share/rosidl_default_generators/cmake)\n'}
+[1.230382] (robot_localization) StdoutLine: {'line': b'-- Found sensor_msgs: 2.0.5 (/opt/ros/foxy/share/sensor_msgs/cmake)\n'}
+[1.281679] (robot_localization) StdoutLine: {'line': b'-- Found std_srvs: 2.0.5 (/opt/ros/foxy/share/std_srvs/cmake)\n'}
+[1.292547] (robot_localization) StdoutLine: {'line': b'-- Found tf2: 0.13.14 (/opt/ros/foxy/share/tf2/cmake)\n'}
+[1.303171] (robot_localization) StdoutLine: {'line': b'-- Found tf2_eigen: 0.13.14 (/opt/ros/foxy/share/tf2_eigen/cmake)\n'}
+[1.303403] (-) TimerEvent: {}
+[1.335452] (motor_interface) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'develop', '--editable', '--build-directory', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface/build', '--no-deps', 'install_data'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface', 'env': {'GJS_DEBUG_TOPICS': 'JS ERROR;JS LOG', 'OPENBLAS_CORETYPE': 'ARMV8', 'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'hyperlabs', 'SSH_AGENT_PID': '4210', 'XDG_SESSION_TYPE': 'x11', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib', 'HOME': '/home/hyperlabs', 'OLDPWD': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src', 'DESKTOP_SESSION': 'ubuntu', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'MANAGERPID': '4004', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'IM_CONFIG_PHASE': '1', 'COLCON_PREFIX_PATH': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install', 'ROS_DISTRO': 'foxy', 'LOGNAME': 'hyperlabs', 'JOURNAL_STREAM': '8:73348', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'hyperlabs', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'WINDOWPATH': '2', 'PATH': '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint', 'SESSION_MANAGER': 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322', 'INVOCATION_ID': '845bfc3ece9b4706a28fa8fe5eb2d4d2', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/gdm/Xauthority', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'GNOME_TERMINAL_SERVICE': ':1.981', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'ROS_DOMAIN_ID': '97', 'AMENT_PREFIX_PATH': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy', 'SHELL': '/bin/bash', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'GPG_AGENT_INFO': '/run/user/1000/gnupg/S.gpg-agent:0:1', 'GJS_DEBUG_OUTPUT': 'stderr', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface', 'LC_ALL': 'en_US.UTF-8', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface/prefix_override:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages', 'COLCON': '1', 'VTE_VERSION': '6003', 'CMAKE_PREFIX_PATH': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis'}, 'shell': False}
+[1.403540] (-) TimerEvent: {}
+[1.497444] (motor_interface) StdoutLine: {'line': b'running develop\n'}
+[1.503637] (-) TimerEvent: {}
+[1.550501] (robot_localization) StdoutLine: {'line': b'-- Found tf2_geometry_msgs: 0.13.14 (/opt/ros/foxy/share/tf2_geometry_msgs/cmake)\n'}
+[1.557791] (robot_localization) StdoutLine: {'line': b'-- Found Eigen3: TRUE (found version "3.3.7") \n'}
+[1.582418] (robot_localization) StdoutLine: {'line': b'-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0/BoostConfig.cmake (found version "1.71.0")  \n'}
+[1.584905] (robot_localization) StdoutLine: {'line': b'-- Found yaml_cpp_vendor: 7.0.3 (/opt/ros/foxy/share/yaml_cpp_vendor/cmake)\n'}
+[1.585116] (robot_localization) StdoutLine: {'line': b"-- Setting yaml-cpp_DIR to: '/opt/ros/foxy/share/yaml_cpp_vendor/cmake/../../../opt/yaml_cpp_vendor/lib/cmake/yaml-cpp'\n"}
+[1.587922] (robot_localization) StdoutLine: {'line': b'-- Found GeographicLib: /usr/lib/x86_64-linux-gnu  \n'}
+[1.590719] (motor_interface) StdoutLine: {'line': b'running egg_info\n'}
+[1.590932] (motor_interface) StdoutLine: {'line': b'writing motor_interface.egg-info/PKG-INFO\n'}
+[1.591179] (motor_interface) StdoutLine: {'line': b'writing dependency_links to motor_interface.egg-info/dependency_links.txt\n'}
+[1.591485] (motor_interface) StdoutLine: {'line': b'writing entry points to motor_interface.egg-info/entry_points.txt\n'}
+[1.591604] (motor_interface) StdoutLine: {'line': b'writing requirements to motor_interface.egg-info/requires.txt\n'}
+[1.591707] (motor_interface) StdoutLine: {'line': b'writing top-level names to motor_interface.egg-info/top_level.txt\n'}
+[1.603764] (-) TimerEvent: {}
+[1.610748] (robot_localization) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found version "3.8.10") \n'}
+[1.612361] (motor_interface) StdoutLine: {'line': b"reading manifest file 'motor_interface.egg-info/SOURCES.txt'\n"}
+[1.612882] (motor_interface) StdoutLine: {'line': b"writing manifest file 'motor_interface.egg-info/SOURCES.txt'\n"}
+[1.641142] (motor_interface) StdoutLine: {'line': b'running build_ext\n'}
+[1.641489] (motor_interface) StdoutLine: {'line': b'Creating /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages/motor-interface.egg-link (link to .)\n'}
+[1.641927] (motor_interface) StdoutLine: {'line': b'Installing motor_interface script to /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/motor_interface\n'}
+[1.642137] (motor_interface) StdoutLine: {'line': b'\n'}
+[1.642273] (motor_interface) StdoutLine: {'line': b'Installed /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface\n'}
+[1.642382] (motor_interface) StdoutLine: {'line': b'running install_data\n'}
+[1.670335] (motor_interface) CommandEnded: {'returncode': 0}
+[1.704724] (-) TimerEvent: {}
+[1.784977] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_cppcheck: 0.9.8 (/opt/ros/foxy/share/ament_cmake_cppcheck/cmake)\n'}
+[1.787627] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_cpplint: 0.9.8 (/opt/ros/foxy/share/ament_cmake_cpplint/cmake)\n'}
+[1.790036] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_uncrustify: 0.9.8 (/opt/ros/foxy/share/ament_cmake_uncrustify/cmake)\n'}
+[1.792714] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.9.2 (/opt/ros/foxy/share/ament_cmake_ros/cmake)\n'}
+[1.804924] (-) TimerEvent: {}
+[1.905809] (-) TimerEvent: {}
+[1.944626] (motor_interface) JobEnded: {'identifier': 'motor_interface', 'rc': 0}
+[2.005952] (-) TimerEvent: {}
+[2.026586] (robot_localization) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[2.106072] (-) TimerEvent: {}
+[2.129021] (robot_localization) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[2.157036] (robot_localization) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") \n'}
+[2.162575] (robot_localization) StdoutLine: {'line': b'-- Found python_cmake_module: 0.8.1 (/opt/ros/foxy/share/python_cmake_module/cmake)\n'}
+[2.190072] (robot_localization) StdoutLine: {'line': b'-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") \n'}
+[2.190381] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[2.190502] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8\n'}
+[2.190605] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so\n'}
+[2.206189] (-) TimerEvent: {}
+[2.214073] (robot_localization) StdoutLine: {'line': b'-- Found PythonExtra: .so  \n'}
+[2.286667] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_flake8: 0.9.8 (/opt/ros/foxy/share/ament_cmake_flake8/cmake)\n'}
+[2.289067] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_pep257: 0.9.8 (/opt/ros/foxy/share/ament_cmake_pep257/cmake)\n'}
+[2.302025] (robot_localization) StdoutLine: {'line': b'-- Found ament_cmake_lint_cmake: 0.9.8 (/opt/ros/foxy/share/ament_cmake_lint_cmake/cmake)\n'}
+[2.304219] (robot_localization) StdoutLine: {'line': b'-- Found launch_testing_ament_cmake: 0.10.10 (/opt/ros/foxy/share/launch_testing_ament_cmake/cmake)\n'}
+[2.306284] (-) TimerEvent: {}
+[2.331472] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[2.331904] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8\n'}
+[2.332221] (robot_localization) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so\n'}
+[2.338948] (robot_localization) StdoutLine: {'line': b"-- Found gtest sources under '/opt/ros/foxy/src/gtest_vendor': C++ tests using 'Google Test' will be built\n"}
+[2.341576] (robot_localization) StdoutLine: {'line': b'-- Check if compiler accepts -pthread\n'}
+[2.406457] (-) TimerEvent: {}
+[2.446755] (robot_localization) StdoutLine: {'line': b'-- Check if compiler accepts -pthread - yes\n'}
+[2.487547] (robot_localization) StdoutLine: {'line': b'-- Configuring done\n'}
+[2.506542] (-) TimerEvent: {}
+[2.606878] (-) TimerEvent: {}
+[2.707216] (-) TimerEvent: {}
+[2.710586] (robot_localization) StdoutLine: {'line': b'-- Generating done\n'}
+[2.714632] (robot_localization) StdoutLine: {'line': b'-- Build files have been written to: /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization\n'}
+[2.728573] (robot_localization) CommandEnded: {'returncode': 0}
+[2.732097] (robot_localization) JobProgress: {'identifier': 'robot_localization', 'progress': 'build'}
+[2.732335] (robot_localization) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization', '--', '-j16', '-l16'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('OPENBLAS_CORETYPE', 'ARMV8'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'hyperlabs'), ('SSH_AGENT_PID', '4210'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/hyperlabs'), ('OLDPWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '4004'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'hyperlabs'), ('JOURNAL_STREAM', '8:73348'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'hyperlabs'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint'), ('SESSION_MANAGER', 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322'), ('INVOCATION_ID', '845bfc3ece9b4706a28fa8fe5eb2d4d2'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.981'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('ROS_DOMAIN_ID', '97'), ('AMENT_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy')]), 'shell': False}
+[2.788909] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target gtest_main\x1b[0m\n'}
+[2.791851] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__cpp\x1b[0m\n'}
+[2.792195] (robot_localization) StdoutLine: {'line': b'[  1%] \x1b[34m\x1b[1mGenerating C code for ROS interfaces\x1b[0m\n'}
+[2.793062] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target gtest\x1b[0m\n'}
+[2.806143] (robot_localization) StdoutLine: {'line': b'[  2%] \x1b[34m\x1b[1mGenerating C++ code for ROS interfaces\x1b[0m\n'}
+[2.807289] (-) TimerEvent: {}
+[2.807737] (robot_localization) StdoutLine: {'line': b'[  3%] \x1b[32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o\x1b[0m\n'}
+[2.810524] (robot_localization) StdoutLine: {'line': b'[  4%] \x1b[32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o\x1b[0m\n'}
+[2.907417] (-) TimerEvent: {}
+[3.007731] (-) TimerEvent: {}
+[3.108082] (-) TimerEvent: {}
+[3.198983] (robot_localization) StdoutLine: {'line': b'[  4%] Built target robot_localization__cpp\n'}
+[3.208192] (-) TimerEvent: {}
+[3.208687] (robot_localization) StdoutLine: {'line': b'[  5%] \x1b[34m\x1b[1mGenerating C++ type support dispatch for ROS interfaces\x1b[0m\n'}
+[3.209390] (robot_localization) StdoutLine: {'line': b'[  6%] \x1b[34m\x1b[1mGenerating C++ type support for eProsima Fast-RTPS\x1b[0m\n'}
+[3.210046] (robot_localization) StdoutLine: {'line': b'[  7%] \x1b[34m\x1b[1mGenerating C++ introspection for ROS interfaces\x1b[0m\n'}
+[3.214464] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_generator_c\x1b[0m\n'}
+[3.241234] (robot_localization) StdoutLine: {'line': b'[  8%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/set_datum__functions.c.o\x1b[0m\n'}
+[3.242048] (robot_localization) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/set_pose__functions.c.o\x1b[0m\n'}
+[3.242215] (robot_localization) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/from_ll__functions.c.o\x1b[0m\n'}
+[3.242335] (robot_localization) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/toggle_filter_processing__functions.c.o\x1b[0m\n'}
+[3.242506] (robot_localization) StdoutLine: {'line': b'[ 11%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/get_state__functions.c.o\x1b[0m\n'}
+[3.243185] (robot_localization) StdoutLine: {'line': b'[ 12%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_generator_c.dir/rosidl_generator_c/robot_localization/srv/detail/to_ll__functions.c.o\x1b[0m\n'}
+[3.308290] (-) TimerEvent: {}
+[3.399551] (robot_localization) StdoutLine: {'line': b'[ 13%] \x1b[32m\x1b[1mLinking C shared library librobot_localization__rosidl_generator_c.so\x1b[0m\n'}
+[3.408385] (-) TimerEvent: {}
+[3.447170] (robot_localization) StdoutLine: {'line': b'[ 13%] \x1b[32m\x1b[1mLinking CXX static library libgtest_main.a\x1b[0m\n'}
+[3.447398] (robot_localization) StdoutLine: {'line': b'[ 13%] Built target robot_localization__rosidl_generator_c\n'}
+[3.456560] (robot_localization) StdoutLine: {'line': b'[ 14%] \x1b[34m\x1b[1mGenerating C introspection for ROS interfaces\x1b[0m\n'}
+[3.456723] (robot_localization) StdoutLine: {'line': b'[ 15%] \x1b[34m\x1b[1mGenerating C type support dispatch for ROS interfaces\x1b[0m\n'}
+[3.479325] (robot_localization) StdoutLine: {'line': b'[ 15%] Built target gtest_main\n'}
+[3.508518] (-) TimerEvent: {}
+[3.539835] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_introspection_cpp\x1b[0m\n'}
+[3.546814] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_cpp\x1b[0m\n'}
+[3.562434] (robot_localization) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/toggle_filter_processing__type_support.cpp.o\x1b[0m\n'}
+[3.562664] (robot_localization) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/from_ll__type_support.cpp.o\x1b[0m\n'}
+[3.563077] (robot_localization) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/to_ll__type_support.cpp.o\x1b[0m\n'}
+[3.563172] (robot_localization) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/set_pose__type_support.cpp.o\x1b[0m\n'}
+[3.563472] (robot_localization) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/get_state__type_support.cpp.o\x1b[0m\n'}
+[3.563599] (robot_localization) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/robot_localization/srv/detail/set_datum__type_support.cpp.o\x1b[0m\n'}
+[3.565007] (robot_localization) StdoutLine: {'line': b'[ 22%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/get_state__type_support.cpp.o\x1b[0m\n'}
+[3.565243] (robot_localization) StdoutLine: {'line': b'[ 23%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/set_datum__type_support.cpp.o\x1b[0m\n'}
+[3.565854] (robot_localization) StdoutLine: {'line': b'[ 24%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/toggle_filter_processing__type_support.cpp.o\x1b[0m\n'}
+[3.566242] (robot_localization) StdoutLine: {'line': b'[ 24%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/from_ll__type_support.cpp.o\x1b[0m\n'}
+[3.571575] (robot_localization) StdoutLine: {'line': b'[ 25%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/to_ll__type_support.cpp.o\x1b[0m\n'}
+[3.571851] (robot_localization) StdoutLine: {'line': b'[ 25%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/robot_localization/srv/set_pose__type_support.cpp.o\x1b[0m\n'}
+[3.608833] (-) TimerEvent: {}
+[3.709283] (-) TimerEvent: {}
+[3.793848] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_fastrtps_cpp\x1b[0m\n'}
+[3.809394] (-) TimerEvent: {}
+[3.864059] (robot_localization) StdoutLine: {'line': b'[ 26%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/from_ll__type_support.cpp.o\x1b[0m\n'}
+[3.909497] (-) TimerEvent: {}
+[3.935516] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_c\x1b[0m\n'}
+[3.952217] (robot_localization) StdoutLine: {'line': b'[ 28%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/get_state__type_support.cpp.o\x1b[0m\n'}
+[3.952480] (robot_localization) StdoutLine: {'line': b'[ 28%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/set_datum__type_support.cpp.o\x1b[0m\n'}
+[3.958324] (robot_localization) StdoutLine: {'line': b'[ 29%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/from_ll__type_support.cpp.o\x1b[0m\n'}
+[3.958613] (robot_localization) StdoutLine: {'line': b'[ 29%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/get_state__type_support.cpp.o\x1b[0m\n'}
+[3.962667] (robot_localization) StdoutLine: {'line': b'[ 29%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/set_pose__type_support.cpp.o\x1b[0m\n'}
+[3.966967] (robot_localization) StdoutLine: {'line': b'[ 30%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/toggle_filter_processing__type_support.cpp.o\x1b[0m\n'}
+[3.979246] (robot_localization) StdoutLine: {'line': b'[ 31%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/set_pose__type_support.cpp.o\x1b[0m\n'}
+[3.980141] (robot_localization) StdoutLine: {'line': b'[ 32%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/set_datum__type_support.cpp.o\x1b[0m\n'}
+[4.001927] (robot_localization) StdoutLine: {'line': b'[ 33%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/toggle_filter_processing__type_support.cpp.o\x1b[0m\n'}
+[4.009639] (-) TimerEvent: {}
+[4.013325] (robot_localization) StdoutLine: {'line': b'[ 34%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_c.dir/rosidl_typesupport_c/robot_localization/srv/to_ll__type_support.cpp.o\x1b[0m\n'}
+[4.014214] (robot_localization) StdoutLine: {'line': b'[ 35%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/robot_localization/srv/detail/dds_fastrtps/to_ll__type_support.cpp.o\x1b[0m\n'}
+[4.022512] (robot_localization) StdoutLine: {'line': b'[ 36%] \x1b[32m\x1b[1mLinking CXX shared library librobot_localization__rosidl_typesupport_introspection_cpp.so\x1b[0m\n'}
+[4.032318] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_introspection_c\x1b[0m\n'}
+[4.050685] (robot_localization) StdoutLine: {'line': b'[ 37%] \x1b[32m\x1b[1mLinking CXX shared library librobot_localization__rosidl_typesupport_c.so\x1b[0m\n'}
+[4.062951] (robot_localization) StdoutLine: {'line': b'[ 39%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/from_ll__type_support.c.o\x1b[0m\n'}
+[4.063253] (robot_localization) StdoutLine: {'line': b'[ 39%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/get_state__type_support.c.o\x1b[0m\n'}
+[4.066132] (robot_localization) StdoutLine: {'line': b'[ 40%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/toggle_filter_processing__type_support.c.o\x1b[0m\n'}
+[4.068444] (robot_localization) StdoutLine: {'line': b'[ 41%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/to_ll__type_support.c.o\x1b[0m\n'}
+[4.072028] (robot_localization) StdoutLine: {'line': b'[ 42%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/set_pose__type_support.c.o\x1b[0m\n'}
+[4.072358] (robot_localization) StdoutLine: {'line': b'[ 42%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/robot_localization/srv/detail/set_datum__type_support.c.o\x1b[0m\n'}
+[4.076052] (robot_localization) StdoutLine: {'line': b'[ 43%] \x1b[32m\x1b[1mLinking CXX shared library librobot_localization__rosidl_typesupport_cpp.so\x1b[0m\n'}
+[4.109750] (-) TimerEvent: {}
+[4.118269] (robot_localization) StdoutLine: {'line': b'[ 43%] Built target robot_localization__rosidl_typesupport_c\n'}
+[4.123334] (robot_localization) StdoutLine: {'line': b'[ 43%] Built target robot_localization__rosidl_typesupport_introspection_cpp\n'}
+[4.131506] (robot_localization) StdoutLine: {'line': b'[ 44%] \x1b[32m\x1b[1mLinking C shared library librobot_localization__rosidl_typesupport_introspection_c.so\x1b[0m\n'}
+[4.156344] (robot_localization) StdoutLine: {'line': b'[ 44%] Built target robot_localization__rosidl_typesupport_cpp\n'}
+[4.170944] (robot_localization) StdoutLine: {'line': b'[ 44%] Built target robot_localization__rosidl_typesupport_introspection_c\n'}
+[4.209843] (-) TimerEvent: {}
+[4.310128] (-) TimerEvent: {}
+[4.410462] (-) TimerEvent: {}
+[4.484051] (robot_localization) StdoutLine: {'line': b'[ 45%] \x1b[32m\x1b[1mLinking CXX shared library librobot_localization__rosidl_typesupport_fastrtps_cpp.so\x1b[0m\n'}
+[4.510566] (-) TimerEvent: {}
+[4.585072] (robot_localization) StdoutLine: {'line': b'[ 45%] Built target robot_localization__rosidl_typesupport_fastrtps_cpp\n'}
+[4.598174] (robot_localization) StdoutLine: {'line': b'[ 46%] \x1b[34m\x1b[1mGenerating C type support for eProsima Fast-RTPS\x1b[0m\n'}
+[4.610670] (-) TimerEvent: {}
+[4.710957] (-) TimerEvent: {}
+[4.811292] (-) TimerEvent: {}
+[4.911607] (-) TimerEvent: {}
+[4.936225] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_fastrtps_c\x1b[0m\n'}
+[4.975575] (robot_localization) StdoutLine: {'line': b'[ 47%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/toggle_filter_processing__type_support_c.cpp.o\x1b[0m\n'}
+[4.977268] (robot_localization) StdoutLine: {'line': b'[ 49%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/set_datum__type_support_c.cpp.o\x1b[0m\n'}
+[4.977446] (robot_localization) StdoutLine: {'line': b'[ 49%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/from_ll__type_support_c.cpp.o\x1b[0m\n'}
+[4.977526] (robot_localization) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/get_state__type_support_c.cpp.o\x1b[0m\n'}
+[4.978150] (robot_localization) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/to_ll__type_support_c.cpp.o\x1b[0m\n'}
+[4.978287] (robot_localization) StdoutLine: {'line': b'[ 51%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/robot_localization/srv/detail/set_pose__type_support_c.cpp.o\x1b[0m\n'}
+[5.011717] (-) TimerEvent: {}
+[5.112072] (-) TimerEvent: {}
+[5.212411] (-) TimerEvent: {}
+[5.312768] (-) TimerEvent: {}
+[5.332711] (robot_localization) StdoutLine: {'line': b'[ 52%] \x1b[32m\x1b[1mLinking CXX shared library librobot_localization__rosidl_typesupport_fastrtps_c.so\x1b[0m\n'}
+[5.412901] (-) TimerEvent: {}
+[5.424226] (robot_localization) StdoutLine: {'line': b'[ 52%] Built target robot_localization__rosidl_typesupport_fastrtps_c\n'}
+[5.440659] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization\x1b[0m\n'}
+[5.458874] (robot_localization) StdoutLine: {'line': b'[ 52%] Built target robot_localization\n'}
+[5.471732] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__py\x1b[0m\n'}
+[5.472644] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target rl_lib\x1b[0m\n'}
+[5.487121] (robot_localization) StdoutLine: {'line': b'[ 53%] \x1b[34m\x1b[1mGenerating Python code for ROS interfaces\x1b[0m\n'}
+[5.512996] (-) TimerEvent: {}
+[5.613293] (-) TimerEvent: {}
+[5.713567] (-) TimerEvent: {}
+[5.760483] (robot_localization) StdoutLine: {'line': b'[ 55%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/ekf.cpp.o\x1b[0m\n'}
+[5.760802] (robot_localization) StdoutLine: {'line': b'[ 55%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/ukf.cpp.o\x1b[0m\n'}
+[5.761465] (robot_localization) StdoutLine: {'line': b'[ 56%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/filter_base.cpp.o\x1b[0m\n'}
+[5.766168] (robot_localization) StdoutLine: {'line': b'[ 57%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/filter_utilities.cpp.o\x1b[0m\n'}
+[5.770066] (robot_localization) StdoutLine: {'line': b'[ 58%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/robot_localization_estimator.cpp.o\x1b[0m\n'}
+[5.770310] (robot_localization) StdoutLine: {'line': b'[ 58%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/navsat_transform.cpp.o\x1b[0m\n'}
+[5.770940] (robot_localization) StdoutLine: {'line': b'[ 60%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/ros_filter_utilities.cpp.o\x1b[0m\n'}
+[5.771079] (robot_localization) StdoutLine: {'line': b'[ 60%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/ros_filter.cpp.o\x1b[0m\n'}
+[5.771676] (robot_localization) StdoutLine: {'line': b'[ 61%] \x1b[32mBuilding CXX object CMakeFiles/rl_lib.dir/src/ros_robot_localization_listener.cpp.o\x1b[0m\n'}
+[5.813663] (-) TimerEvent: {}
+[5.913944] (-) TimerEvent: {}
+[6.014341] (-) TimerEvent: {}
+[6.114626] (-) TimerEvent: {}
+[6.214955] (-) TimerEvent: {}
+[6.315254] (-) TimerEvent: {}
+[6.415630] (-) TimerEvent: {}
+[6.515978] (-) TimerEvent: {}
+[6.616354] (-) TimerEvent: {}
+[6.661854] (robot_localization) StdoutLine: {'line': b'[ 61%] Built target robot_localization__py\n'}
+[6.677031] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__python\x1b[0m\n'}
+[6.716466] (-) TimerEvent: {}
+[6.744633] (robot_localization) StdoutLine: {'line': b'[ 62%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_from_ll_s.c.o\x1b[0m\n'}
+[6.744999] (robot_localization) StdoutLine: {'line': b'[ 63%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_set_datum_s.c.o\x1b[0m\n'}
+[6.745530] (robot_localization) StdoutLine: {'line': b'[ 63%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_get_state_s.c.o\x1b[0m\n'}
+[6.751532] (robot_localization) StdoutLine: {'line': b'[ 64%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_set_pose_s.c.o\x1b[0m\n'}
+[6.753091] (robot_localization) StdoutLine: {'line': b'[ 65%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_toggle_filter_processing_s.c.o\x1b[0m\n'}
+[6.758151] (robot_localization) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding C object CMakeFiles/robot_localization__python.dir/rosidl_generator_py/robot_localization/srv/_to_ll_s.c.o\x1b[0m\n'}
+[6.816575] (-) TimerEvent: {}
+[6.917049] (-) TimerEvent: {}
+[6.992408] (robot_localization) StdoutLine: {'line': b'[ 67%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/robot_localization/librobot_localization__python.so\x1b[0m\n'}
+[7.017161] (-) TimerEvent: {}
+[7.037992] (robot_localization) StdoutLine: {'line': b'[ 67%] Built target robot_localization__python\n'}
+[7.049690] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_introspection_c__pyext\x1b[0m\n'}
+[7.050051] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_fastrtps_c__pyext\x1b[0m\n'}
+[7.050207] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization__rosidl_typesupport_c__pyext\x1b[0m\n'}
+[7.078125] (robot_localization) StdoutLine: {'line': b'[ 69%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/robot_localization/_robot_localization_s.ep.rosidl_typesupport_introspection_c.c.o\x1b[0m\n'}
+[7.078408] (robot_localization) StdoutLine: {'line': b'[ 69%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/robot_localization/_robot_localization_s.ep.rosidl_typesupport_c.c.o\x1b[0m\n'}
+[7.085258] (robot_localization) StdoutLine: {'line': b'[ 70%] \x1b[32mBuilding C object CMakeFiles/robot_localization__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/robot_localization/_robot_localization_s.ep.rosidl_typesupport_fastrtps_c.c.o\x1b[0m\n'}
+[7.117279] (-) TimerEvent: {}
+[7.217672] (-) TimerEvent: {}
+[7.318046] (-) TimerEvent: {}
+[7.351733] (robot_localization) StdoutLine: {'line': b'[ 70%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/robot_localization/robot_localization_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so\x1b[0m\n'}
+[7.366613] (robot_localization) StdoutLine: {'line': b'[ 71%] \x1b[32m\x1b[1mLinking C shared library rosidl_generator_py/robot_localization/robot_localization_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so\x1b[0m\n'}
+[7.407134] (robot_localization) StdoutLine: {'line': b'[ 71%] Built target robot_localization__rosidl_typesupport_c__pyext\n'}
+[7.418165] (-) TimerEvent: {}
+[7.426151] (robot_localization) StdoutLine: {'line': b'[ 71%] Built target robot_localization__rosidl_typesupport_introspection_c__pyext\n'}
+[7.441814] (robot_localization) StdoutLine: {'line': b'[ 72%] \x1b[32m\x1b[1mLinking CXX shared library rosidl_generator_py/robot_localization/robot_localization_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so\x1b[0m\n'}
+[7.518275] (-) TimerEvent: {}
+[7.546054] (robot_localization) StdoutLine: {'line': b'[ 72%] Built target robot_localization__rosidl_typesupport_fastrtps_c__pyext\n'}
+[7.618389] (-) TimerEvent: {}
+[7.718739] (-) TimerEvent: {}
+[7.819218] (-) TimerEvent: {}
+[7.919654] (-) TimerEvent: {}
+[8.020000] (-) TimerEvent: {}
+[8.120381] (-) TimerEvent: {}
+[8.220717] (-) TimerEvent: {}
+[8.321090] (-) TimerEvent: {}
+[8.421474] (-) TimerEvent: {}
+[8.521847] (-) TimerEvent: {}
+[8.622202] (-) TimerEvent: {}
+[8.722573] (-) TimerEvent: {}
+[8.822932] (-) TimerEvent: {}
+[8.923274] (-) TimerEvent: {}
+[9.023603] (-) TimerEvent: {}
+[9.123924] (-) TimerEvent: {}
+[9.224283] (-) TimerEvent: {}
+[9.324620] (-) TimerEvent: {}
+[9.424953] (-) TimerEvent: {}
+[9.525305] (-) TimerEvent: {}
+[9.625632] (-) TimerEvent: {}
+[9.725985] (-) TimerEvent: {}
+[9.826301] (-) TimerEvent: {}
+[9.926630] (-) TimerEvent: {}
+[10.026993] (-) TimerEvent: {}
+[10.127298] (-) TimerEvent: {}
+[10.227644] (-) TimerEvent: {}
+[10.327975] (-) TimerEvent: {}
+[10.428339] (-) TimerEvent: {}
+[10.528718] (-) TimerEvent: {}
+[10.629086] (-) TimerEvent: {}
+[10.729451] (-) TimerEvent: {}
+[10.829823] (-) TimerEvent: {}
+[10.930210] (-) TimerEvent: {}
+[11.030581] (-) TimerEvent: {}
+[11.130967] (-) TimerEvent: {}
+[11.231322] (-) TimerEvent: {}
+[11.331685] (-) TimerEvent: {}
+[11.432043] (-) TimerEvent: {}
+[11.532379] (-) TimerEvent: {}
+[11.632741] (-) TimerEvent: {}
+[11.733081] (-) TimerEvent: {}
+[11.833397] (-) TimerEvent: {}
+[11.933702] (-) TimerEvent: {}
+[12.034112] (-) TimerEvent: {}
+[12.134490] (-) TimerEvent: {}
+[12.234862] (-) TimerEvent: {}
+[12.335225] (-) TimerEvent: {}
+[12.435588] (-) TimerEvent: {}
+[12.535891] (-) TimerEvent: {}
+[12.636304] (-) TimerEvent: {}
+[12.736599] (-) TimerEvent: {}
+[12.836895] (-) TimerEvent: {}
+[12.937187] (-) TimerEvent: {}
+[13.037487] (-) TimerEvent: {}
+[13.137839] (-) TimerEvent: {}
+[13.238176] (-) TimerEvent: {}
+[13.338563] (-) TimerEvent: {}
+[13.438969] (-) TimerEvent: {}
+[13.539348] (-) TimerEvent: {}
+[13.639715] (-) TimerEvent: {}
+[13.640646] (robot_localization) StdoutLine: {'line': b'[ 73%] \x1b[32m\x1b[1mLinking CXX static library libgtest.a\x1b[0m\n'}
+[13.739846] (-) TimerEvent: {}
+[13.742673] (robot_localization) StdoutLine: {'line': b'[ 73%] Built target gtest\n'}
+[13.839976] (-) TimerEvent: {}
+[13.940370] (-) TimerEvent: {}
+[14.040732] (-) TimerEvent: {}
+[14.141083] (-) TimerEvent: {}
+[14.241417] (-) TimerEvent: {}
+[14.341718] (-) TimerEvent: {}
+[14.442027] (-) TimerEvent: {}
+[14.542335] (-) TimerEvent: {}
+[14.642666] (-) TimerEvent: {}
+[14.742982] (-) TimerEvent: {}
+[14.843299] (-) TimerEvent: {}
+[14.943616] (-) TimerEvent: {}
+[15.043935] (-) TimerEvent: {}
+[15.144285] (-) TimerEvent: {}
+[15.244640] (-) TimerEvent: {}
+[15.344985] (-) TimerEvent: {}
+[15.445365] (-) TimerEvent: {}
+[15.545731] (-) TimerEvent: {}
+[15.646073] (-) TimerEvent: {}
+[15.746432] (-) TimerEvent: {}
+[15.846793] (-) TimerEvent: {}
+[15.947148] (-) TimerEvent: {}
+[16.047493] (-) TimerEvent: {}
+[16.147842] (-) TimerEvent: {}
+[16.248191] (-) TimerEvent: {}
+[16.348514] (-) TimerEvent: {}
+[16.448842] (-) TimerEvent: {}
+[16.549182] (-) TimerEvent: {}
+[16.649528] (-) TimerEvent: {}
+[16.749860] (-) TimerEvent: {}
+[16.850181] (-) TimerEvent: {}
+[16.950493] (-) TimerEvent: {}
+[17.050813] (-) TimerEvent: {}
+[17.151131] (-) TimerEvent: {}
+[17.251463] (-) TimerEvent: {}
+[17.351774] (-) TimerEvent: {}
+[17.452090] (-) TimerEvent: {}
+[17.552431] (-) TimerEvent: {}
+[17.652845] (-) TimerEvent: {}
+[17.753200] (-) TimerEvent: {}
+[17.853594] (-) TimerEvent: {}
+[17.953942] (-) TimerEvent: {}
+[18.054291] (-) TimerEvent: {}
+[18.154638] (-) TimerEvent: {}
+[18.254969] (-) TimerEvent: {}
+[18.355315] (-) TimerEvent: {}
+[18.455651] (-) TimerEvent: {}
+[18.555985] (-) TimerEvent: {}
+[18.656335] (-) TimerEvent: {}
+[18.756649] (-) TimerEvent: {}
+[18.857010] (-) TimerEvent: {}
+[18.957351] (-) TimerEvent: {}
+[19.057695] (-) TimerEvent: {}
+[19.158031] (-) TimerEvent: {}
+[19.258371] (-) TimerEvent: {}
+[19.358708] (-) TimerEvent: {}
+[19.459051] (-) TimerEvent: {}
+[19.559385] (-) TimerEvent: {}
+[19.659722] (-) TimerEvent: {}
+[19.760074] (-) TimerEvent: {}
+[19.860434] (-) TimerEvent: {}
+[19.960785] (-) TimerEvent: {}
+[20.061119] (-) TimerEvent: {}
+[20.161477] (-) TimerEvent: {}
+[20.261851] (-) TimerEvent: {}
+[20.362198] (-) TimerEvent: {}
+[20.462547] (-) TimerEvent: {}
+[20.562920] (-) TimerEvent: {}
+[20.663295] (-) TimerEvent: {}
+[20.763647] (-) TimerEvent: {}
+[20.864003] (-) TimerEvent: {}
+[20.964370] (-) TimerEvent: {}
+[21.064728] (-) TimerEvent: {}
+[21.165073] (-) TimerEvent: {}
+[21.265437] (-) TimerEvent: {}
+[21.365805] (-) TimerEvent: {}
+[21.466197] (-) TimerEvent: {}
+[21.566618] (-) TimerEvent: {}
+[21.667030] (-) TimerEvent: {}
+[21.767382] (-) TimerEvent: {}
+[21.867741] (-) TimerEvent: {}
+[21.968117] (-) TimerEvent: {}
+[22.068443] (-) TimerEvent: {}
+[22.168792] (-) TimerEvent: {}
+[22.269140] (-) TimerEvent: {}
+[22.369560] (-) TimerEvent: {}
+[22.469935] (-) TimerEvent: {}
+[22.570279] (-) TimerEvent: {}
+[22.670635] (-) TimerEvent: {}
+[22.770982] (-) TimerEvent: {}
+[22.871356] (-) TimerEvent: {}
+[22.971715] (-) TimerEvent: {}
+[23.072083] (-) TimerEvent: {}
+[23.172444] (-) TimerEvent: {}
+[23.272790] (-) TimerEvent: {}
+[23.373131] (-) TimerEvent: {}
+[23.473474] (-) TimerEvent: {}
+[23.573814] (-) TimerEvent: {}
+[23.674146] (-) TimerEvent: {}
+[23.774498] (-) TimerEvent: {}
+[23.874844] (-) TimerEvent: {}
+[23.975176] (-) TimerEvent: {}
+[24.075518] (-) TimerEvent: {}
+[24.175861] (-) TimerEvent: {}
+[24.276211] (-) TimerEvent: {}
+[24.376545] (-) TimerEvent: {}
+[24.476897] (-) TimerEvent: {}
+[24.577239] (-) TimerEvent: {}
+[24.677582] (-) TimerEvent: {}
+[24.777919] (-) TimerEvent: {}
+[24.878242] (-) TimerEvent: {}
+[24.978569] (-) TimerEvent: {}
+[25.078899] (-) TimerEvent: {}
+[25.179225] (-) TimerEvent: {}
+[25.279546] (-) TimerEvent: {}
+[25.379895] (-) TimerEvent: {}
+[25.480268] (-) TimerEvent: {}
+[25.580622] (-) TimerEvent: {}
+[25.680972] (-) TimerEvent: {}
+[25.781328] (-) TimerEvent: {}
+[25.881672] (-) TimerEvent: {}
+[25.982048] (-) TimerEvent: {}
+[26.082413] (-) TimerEvent: {}
+[26.182760] (-) TimerEvent: {}
+[26.283296] (-) TimerEvent: {}
+[26.383656] (-) TimerEvent: {}
+[26.484002] (-) TimerEvent: {}
+[26.584410] (-) TimerEvent: {}
+[26.684758] (-) TimerEvent: {}
+[26.785110] (-) TimerEvent: {}
+[26.885443] (-) TimerEvent: {}
+[26.985795] (-) TimerEvent: {}
+[27.086232] (-) TimerEvent: {}
+[27.186567] (-) TimerEvent: {}
+[27.286897] (-) TimerEvent: {}
+[27.387295] (-) TimerEvent: {}
+[27.487600] (-) TimerEvent: {}
+[27.587946] (-) TimerEvent: {}
+[27.688326] (-) TimerEvent: {}
+[27.788663] (-) TimerEvent: {}
+[27.888990] (-) TimerEvent: {}
+[27.989330] (-) TimerEvent: {}
+[28.089692] (-) TimerEvent: {}
+[28.190042] (-) TimerEvent: {}
+[28.290393] (-) TimerEvent: {}
+[28.390792] (-) TimerEvent: {}
+[28.491131] (-) TimerEvent: {}
+[28.591469] (-) TimerEvent: {}
+[28.691816] (-) TimerEvent: {}
+[28.792168] (-) TimerEvent: {}
+[28.892527] (-) TimerEvent: {}
+[28.992882] (-) TimerEvent: {}
+[29.093225] (-) TimerEvent: {}
+[29.193570] (-) TimerEvent: {}
+[29.293908] (-) TimerEvent: {}
+[29.394239] (-) TimerEvent: {}
+[29.494595] (-) TimerEvent: {}
+[29.594924] (-) TimerEvent: {}
+[29.695268] (-) TimerEvent: {}
+[29.795598] (-) TimerEvent: {}
+[29.895941] (-) TimerEvent: {}
+[29.996293] (-) TimerEvent: {}
+[30.096627] (-) TimerEvent: {}
+[30.196965] (-) TimerEvent: {}
+[30.297301] (-) TimerEvent: {}
+[30.397638] (-) TimerEvent: {}
+[30.498281] (-) TimerEvent: {}
+[30.598633] (-) TimerEvent: {}
+[30.698968] (-) TimerEvent: {}
+[30.799286] (-) TimerEvent: {}
+[30.899625] (-) TimerEvent: {}
+[30.999972] (-) TimerEvent: {}
+[31.100336] (-) TimerEvent: {}
+[31.200659] (-) TimerEvent: {}
+[31.300998] (-) TimerEvent: {}
+[31.401335] (-) TimerEvent: {}
+[31.501675] (-) TimerEvent: {}
+[31.602016] (-) TimerEvent: {}
+[31.702361] (-) TimerEvent: {}
+[31.802757] (-) TimerEvent: {}
+[31.903121] (-) TimerEvent: {}
+[32.003456] (-) TimerEvent: {}
+[32.103823] (-) TimerEvent: {}
+[32.204176] (-) TimerEvent: {}
+[32.304503] (-) TimerEvent: {}
+[32.404886] (-) TimerEvent: {}
+[32.505278] (-) TimerEvent: {}
+[32.605657] (-) TimerEvent: {}
+[32.706018] (-) TimerEvent: {}
+[32.806388] (-) TimerEvent: {}
+[32.906760] (-) TimerEvent: {}
+[33.007132] (-) TimerEvent: {}
+[33.107514] (-) TimerEvent: {}
+[33.207896] (-) TimerEvent: {}
+[33.308365] (-) TimerEvent: {}
+[33.408771] (-) TimerEvent: {}
+[33.509178] (-) TimerEvent: {}
+[33.609570] (-) TimerEvent: {}
+[33.709975] (-) TimerEvent: {}
+[33.810360] (-) TimerEvent: {}
+[33.910753] (-) TimerEvent: {}
+[34.011092] (-) TimerEvent: {}
+[34.111421] (-) TimerEvent: {}
+[34.211754] (-) TimerEvent: {}
+[34.312095] (-) TimerEvent: {}
+[34.412433] (-) TimerEvent: {}
+[34.512764] (-) TimerEvent: {}
+[34.613109] (-) TimerEvent: {}
+[34.713486] (-) TimerEvent: {}
+[34.813814] (-) TimerEvent: {}
+[34.914197] (-) TimerEvent: {}
+[35.014615] (-) TimerEvent: {}
+[35.114979] (-) TimerEvent: {}
+[35.215312] (-) TimerEvent: {}
+[35.315648] (-) TimerEvent: {}
+[35.415983] (-) TimerEvent: {}
+[35.516339] (-) TimerEvent: {}
+[35.616677] (-) TimerEvent: {}
+[35.717012] (-) TimerEvent: {}
+[35.817333] (-) TimerEvent: {}
+[35.917658] (-) TimerEvent: {}
+[36.018002] (-) TimerEvent: {}
+[36.118455] (-) TimerEvent: {}
+[36.218865] (-) TimerEvent: {}
+[36.319278] (-) TimerEvent: {}
+[36.419630] (-) TimerEvent: {}
+[36.520372] (-) TimerEvent: {}
+[36.620772] (-) TimerEvent: {}
+[36.721147] (-) TimerEvent: {}
+[36.821517] (-) TimerEvent: {}
+[36.921901] (-) TimerEvent: {}
+[37.022265] (-) TimerEvent: {}
+[37.122634] (-) TimerEvent: {}
+[37.222994] (-) TimerEvent: {}
+[37.323361] (-) TimerEvent: {}
+[37.423741] (-) TimerEvent: {}
+[37.524127] (-) TimerEvent: {}
+[37.624466] (-) TimerEvent: {}
+[37.724814] (-) TimerEvent: {}
+[37.825170] (-) TimerEvent: {}
+[37.925515] (-) TimerEvent: {}
+[38.025864] (-) TimerEvent: {}
+[38.126221] (-) TimerEvent: {}
+[38.226610] (-) TimerEvent: {}
+[38.326951] (-) TimerEvent: {}
+[38.427320] (-) TimerEvent: {}
+[38.528011] (-) TimerEvent: {}
+[38.628373] (-) TimerEvent: {}
+[38.728719] (-) TimerEvent: {}
+[38.829058] (-) TimerEvent: {}
+[38.929401] (-) TimerEvent: {}
+[39.029732] (-) TimerEvent: {}
+[39.130118] (-) TimerEvent: {}
+[39.230454] (-) TimerEvent: {}
+[39.330793] (-) TimerEvent: {}
+[39.431134] (-) TimerEvent: {}
+[39.531469] (-) TimerEvent: {}
+[39.631803] (-) TimerEvent: {}
+[39.732112] (-) TimerEvent: {}
+[39.832456] (-) TimerEvent: {}
+[39.932811] (-) TimerEvent: {}
+[40.033152] (-) TimerEvent: {}
+[40.133515] (-) TimerEvent: {}
+[40.233852] (-) TimerEvent: {}
+[40.334187] (-) TimerEvent: {}
+[40.434519] (-) TimerEvent: {}
+[40.534832] (-) TimerEvent: {}
+[40.635135] (-) TimerEvent: {}
+[40.735502] (-) TimerEvent: {}
+[40.835968] (-) TimerEvent: {}
+[40.936549] (-) TimerEvent: {}
+[41.036899] (-) TimerEvent: {}
+[41.137241] (-) TimerEvent: {}
+[41.237595] (-) TimerEvent: {}
+[41.337960] (-) TimerEvent: {}
+[41.438316] (-) TimerEvent: {}
+[41.538671] (-) TimerEvent: {}
+[41.639015] (-) TimerEvent: {}
+[41.739361] (-) TimerEvent: {}
+[41.839697] (-) TimerEvent: {}
+[41.940058] (-) TimerEvent: {}
+[42.040411] (-) TimerEvent: {}
+[42.140751] (-) TimerEvent: {}
+[42.241096] (-) TimerEvent: {}
+[42.341437] (-) TimerEvent: {}
+[42.441807] (-) TimerEvent: {}
+[42.542273] (-) TimerEvent: {}
+[42.642652] (-) TimerEvent: {}
+[42.743002] (-) TimerEvent: {}
+[42.843344] (-) TimerEvent: {}
+[42.943681] (-) TimerEvent: {}
+[43.044062] (-) TimerEvent: {}
+[43.144416] (-) TimerEvent: {}
+[43.244779] (-) TimerEvent: {}
+[43.345156] (-) TimerEvent: {}
+[43.445517] (-) TimerEvent: {}
+[43.545862] (-) TimerEvent: {}
+[43.646222] (-) TimerEvent: {}
+[43.746615] (-) TimerEvent: {}
+[43.846954] (-) TimerEvent: {}
+[43.947593] (-) TimerEvent: {}
+[44.048036] (-) TimerEvent: {}
+[44.148436] (-) TimerEvent: {}
+[44.248794] (-) TimerEvent: {}
+[44.349148] (-) TimerEvent: {}
+[44.449493] (-) TimerEvent: {}
+[44.549829] (-) TimerEvent: {}
+[44.650110] (-) TimerEvent: {}
+[44.750484] (-) TimerEvent: {}
+[44.850837] (-) TimerEvent: {}
+[44.951217] (-) TimerEvent: {}
+[45.051569] (-) TimerEvent: {}
+[45.151949] (-) TimerEvent: {}
+[45.252322] (-) TimerEvent: {}
+[45.352719] (-) TimerEvent: {}
+[45.453063] (-) TimerEvent: {}
+[45.553408] (-) TimerEvent: {}
+[45.653766] (-) TimerEvent: {}
+[45.754115] (-) TimerEvent: {}
+[45.854627] (-) TimerEvent: {}
+[45.954984] (-) TimerEvent: {}
+[46.055341] (-) TimerEvent: {}
+[46.155684] (-) TimerEvent: {}
+[46.256028] (-) TimerEvent: {}
+[46.356375] (-) TimerEvent: {}
+[46.456748] (-) TimerEvent: {}
+[46.557092] (-) TimerEvent: {}
+[46.657444] (-) TimerEvent: {}
+[46.757784] (-) TimerEvent: {}
+[46.858135] (-) TimerEvent: {}
+[46.958464] (-) TimerEvent: {}
+[47.058816] (-) TimerEvent: {}
+[47.159176] (-) TimerEvent: {}
+[47.259519] (-) TimerEvent: {}
+[47.359856] (-) TimerEvent: {}
+[47.460217] (-) TimerEvent: {}
+[47.560561] (-) TimerEvent: {}
+[47.660899] (-) TimerEvent: {}
+[47.761230] (-) TimerEvent: {}
+[47.861568] (-) TimerEvent: {}
+[47.961969] (-) TimerEvent: {}
+[48.062306] (-) TimerEvent: {}
+[48.162650] (-) TimerEvent: {}
+[48.262984] (-) TimerEvent: {}
+[48.363319] (-) TimerEvent: {}
+[48.463665] (-) TimerEvent: {}
+[48.564043] (-) TimerEvent: {}
+[48.664379] (-) TimerEvent: {}
+[48.764702] (-) TimerEvent: {}
+[48.865057] (-) TimerEvent: {}
+[48.965415] (-) TimerEvent: {}
+[49.065833] (-) TimerEvent: {}
+[49.166185] (-) TimerEvent: {}
+[49.266620] (-) TimerEvent: {}
+[49.366955] (-) TimerEvent: {}
+[49.467269] (-) TimerEvent: {}
+[49.567564] (-) TimerEvent: {}
+[49.667848] (-) TimerEvent: {}
+[49.752115] (robot_localization) StdoutLine: {'line': b'[ 74%] \x1b[32m\x1b[1mLinking CXX shared library librl_lib.so\x1b[0m\n'}
+[49.767994] (-) TimerEvent: {}
+[49.868431] (-) TimerEvent: {}
+[49.968784] (-) TimerEvent: {}
+[50.069191] (-) TimerEvent: {}
+[50.169547] (-) TimerEvent: {}
+[50.269910] (-) TimerEvent: {}
+[50.370264] (-) TimerEvent: {}
+[50.470576] (-) TimerEvent: {}
+[50.570880] (-) TimerEvent: {}
+[50.671217] (-) TimerEvent: {}
+[50.685495] (robot_localization) StdoutLine: {'line': b'[ 74%] Built target rl_lib\n'}
+[50.697372] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ekf\x1b[0m\n'}
+[50.697740] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target ukf_node\x1b[0m\n'}
+[50.698719] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target ekf_node\x1b[0m\n'}
+[50.698877] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_navsat_conversions\x1b[0m\n'}
+[50.699017] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ukf\x1b[0m\n'}
+[50.699159] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target filter_base-test\x1b[0m\n'}
+[50.699287] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_navsat_transform\x1b[0m\n'}
+[50.699401] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ros_robot_localization_listener_publisher\x1b[0m\n'}
+[50.700085] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target navsat_transform_node\x1b[0m\n'}
+[50.700177] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_robot_localization_estimator\x1b[0m\n'}
+[50.700664] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target robot_localization_listener_node\x1b[0m\n'}
+[50.700911] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ros_robot_localization_listener\x1b[0m\n'}
+[50.717852] (robot_localization) StdoutLine: {'line': b'[ 74%] \x1b[32mBuilding CXX object CMakeFiles/test_navsat_conversions.dir/test/test_navsat_conversions.cpp.o\x1b[0m\n'}
+[50.754966] (robot_localization) StdoutLine: {'line': b'[ 75%] \x1b[32mBuilding CXX object CMakeFiles/filter_base-test.dir/test/test_filter_base.cpp.o\x1b[0m\n'}
+[50.760178] (robot_localization) StdoutLine: {'line': b'[ 76%] \x1b[32mBuilding CXX object CMakeFiles/test_navsat_transform.dir/test/test_navsat_transform.cpp.o\x1b[0m\n'}
+[50.763823] (robot_localization) StdoutLine: {'line': b'[ 76%] \x1b[32mBuilding CXX object CMakeFiles/test_ros_robot_localization_listener_publisher.dir/test/test_ros_robot_localization_listener_publisher.cpp.o\x1b[0m\n'}
+[50.771323] (-) TimerEvent: {}
+[50.773479] (robot_localization) StdoutLine: {'line': b'[ 77%] \x1b[32mBuilding CXX object CMakeFiles/test_robot_localization_estimator.dir/test/test_robot_localization_estimator.cpp.o\x1b[0m\n'}
+[50.790044] (robot_localization) StdoutLine: {'line': b'[ 78%] \x1b[32mBuilding CXX object CMakeFiles/navsat_transform_node.dir/src/navsat_transform_node.cpp.o\x1b[0m\n'}
+[50.790268] (robot_localization) StdoutLine: {'line': b'[ 80%] \x1b[32mBuilding CXX object CMakeFiles/ukf_node.dir/src/ukf_node.cpp.o\x1b[0m\n'}
+[50.790348] (robot_localization) StdoutLine: {'line': b'[ 80%] \x1b[32mBuilding CXX object CMakeFiles/test_ekf.dir/test/test_ekf.cpp.o\x1b[0m\n'}
+[50.799454] (robot_localization) StdoutLine: {'line': b'[ 80%] \x1b[32mBuilding CXX object CMakeFiles/ekf_node.dir/src/ekf_node.cpp.o\x1b[0m\n'}
+[50.799726] (robot_localization) StdoutLine: {'line': b'[ 81%] \x1b[32mBuilding CXX object CMakeFiles/test_ros_robot_localization_listener.dir/test/test_ros_robot_localization_listener.cpp.o\x1b[0m\n'}
+[50.800199] (robot_localization) StdoutLine: {'line': b'[ 82%] \x1b[32mBuilding CXX object CMakeFiles/robot_localization_listener_node.dir/src/robot_localization_listener_node.cpp.o\x1b[0m\n'}
+[50.805870] (robot_localization) StdoutLine: {'line': b'[ 83%] \x1b[32mBuilding CXX object CMakeFiles/test_ukf.dir/test/test_ukf.cpp.o\x1b[0m\n'}
+[50.871430] (-) TimerEvent: {}
+[50.971750] (-) TimerEvent: {}
+[51.072078] (-) TimerEvent: {}
+[51.172433] (-) TimerEvent: {}
+[51.272795] (-) TimerEvent: {}
+[51.373154] (-) TimerEvent: {}
+[51.473489] (-) TimerEvent: {}
+[51.573842] (-) TimerEvent: {}
+[51.674229] (-) TimerEvent: {}
+[51.774596] (-) TimerEvent: {}
+[51.874967] (-) TimerEvent: {}
+[51.940684] (robot_localization) StdoutLine: {'line': b'[ 84%] \x1b[32m\x1b[1mLinking CXX executable test_navsat_conversions\x1b[0m\n'}
+[51.975087] (-) TimerEvent: {}
+[52.084202] (-) TimerEvent: {}
+[52.184571] (-) TimerEvent: {}
+[52.193898] (robot_localization) StdoutLine: {'line': b'[ 84%] Built target test_navsat_conversions\n'}
+[52.284682] (-) TimerEvent: {}
+[52.385052] (-) TimerEvent: {}
+[52.485461] (-) TimerEvent: {}
+[52.585880] (-) TimerEvent: {}
+[52.686244] (-) TimerEvent: {}
+[52.786592] (-) TimerEvent: {}
+[52.887147] (-) TimerEvent: {}
+[52.987497] (-) TimerEvent: {}
+[53.087932] (-) TimerEvent: {}
+[53.188318] (-) TimerEvent: {}
+[53.288688] (-) TimerEvent: {}
+[53.389066] (-) TimerEvent: {}
+[53.489435] (-) TimerEvent: {}
+[53.589819] (-) TimerEvent: {}
+[53.690180] (-) TimerEvent: {}
+[53.790605] (-) TimerEvent: {}
+[53.892275] (-) TimerEvent: {}
+[53.992651] (-) TimerEvent: {}
+[54.003928] (robot_localization) StdoutLine: {'line': b'[ 85%] \x1b[32m\x1b[1mLinking CXX executable filter_base-test\x1b[0m\n'}
+[54.092774] (-) TimerEvent: {}
+[54.193168] (-) TimerEvent: {}
+[54.293562] (-) TimerEvent: {}
+[54.362025] (robot_localization) StdoutLine: {'line': b'[ 85%] Built target filter_base-test\n'}
+[54.393669] (-) TimerEvent: {}
+[54.473417] (robot_localization) StdoutLine: {'line': b'[ 86%] \x1b[32m\x1b[1mLinking CXX executable navsat_transform_node\x1b[0m\n'}
+[54.493780] (-) TimerEvent: {}
+[54.594108] (-) TimerEvent: {}
+[54.647224] (robot_localization) StdoutLine: {'line': b'[ 86%] Built target navsat_transform_node\n'}
+[54.658423] (robot_localization) StdoutLine: {'line': b'[ 87%] \x1b[32m\x1b[1mLinking CXX executable test_navsat_transform\x1b[0m\n'}
+[54.694224] (-) TimerEvent: {}
+[54.794572] (-) TimerEvent: {}
+[54.867111] (robot_localization) StdoutLine: {'line': b'[ 87%] Built target test_navsat_transform\n'}
+[54.894686] (-) TimerEvent: {}
+[54.995026] (-) TimerEvent: {}
+[55.095353] (-) TimerEvent: {}
+[55.195696] (-) TimerEvent: {}
+[55.296084] (-) TimerEvent: {}
+[55.339749] (robot_localization) StdoutLine: {'line': b'[ 88%] \x1b[32m\x1b[1mLinking CXX executable ukf_node\x1b[0m\n'}
+[55.396189] (-) TimerEvent: {}
+[55.496504] (-) TimerEvent: {}
+[55.526134] (robot_localization) StdoutLine: {'line': b'[ 88%] Built target ukf_node\n'}
+[55.539576] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ukf_localization_node_interfaces\x1b[0m\n'}
+[55.571364] (robot_localization) StdoutLine: {'line': b'[ 88%] \x1b[32m\x1b[1mLinking CXX executable robot_localization_listener_node\x1b[0m\n'}
+[55.592427] (robot_localization) StdoutLine: {'line': b'[ 89%] \x1b[32mBuilding CXX object CMakeFiles/test_ukf_localization_node_interfaces.dir/test/test_ukf_localization_node_interfaces.cpp.o\x1b[0m\n'}
+[55.596611] (-) TimerEvent: {}
+[55.696947] (-) TimerEvent: {}
+[55.753341] (robot_localization) StdoutLine: {'line': b'[ 89%] Built target robot_localization_listener_node\n'}
+[55.797052] (-) TimerEvent: {}
+[55.897372] (-) TimerEvent: {}
+[55.997779] (-) TimerEvent: {}
+[56.073798] (robot_localization) StdoutLine: {'line': b'[ 90%] \x1b[32m\x1b[1mLinking CXX executable test_robot_localization_estimator\x1b[0m\n'}
+[56.097918] (-) TimerEvent: {}
+[56.198307] (-) TimerEvent: {}
+[56.298677] (-) TimerEvent: {}
+[56.318180] (robot_localization) StdoutLine: {'line': b'[ 90%] Built target test_robot_localization_estimator\n'}
+[56.383726] (robot_localization) StdoutLine: {'line': b'[ 91%] \x1b[32m\x1b[1mLinking CXX executable ekf_node\x1b[0m\n'}
+[56.398787] (-) TimerEvent: {}
+[56.399019] (robot_localization) StdoutLine: {'line': b'[ 92%] \x1b[32m\x1b[1mLinking CXX executable test_ros_robot_localization_listener\x1b[0m\n'}
+[56.498898] (-) TimerEvent: {}
+[56.499572] (robot_localization) StdoutLine: {'line': b'[ 93%] \x1b[32m\x1b[1mLinking CXX executable test_ekf\x1b[0m\n'}
+[56.595561] (robot_localization) StdoutLine: {'line': b'[ 93%] Built target ekf_node\n'}
+[56.598991] (-) TimerEvent: {}
+[56.605857] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_filter_base_diagnostics_timestamps\x1b[0m\n'}
+[56.607182] (robot_localization) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target test_ekf_localization_node_interfaces\x1b[0m\n'}
+[56.656986] (robot_localization) StdoutLine: {'line': b'[ 93%] Built target test_ros_robot_localization_listener\n'}
+[56.660749] (robot_localization) StdoutLine: {'line': b'[ 94%] \x1b[32mBuilding CXX object CMakeFiles/test_ekf_localization_node_interfaces.dir/test/test_ekf_localization_node_interfaces.cpp.o\x1b[0m\n'}
+[56.675381] (robot_localization) StdoutLine: {'line': b'[ 95%] \x1b[32mBuilding CXX object CMakeFiles/test_filter_base_diagnostics_timestamps.dir/test/test_filter_base_diagnostics_timestamps.cpp.o\x1b[0m\n'}
+[56.699104] (-) TimerEvent: {}
+[56.750396] (robot_localization) StdoutLine: {'line': b'[ 95%] Built target test_ekf\n'}
+[56.799213] (-) TimerEvent: {}
+[56.899553] (-) TimerEvent: {}
+[56.999909] (-) TimerEvent: {}
+[57.100283] (-) TimerEvent: {}
+[57.200642] (-) TimerEvent: {}
+[57.204386] (robot_localization) StdoutLine: {'line': b'[ 96%] \x1b[32m\x1b[1mLinking CXX executable test_ros_robot_localization_listener_publisher\x1b[0m\n'}
+[57.300778] (-) TimerEvent: {}
+[57.333286] (robot_localization) StdoutLine: {'line': b'[ 97%] \x1b[32m\x1b[1mLinking CXX executable test_ukf\x1b[0m\n'}
+[57.381856] (robot_localization) StdoutLine: {'line': b'[ 97%] Built target test_ros_robot_localization_listener_publisher\n'}
+[57.400887] (-) TimerEvent: {}
+[57.501262] (-) TimerEvent: {}
+[57.570055] (robot_localization) StdoutLine: {'line': b'[ 97%] Built target test_ukf\n'}
+[57.601402] (-) TimerEvent: {}
+[57.701746] (-) TimerEvent: {}
+[57.802082] (-) TimerEvent: {}
+[57.902488] (-) TimerEvent: {}
+[58.002852] (-) TimerEvent: {}
+[58.103193] (-) TimerEvent: {}
+[58.203528] (-) TimerEvent: {}
+[58.303829] (-) TimerEvent: {}
+[58.404160] (-) TimerEvent: {}
+[58.504484] (-) TimerEvent: {}
+[58.604848] (-) TimerEvent: {}
+[58.705207] (-) TimerEvent: {}
+[58.805612] (-) TimerEvent: {}
+[58.905992] (-) TimerEvent: {}
+[59.006349] (-) TimerEvent: {}
+[59.106708] (-) TimerEvent: {}
+[59.207069] (-) TimerEvent: {}
+[59.307416] (-) TimerEvent: {}
+[59.407762] (-) TimerEvent: {}
+[59.508099] (-) TimerEvent: {}
+[59.608474] (-) TimerEvent: {}
+[59.708825] (-) TimerEvent: {}
+[59.809160] (-) TimerEvent: {}
+[59.909490] (-) TimerEvent: {}
+[60.009838] (-) TimerEvent: {}
+[60.110212] (-) TimerEvent: {}
+[60.210554] (-) TimerEvent: {}
+[60.310895] (-) TimerEvent: {}
+[60.411295] (-) TimerEvent: {}
+[60.511679] (-) TimerEvent: {}
+[60.612042] (-) TimerEvent: {}
+[60.712402] (-) TimerEvent: {}
+[60.812727] (-) TimerEvent: {}
+[60.913067] (-) TimerEvent: {}
+[61.013429] (-) TimerEvent: {}
+[61.113809] (-) TimerEvent: {}
+[61.214164] (-) TimerEvent: {}
+[61.314516] (-) TimerEvent: {}
+[61.414872] (-) TimerEvent: {}
+[61.515229] (-) TimerEvent: {}
+[61.615586] (-) TimerEvent: {}
+[61.715929] (-) TimerEvent: {}
+[61.816286] (-) TimerEvent: {}
+[61.916636] (-) TimerEvent: {}
+[62.016987] (-) TimerEvent: {}
+[62.117327] (-) TimerEvent: {}
+[62.217678] (-) TimerEvent: {}
+[62.318062] (-) TimerEvent: {}
+[62.418395] (-) TimerEvent: {}
+[62.518735] (-) TimerEvent: {}
+[62.619132] (-) TimerEvent: {}
+[62.719496] (-) TimerEvent: {}
+[62.819849] (-) TimerEvent: {}
+[62.920165] (-) TimerEvent: {}
+[63.020445] (-) TimerEvent: {}
+[63.120791] (-) TimerEvent: {}
+[63.221147] (-) TimerEvent: {}
+[63.321500] (-) TimerEvent: {}
+[63.421846] (-) TimerEvent: {}
+[63.522203] (-) TimerEvent: {}
+[63.622651] (-) TimerEvent: {}
+[63.723015] (-) TimerEvent: {}
+[63.823366] (-) TimerEvent: {}
+[63.923701] (-) TimerEvent: {}
+[64.024053] (-) TimerEvent: {}
+[64.124412] (-) TimerEvent: {}
+[64.224862] (-) TimerEvent: {}
+[64.325205] (-) TimerEvent: {}
+[64.425681] (-) TimerEvent: {}
+[64.526019] (-) TimerEvent: {}
+[64.626348] (-) TimerEvent: {}
+[64.726692] (-) TimerEvent: {}
+[64.827072] (-) TimerEvent: {}
+[64.927417] (-) TimerEvent: {}
+[65.027769] (-) TimerEvent: {}
+[65.128086] (-) TimerEvent: {}
+[65.228411] (-) TimerEvent: {}
+[65.328737] (-) TimerEvent: {}
+[65.429087] (-) TimerEvent: {}
+[65.529461] (-) TimerEvent: {}
+[65.629812] (-) TimerEvent: {}
+[65.730154] (-) TimerEvent: {}
+[65.830495] (-) TimerEvent: {}
+[65.930862] (-) TimerEvent: {}
+[66.031222] (-) TimerEvent: {}
+[66.131587] (-) TimerEvent: {}
+[66.231962] (-) TimerEvent: {}
+[66.332316] (-) TimerEvent: {}
+[66.432657] (-) TimerEvent: {}
+[66.533020] (-) TimerEvent: {}
+[66.633368] (-) TimerEvent: {}
+[66.733719] (-) TimerEvent: {}
+[66.834084] (-) TimerEvent: {}
+[66.934450] (-) TimerEvent: {}
+[67.034806] (-) TimerEvent: {}
+[67.135171] (-) TimerEvent: {}
+[67.235541] (-) TimerEvent: {}
+[67.335989] (-) TimerEvent: {}
+[67.436364] (-) TimerEvent: {}
+[67.536709] (-) TimerEvent: {}
+[67.637059] (-) TimerEvent: {}
+[67.737401] (-) TimerEvent: {}
+[67.837748] (-) TimerEvent: {}
+[67.938092] (-) TimerEvent: {}
+[68.038435] (-) TimerEvent: {}
+[68.138788] (-) TimerEvent: {}
+[68.239131] (-) TimerEvent: {}
+[68.339455] (-) TimerEvent: {}
+[68.439809] (-) TimerEvent: {}
+[68.540171] (-) TimerEvent: {}
+[68.640530] (-) TimerEvent: {}
+[68.740905] (-) TimerEvent: {}
+[68.841260] (-) TimerEvent: {}
+[68.941609] (-) TimerEvent: {}
+[68.946662] (robot_localization) StdoutLine: {'line': b'[ 98%] \x1b[32m\x1b[1mLinking CXX executable test_filter_base_diagnostics_timestamps\x1b[0m\n'}
+[69.041738] (-) TimerEvent: {}
+[69.142084] (-) TimerEvent: {}
+[69.212919] (robot_localization) StdoutLine: {'line': b'[ 98%] Built target test_filter_base_diagnostics_timestamps\n'}
+[69.242210] (-) TimerEvent: {}
+[69.342552] (-) TimerEvent: {}
+[69.442906] (-) TimerEvent: {}
+[69.543244] (-) TimerEvent: {}
+[69.643663] (-) TimerEvent: {}
+[69.744288] (-) TimerEvent: {}
+[69.844649] (-) TimerEvent: {}
+[69.915258] (robot_localization) StdoutLine: {'line': b'[ 99%] \x1b[32m\x1b[1mLinking CXX executable test_ukf_localization_node_interfaces\x1b[0m\n'}
+[69.944778] (-) TimerEvent: {}
+[70.045179] (-) TimerEvent: {}
+[70.145585] (-) TimerEvent: {}
+[70.179020] (robot_localization) StdoutLine: {'line': b'[ 99%] Built target test_ukf_localization_node_interfaces\n'}
+[70.245711] (-) TimerEvent: {}
+[70.346054] (-) TimerEvent: {}
+[70.446397] (-) TimerEvent: {}
+[70.546782] (-) TimerEvent: {}
+[70.647141] (-) TimerEvent: {}
+[70.747496] (-) TimerEvent: {}
+[70.846654] (robot_localization) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable test_ekf_localization_node_interfaces\x1b[0m\n'}
+[70.847583] (-) TimerEvent: {}
+[70.947876] (-) TimerEvent: {}
+[71.048257] (-) TimerEvent: {}
+[71.122342] (robot_localization) StdoutLine: {'line': b'[100%] Built target test_ekf_localization_node_interfaces\n'}
+[71.141878] (robot_localization) CommandEnded: {'returncode': 0}
+[71.148377] (-) TimerEvent: {}
+[71.248595] (-) TimerEvent: {}
+[71.348874] (-) TimerEvent: {}
+[71.440002] (robot_localization) JobProgress: {'identifier': 'robot_localization', 'progress': 'install'}
+[71.449039] (-) TimerEvent: {}
+[71.452437] (robot_localization) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('OPENBLAS_CORETYPE', 'ARMV8'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'hyperlabs'), ('SSH_AGENT_PID', '4210'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/hyperlabs'), ('OLDPWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '4004'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'hyperlabs'), ('JOURNAL_STREAM', '8:73348'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'hyperlabs'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint'), ('SESSION_MANAGER', 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322'), ('INVOCATION_ID', '845bfc3ece9b4706a28fa8fe5eb2d4d2'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.981'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('ROS_DOMAIN_ID', '97'), ('AMENT_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/robot_localization'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy')]), 'shell': False}
+[71.468216] (robot_localization) StdoutLine: {'line': b'-- Install configuration: "RelWithDebInfo"\n'}
+[71.468699] (robot_localization) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[71.468999] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/ament_index/resource_index/rosidl_interfaces/robot_localization\n'}
+[71.485234] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/msg/rosidl_generator_c__visibility_control.h\n'}
+[71.494948] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__functions.h\n'}
+[71.503535] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__struct.h\n'}
+[71.516483] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__type_support.h\n'}
+[71.524424] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__functions.h\n'}
+[71.536804] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__struct.h\n'}
+[71.549146] (-) TimerEvent: {}
+[71.553622] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__type_support.h\n'}
+[71.565916] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__functions.h\n'}
+[71.577482] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__struct.h\n'}
+[71.592614] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__type_support.h\n'}
+[71.599933] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__functions.h\n'}
+[71.606966] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__struct.h\n'}
+[71.613917] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__type_support.h\n'}
+[71.625237] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__functions.h\n'}
+[71.640103] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__struct.h\n'}
+[71.649250] (-) TimerEvent: {}
+[71.650000] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__type_support.h\n'}
+[71.657223] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__functions.h\n'}
+[71.664885] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__struct.h\n'}
+[71.674199] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__type_support.h\n'}
+[71.682828] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/from_ll.h\n'}
+[71.695913] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/get_state.h\n'}
+[71.702929] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/set_datum.h\n'}
+[71.709878] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/set_pose.h\n'}
+[71.716895] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/to_ll.h\n'}
+[71.729161] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/toggle_filter_processing.h\n'}
+[71.742266] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/library_path.sh\n'}
+[71.749351] (-) TimerEvent: {}
+[71.754628] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/library_path.dsv\n'}
+[71.763464] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[71.771825] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__rosidl_typesupport_fastrtps_c.h\n'}
+[71.779288] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__rosidl_typesupport_fastrtps_c.h\n'}
+[71.792472] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__rosidl_typesupport_fastrtps_c.h\n'}
+[71.800218] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__rosidl_typesupport_fastrtps_c.h\n'}
+[71.811018] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__rosidl_typesupport_fastrtps_c.h\n'}
+[71.822657] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__rosidl_typesupport_fastrtps_c.h\n'}
+[71.836930] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_fastrtps_c.so\n'}
+[71.849448] (-) TimerEvent: {}
+[71.852827] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[71.861325] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.873228] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.887510] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.895127] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.902444] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.909338] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[71.921793] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_fastrtps_cpp.so\n'}
+[71.930762] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[71.939227] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__rosidl_typesupport_introspection_c.h\n'}
+[71.949238] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__rosidl_typesupport_introspection_c.h\n'}
+[71.949546] (-) TimerEvent: {}
+[71.963887] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__rosidl_typesupport_introspection_c.h\n'}
+[71.976183] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__rosidl_typesupport_introspection_c.h\n'}
+[71.986078] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__rosidl_typesupport_introspection_c.h\n'}
+[71.993474] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__rosidl_typesupport_introspection_c.h\n'}
+[72.001374] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/msg/rosidl_generator_cpp__visibility_control.hpp\n'}
+[72.007956] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__builder.hpp\n'}
+[72.015004] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__struct.hpp\n'}
+[72.025984] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__traits.hpp\n'}
+[72.032893] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__type_support.hpp\n'}
+[72.040165] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__builder.hpp\n'}
+[72.049677] (-) TimerEvent: {}
+[72.055233] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__struct.hpp\n'}
+[72.066285] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__traits.hpp\n'}
+[72.076231] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__type_support.hpp\n'}
+[72.085197] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__builder.hpp\n'}
+[72.094197] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__struct.hpp\n'}
+[72.101187] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__traits.hpp\n'}
+[72.115532] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__type_support.hpp\n'}
+[72.122893] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__builder.hpp\n'}
+[72.136280] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__struct.hpp\n'}
+[72.148999] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__traits.hpp\n'}
+[72.149771] (-) TimerEvent: {}
+[72.163711] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__type_support.hpp\n'}
+[72.170982] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__builder.hpp\n'}
+[72.178407] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__struct.hpp\n'}
+[72.192736] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__traits.hpp\n'}
+[72.205605] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__type_support.hpp\n'}
+[72.218890] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__builder.hpp\n'}
+[72.225835] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__struct.hpp\n'}
+[72.238502] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__traits.hpp\n'}
+[72.248421] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__type_support.hpp\n'}
+[72.249877] (-) TimerEvent: {}
+[72.256173] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/from_ll.hpp\n'}
+[72.263594] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/get_state.hpp\n'}
+[72.270935] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/set_datum.hpp\n'}
+[72.284607] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/set_pose.hpp\n'}
+[72.295796] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/to_ll.hpp\n'}
+[72.303785] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/toggle_filter_processing.hpp\n'}
+[72.313911] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/from_ll__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.322714] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/get_state__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.335284] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_datum__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.343210] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/set_pose__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.350007] (-) TimerEvent: {}
+[72.356517] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/to_ll__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.364406] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/srv/detail/toggle_filter_processing__rosidl_typesupport_introspection_cpp.hpp\n'}
+[72.371758] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/pythonpath.sh\n'}
+[72.379064] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/pythonpath.dsv\n'}
+[72.392374] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/__init__.py\n'}
+[72.402365] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/__init__.py\n'}
+[72.417882] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_from_ll.py\n'}
+[72.431292] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_get_state.py\n'}
+[72.441745] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_set_datum.py\n'}
+[72.450136] (-) TimerEvent: {}
+[72.452875] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_set_pose.py\n'}
+[72.461253] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_to_ll.py\n'}
+[72.475513] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/srv/_toggle_filter_processing.py\n'}
+[72.487060] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/robot_localization_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so\n'}
+[72.500693] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/robot_localization_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so\n'}
+[72.509562] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/robot_localization_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so\n'}
+[72.517652] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__python.so\n'}
+[72.532675] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/FromLL.idl\n'}
+[72.539987] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/GetState.idl\n'}
+[72.547800] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetDatum.idl\n'}
+[72.550232] (-) TimerEvent: {}
+[72.555466] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetPose.idl\n'}
+[72.562661] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToggleFilterProcessing.idl\n'}
+[72.569930] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToLL.idl\n'}
+[72.577328] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/FromLL.srv\n'}
+[72.586168] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/FromLL_Request.msg\n'}
+[72.593701] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/FromLL_Response.msg\n'}
+[72.601159] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/GetState.srv\n'}
+[72.607984] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/GetState_Request.msg\n'}
+[72.615448] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/GetState_Response.msg\n'}
+[72.625938] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetDatum.srv\n'}
+[72.634114] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetDatum_Request.msg\n'}
+[72.641927] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetDatum_Response.msg\n'}
+[72.650382] (-) TimerEvent: {}
+[72.655935] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetPose.srv\n'}
+[72.668359] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetPose_Request.msg\n'}
+[72.676682] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/SetPose_Response.msg\n'}
+[72.683943] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToggleFilterProcessing.srv\n'}
+[72.692435] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToggleFilterProcessing_Request.msg\n'}
+[72.700649] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToggleFilterProcessing_Response.msg\n'}
+[72.715837] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToLL.srv\n'}
+[72.724912] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToLL_Request.msg\n'}
+[72.733818] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/srv/ToLL_Response.msg\n'}
+[72.741770] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/filter_base-test\n'}
+[72.750487] (-) TimerEvent: {}
+[72.753906] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_filter_base_diagnostics_timestamps\n'}
+[72.762631] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ekf\n'}
+[72.776096] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ekf_localization_node_interfaces\n'}
+[72.783523] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ukf\n'}
+[72.794156] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ukf_localization_node_interfaces\n'}
+[72.802114] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_robot_localization_estimator\n'}
+[72.815541] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_navsat_conversions\n'}
+[72.828608] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_navsat_transform\n'}
+[72.836935] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ros_robot_localization_listener\n'}
+[72.850587] (-) TimerEvent: {}
+[72.851235] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/test_ros_robot_localization_listener_publisher\n'}
+[72.863103] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/navsat_transform_node\n'}
+[72.873339] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/ekf_node\n'}
+[72.881455] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/ukf_node\n'}
+[72.894498] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/robot_localization/robot_localization_listener_node\n'}
+[72.908651] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librl_lib.so\n'}
+[72.921542] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/ament_index/resource_index/package_run_dependencies/robot_localization\n'}
+[72.933797] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/ament_index/resource_index/parent_prefix_path/robot_localization\n'}
+[72.945671] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/ament_prefix_path.sh\n'}
+[72.950696] (-) TimerEvent: {}
+[72.959908] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/ament_prefix_path.dsv\n'}
+[72.967289] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/path.sh\n'}
+[72.974462] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/environment/path.dsv\n'}
+[72.986050] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/local_setup.bash\n'}
+[73.000585] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/local_setup.sh\n'}
+[73.013055] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/local_setup.zsh\n'}
+[73.022687] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/local_setup.dsv\n'}
+[73.035936] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/package.dsv\n'}
+[73.045325] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/ament_index/resource_index/packages/robot_localization\n'}
+[73.050825] (-) TimerEvent: {}
+[73.057683] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/rosidl_cmake-extras.cmake\n'}
+[73.072228] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[73.085480] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[73.102014] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[73.114198] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[73.125291] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[73.138320] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[73.150949] (-) TimerEvent: {}
+[73.153215] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localizationConfig.cmake\n'}
+[73.165274] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localizationConfig-version.cmake\n'}
+[73.177302] (robot_localization) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/package.xml\n'}
+[73.191913] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_generator_c.so\n'}
+[73.193210] (robot_localization) StdoutLine: {'line': b'-- Set runtime path of "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_generator_c.so" to ""\n'}
+[73.193511] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_introspection_c.so\n'}
+[73.194482] (robot_localization) StdoutLine: {'line': b'-- Set runtime path of "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_introspection_c.so" to ""\n'}
+[73.194719] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_c.so\n'}
+[73.195892] (robot_localization) StdoutLine: {'line': b'-- Set runtime path of "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_c.so" to ""\n'}
+[73.196163] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_introspection_cpp.so\n'}
+[73.198267] (robot_localization) StdoutLine: {'line': b'-- Set runtime path of "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_introspection_cpp.so" to ""\n'}
+[73.198497] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_cpp.so\n'}
+[73.200035] (robot_localization) StdoutLine: {'line': b'-- Set runtime path of "/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/librobot_localization__rosidl_typesupport_cpp.so" to ""\n'}
+[73.228196] (robot_localization) StdoutLine: {'line': b"Compiling '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages/robot_localization/__init__.py'...\n"}
+[73.230638] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test\n'}
+[73.230821] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_filter_base_diagnostics_timestamps.yaml\n'}
+[73.231053] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test1.bag\n'}
+[73.234837] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test2.bag\n'}
+[73.236738] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag2.launch.py\n'}
+[73.237155] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag2.yaml\n'}
+[73.237560] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_navsat_conversions.cpp\n'}
+[73.237868] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_interfaces.launch.py\n'}
+[73.238146] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag3.sh\n'}
+[73.238368] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag1.launch.py\n'}
+[73.238582] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag2.launch.py\n'}
+[73.238791] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf.cpp\n'}
+[73.238958] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ros_robot_localization_listener.yaml\n'}
+[73.239212] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_interfaces.yaml\n'}
+[73.239405] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_interfaces.cpp\n'}
+[73.239592] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag3.yaml\n'}
+[73.239750] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf.cpp\n'}
+[73.239922] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_navsat_transform.launch.py\n'}
+[73.240102] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_filter_base_diagnostics_timestamps.launch.py\n'}
+[73.240267] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag1.sh\n'}
+[73.240422] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_filter_base_diagnostics_timestamps.cpp\n'}
+[73.240576] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_robot_localization_estimator.cpp\n'}
+[73.240708] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ros_robot_localization_listener.cpp\n'}
+[73.240780] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag1.yaml\n'}
+[73.240855] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_localization_node_bag_pose_tester.cpp\n'}
+[73.240928] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test3.bag\n'}
+[73.251049] (-) TimerEvent: {}
+[73.266527] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag3.sh\n'}
+[73.266857] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_robot_localization_estimator.launch.py\n'}
+[73.267069] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag3.yaml\n'}
+[73.267196] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag3.launch.py\n'}
+[73.267309] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_interfaces.yaml\n'}
+[73.267425] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag1.sh\n'}
+[73.267554] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_interfaces.cpp\n'}
+[73.267654] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag2.yaml\n'}
+[73.267773] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ros_robot_localization_listener.launch.py\n'}
+[73.267881] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag2.sh\n'}
+[73.267988] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag1.launch.py\n'}
+[73.268125] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_navsat_transform.cpp\n'}
+[73.268242] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag2.sh\n'}
+[73.268372] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_filter_base.cpp\n'}
+[73.268475] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_bag3.launch.py\n'}
+[73.268581] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ukf_localization_node_bag1.yaml\n'}
+[73.268692] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ekf_localization_node_interfaces.launch.py\n'}
+[73.268783] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/test/test_ros_robot_localization_listener_publisher.cpp\n'}
+[73.268888] (robot_localization) StdoutLine: {'line': b'-- Up-to-date: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include\n'}
+[73.268994] (robot_localization) StdoutLine: {'line': b'-- Up-to-date: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization\n'}
+[73.269114] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/navsat_transform.hpp\n'}
+[73.269236] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ekf.hpp\n'}
+[73.269335] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ros_filter_types.hpp\n'}
+[73.269442] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ros_filter.hpp\n'}
+[73.269521] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/navsat_conversions.hpp\n'}
+[73.269574] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/filter_base.hpp\n'}
+[73.269615] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ukf.hpp\n'}
+[73.269655] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ros_robot_localization_listener.hpp\n'}
+[73.269715] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/filter_common.hpp\n'}
+[73.269778] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/filter_state.hpp\n'}
+[73.269820] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/filter_utilities.hpp\n'}
+[73.269864] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/measurement.hpp\n'}
+[73.269907] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/ros_filter_utilities.hpp\n'}
+[73.269949] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/include/robot_localization/robot_localization_estimator.hpp\n'}
+[73.269992] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/params\n'}
+[73.270036] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/params/navsat_transform.yaml\n'}
+[73.270101] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/params/dual_ekf_navsat_example.yaml\n'}
+[73.270173] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/params/ukf.yaml\n'}
+[73.270222] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/params/ekf.yaml\n'}
+[73.270297] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/launch\n'}
+[73.270346] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/launch/dual_ekf_navsat_example.launch.py\n'}
+[73.270409] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/launch/ekf.launch.py\n'}
+[73.270478] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/launch/navsat_transform.launch.py\n'}
+[73.270525] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/launch/ukf.launch.py\n'}
+[73.270596] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_generator_cExport.cmake\n'}
+[73.270755] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_generator_cExport-relwithdebinfo.cmake\n'}
+[73.270930] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_introspection_cExport.cmake\n'}
+[73.271080] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_introspection_cExport-relwithdebinfo.cmake\n'}
+[73.271250] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_cExport.cmake\n'}
+[73.271399] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_cExport-relwithdebinfo.cmake\n'}
+[73.271594] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_generator_cppExport.cmake\n'}
+[73.271755] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[73.271898] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_introspection_cppExport-relwithdebinfo.cmake\n'}
+[73.272127] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_cppExport.cmake\n'}
+[73.272285] (robot_localization) StdoutLine: {'line': b'-- Installing: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/share/robot_localization/cmake/robot_localization__rosidl_typesupport_cppExport-relwithdebinfo.cmake\n'}
+[73.274806] (robot_localization) CommandEnded: {'returncode': 0}
+[73.351206] (-) TimerEvent: {}
+[73.452363] (-) TimerEvent: {}
+[73.553006] (-) TimerEvent: {}
+[73.653406] (-) TimerEvent: {}
+[73.754031] (-) TimerEvent: {}
+[73.854405] (-) TimerEvent: {}
+[73.955505] (-) TimerEvent: {}
+[74.056629] (-) TimerEvent: {}
+[74.156918] (-) TimerEvent: {}
+[74.257674] (-) TimerEvent: {}
+[74.347668] (robot_localization) JobEnded: {'identifier': 'robot_localization', 'rc': 0}
+[74.348465] (imprimis) JobStarted: {'identifier': 'imprimis'}
+[74.357817] (-) TimerEvent: {}
+[74.458338] (-) TimerEvent: {}
+[74.558848] (-) TimerEvent: {}
+[74.633008] (imprimis) JobProgress: {'identifier': 'imprimis', 'progress': 'cmake'}
+[74.634306] (imprimis) JobProgress: {'identifier': 'imprimis', 'progress': 'build'}
+[74.637054] (imprimis) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis', '--', '-j16', '-l16'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('OPENBLAS_CORETYPE', 'ARMV8'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'hyperlabs'), ('SSH_AGENT_PID', '4210'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/hyperlabs'), ('OLDPWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '4004'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'hyperlabs'), ('JOURNAL_STREAM', '8:73348'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'hyperlabs'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint'), ('SESSION_MANAGER', 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322'), ('INVOCATION_ID', '845bfc3ece9b4706a28fa8fe5eb2d4d2'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.981'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('ROS_DOMAIN_ID', '97'), ('AMENT_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy')]), 'shell': False}
+[74.659268] (-) TimerEvent: {}
+[74.687867] (imprimis) CommandEnded: {'returncode': 0}
+[74.723261] (imprimis) JobProgress: {'identifier': 'imprimis', 'progress': 'install'}
+[74.726418] (imprimis) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis'], 'cwd': '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('OPENBLAS_CORETYPE', 'ARMV8'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'hyperlabs'), ('SSH_AGENT_PID', '4210'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('HOME', '/home/hyperlabs'), ('OLDPWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/src'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('MANAGERPID', '4004'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'hyperlabs'), ('JOURNAL_STREAM', '8:73348'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'hyperlabs'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/hyperlabs/.local/bin:/opt/ros/foxy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/hyperlabs/Luxonis/depthai/entrypoint'), ('SESSION_MANAGER', 'local/hyperlabs-cbpc:@/tmp/.ICE-unix/4322,unix/hyperlabs-cbpc:/tmp/.ICE-unix/4322'), ('INVOCATION_ID', '845bfc3ece9b4706a28fa8fe5eb2d4d2'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/72e9d282_250b_421b_b208_4d7f6d660b6c'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.981'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('ROS_DOMAIN_ID', '97'), ('AMENT_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy')]), 'shell': False}
+[74.737514] (imprimis) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[74.738087] (imprimis) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[74.738595] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz\n'}
+[74.738769] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml\n'}
+[74.738937] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf1.yaml\n'}
+[74.739106] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml\n'}
+[74.739270] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.gv\n'}
+[74.739436] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.pdf\n'}
+[74.739603] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml\n'}
+[74.739768] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/my_controllers.yaml\n'}
+[74.739931] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/urdf_config.rviz\n'}
+[74.740267] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro\n'}
+[74.740428] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro\n'}
+[74.740591] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro\n'}
+[74.740771] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro\n'}
+[74.740924] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro\n'}
+[74.741124] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro\n'}
+[74.741279] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro\n'}
+[74.741440] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/ros2_control.xacro\n'}
+[74.741601] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/sam_bot_description.urdf\n'}
+[74.741899] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/display.launch.py\n'}
+[74.742064] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py\n'}
+[74.742226] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py\n'}
+[74.742514] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world\n'}
+[74.742674] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world\n'}
+[74.742837] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/my_world.sdf\n'}
+[74.743089] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis\n'}
+[74.743331] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis\n'}
+[74.743562] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh\n'}
+[74.743787] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv\n'}
+[74.744018] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh\n'}
+[74.744258] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv\n'}
+[74.744478] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash\n'}
+[74.744698] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh\n'}
+[74.744917] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh\n'}
+[74.745152] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv\n'}
+[74.745318] (imprimis) StdoutLine: {'line': b'-- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv\n'}
+[74.755360] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis\n'}
+[74.755876] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake\n'}
+[74.756270] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake\n'}
+[74.756798] (imprimis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml\n'}
+[74.759510] (-) TimerEvent: {}
+[74.760263] (imprimis) CommandEnded: {'returncode': 0}
+[74.860669] (-) TimerEvent: {}
+[74.961672] (-) TimerEvent: {}
+[75.062242] (-) TimerEvent: {}
+[75.163938] (-) TimerEvent: {}
+[75.265572] (-) TimerEvent: {}
+[75.281806] (imprimis) JobEnded: {'identifier': 'imprimis', 'rc': 0}
+[75.282449] (-) EventReactorShutdown: {}

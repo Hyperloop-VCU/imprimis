@@ -57,8 +57,8 @@ def generate_launch_description():
         rsp,
         gazebo,
         spawn_entity,
+        #robot_localization_node,
         diff_drive_spawner,
-        joint_broad_spawner,
-        robot_localization_node
+    joint_broad_spawner
     ])
 

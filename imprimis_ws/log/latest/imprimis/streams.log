@@ -1,0 +1,45 @@
+[0.291s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': AMENT_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy LD_LIBRARY_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j16 -l16
+[0.340s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': AMENT_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy LD_LIBRARY_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis -- -j16 -l16
+[0.379s] Invoking command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis': AMENT_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy LD_LIBRARY_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis
+[0.389s] -- Install configuration: ""
+[0.390s] -- Execute custom install script
+[0.390s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/bot.rviz
+[0.390s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf.yaml
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/ekf1.yaml
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/empty.yaml
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.gv
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/frames.pdf
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/mapper_params_online_async.yaml
+[0.391s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/my_controllers.yaml
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/config/urdf_config.rviz
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/camera.xacro
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/gazebo_control.xacro
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/imu.xacro
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/inertial_macros.xacro
+[0.392s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/lidar.xacro
+[0.393s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot.urdf.xacro
+[0.393s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/robot_core.xacro
+[0.393s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/ros2_control.xacro
+[0.393s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/description/sam_bot_description.urdf
+[0.393s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/display.launch.py
+[0.394s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/launch_sim.launch.py
+[0.394s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/launch/rsp.launch.py
+[0.394s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/coneland.world
+[0.394s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/empty.world
+[0.394s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/worlds/my_world.sdf
+[0.395s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/package_run_dependencies/imprimis
+[0.395s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/parent_prefix_path/imprimis
+[0.395s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.sh
+[0.395s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/ament_prefix_path.dsv
+[0.396s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.sh
+[0.396s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/environment/path.dsv
+[0.396s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.bash
+[0.396s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.sh
+[0.397s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.zsh
+[0.397s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/local_setup.dsv
+[0.397s] -- Symlinking: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.dsv
+[0.407s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/ament_index/resource_index/packages/imprimis
+[0.408s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig.cmake
+[0.408s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/cmake/imprimisConfig-version.cmake
+[0.408s] -- Up-to-date symlink: /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis/share/imprimis/package.xml
+[0.412s] Invoked command in '/home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis' returned '0': AMENT_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/imprimis:/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface:/opt/ros/foxy LD_LIBRARY_PATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/hyperlabs/Desktop/imprimis/imprimis_ws/install/robot_localization/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis

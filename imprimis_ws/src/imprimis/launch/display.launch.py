@@ -57,7 +57,4 @@ def generate_launch_description():
         spawn_entity,
         robot_localization_node,
         rviz_node
-
-
-        
     ])

@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing motor_interface.egg-info/PKG-INFO
+writing dependency_links to motor_interface.egg-info/dependency_links.txt
+writing entry points to motor_interface.egg-info/entry_points.txt
+writing requirements to motor_interface.egg-info/requires.txt
+writing top-level names to motor_interface.egg-info/top_level.txt
+reading manifest file 'motor_interface.egg-info/SOURCES.txt'
+writing manifest file 'motor_interface.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/python3.8/site-packages/motor-interface.egg-link (link to .)
+Installing motor_interface script to /home/hyperlabs/Desktop/imprimis/imprimis_ws/install/motor_interface/lib/motor_interface
+
+Installed /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/motor_interface
+running install_data

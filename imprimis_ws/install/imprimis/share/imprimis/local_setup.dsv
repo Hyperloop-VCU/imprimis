@@ -1,1 +1,2 @@
-/home/vboxuser/imprimis/imprimis_ws/build/imprimis/ament_cmake_environment_hooks/local_setup.dsv
+source;share/imprimis/environment/ament_prefix_path.sh
+source;share/imprimis/environment/path.sh
