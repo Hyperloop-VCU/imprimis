@@ -1,99 +1,57 @@
 #include <esp_now.h>
-#include <Arduino.h>
 #include <WiFi.h>
+#include <Arduino.h>
 #include "config.h"
 
-#define DEBUG 1
 
-// This is the firmware for ESP32 board "A" connected to the PC
+// Structure example to receive data
+// Must match the sender structure
+typedef struct struct_message {
+    char a[32];
+    int b;
+    float c;
+    bool d;
+} struct_message;
 
-unsigned long t0;
+// Create a struct_message called myData
+struct_message myData;
 
-struct dataPacket // data packet, shared between A and B
-{
-  int setLeftCPL;      // input to B
-  int setRightCPL;     // input to B
-  int currLeftCPL;     // readonly, updated by B
-  int currRightCPL;    // readonly, updated by B
-  int reset;           // set by A, then reset by B
-  float kp;            // input to B
-  float ki;            // input to B
-  float kd;            // input to B
-};
-
-dataPacket data;
-esp_now_peer_info_t peerInfo;
-
-void printAllData() 
-{
-  Serial.println(data.setLeftCPL);
-  Serial.print(" ");
-  Serial.print(data.setRightCPL);
-  Serial.print(" ");
-  Serial.print(data.currLeftCPL);
-  Serial.print(" ");
-  Serial.print(data.currRightCPL);
-  Serial.print(" ");
-  Serial.print(data.reset);
-  Serial.print(" ");
-  Serial.print(data.kp);
-  Serial.print(" ");
-  Serial.print(data.ki);
-  Serial.print(" ");
-  Serial.print(data.kd);
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  Serial.print("Bytes received: ");
+  Serial.println(len);
+  Serial.print("Char: ");
+  Serial.println(myData.a);
+  Serial.print("Int: ");
+  Serial.println(myData.b);
+  Serial.print("Float: ");
+  Serial.println(myData.c);
+  Serial.print("Bool: ");
+  Serial.println(myData.d);
   Serial.println();
 }
-
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
-{
-  memcpy(&data, incomingData, sizeof(data));
-  printAllData();
-}
-
-void setup() 
-{  
-
-  Serial.begin(SERIAL_BAUD_RATE_A);
-
-  // set the initial data packet
-  data.currLeftCPL = 0;
-  data.currRightCPL = 0;
-  data.setLeftCPL = 0;
-  data.setRightCPL = 0;
-  data.reset = 0;
-  data.kp = 0.057 / 2;
-  data.ki = 0;
-  data.kd = 0;
-
-  // set up ESP now
+ 
+void setup() {
+  // Initialize Serial Monitor
+  Serial.begin(115200);
+  
+  // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
+  // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
   
-  memcpy(peerInfo.peer_addr, B_MAC, 6);
-  peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
-  
-  if (esp_now_add_peer(&peerInfo) != ESP_OK){
-    Serial.println("Failed to add peer");
-    return;
-  }
-  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-
-  t0 = millis();
+  // Once ESPNow is successfully Init, we will register for recv CB to
+  // get recv packer info
+  esp_now_register_recv_cb(OnDataRecv);
+  Serial.println("abcd");
 }
-
+ 
 void loop() 
 {
-  // exchange data every DT seconds. 
-  if (millis() - t0 >= DT_MILLIS) 
-  {
-    data.currLeftCPL += 1;
-    esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
-    if (result != ESP_OK) Serial.println("Error sending data from A to B");
-  }
 
 }
