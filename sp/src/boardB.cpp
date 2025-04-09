@@ -132,7 +132,7 @@ void setup()
   delay(3000);
 
   // setup pins and serial
-  Serial2.begin(9600, SERIAL_8N1, 16, 17);
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); // connection to MDDS60
   pinMode(RA, INPUT_PULLUP);
   pinMode(RB, INPUT_PULLUP);
   pinMode(LA, INPUT_PULLUP);
