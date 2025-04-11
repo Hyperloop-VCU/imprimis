@@ -10,18 +10,21 @@
 #define MANUAL_TURNING_FACTOR 0.5
 
 // MAC addresses for ESP NOW
-uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 uint8_t A_MAC[] = {0x14, 0x2B, 0x2F, 0xDA, 0x7D, 0x10};
+uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 // pins for board B
-#define LA 2 // must be interrupt capable
-#define LB 4
-#define RA 3 // must be interrupt capable
-#define RB 5
-#define MOTOR_OUTPUT 10
+#define LA 26 // must be interrupt capable
+#define LB 27
+#define RA 14 // must be interrupt capable
+#define RB 12
+#define LV 4 // goes to "lv" on level shifter, 3.3V output
+
+// Motor output is pin 17. It's assigned automatically when you initialize that serial port.
 
 #define DT 0.05 // time in between each PID update in seconds
-#define SERIAL_BAUD_RATE_A 115200
+#define SERIAL_BAUD_RATE_A 115200 // A to the PC
+#define SERIAL_BAUD_RATE_B 9600  // B to the motors
 
 // serial commands
 #define TWIST_SETPOINT 's'

@@ -157,6 +157,7 @@ void loop() {
   if (millis() - t0 >= DT_MILLIS) {
     esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
     if (result != ESP_OK) Serial.println("Error sending data from A to B");
+    t0 = millis();
   }
 
 }
