@@ -65,26 +65,105 @@ class MotorController {
       byte data = speed | direction | channel;
       Serial2.write(data);
     }
+
+    void newSetpoint(int sp)
+    {
+      this->integral = 0; // prevent error interference from prev setpoint
+      this->setpointCPL = sp;
+    }
   
   };
 
 int leftEncoderCount = 0, rightEncoderCount = 0;
-MotorController leftController(17, 0.057, 0, 0, &leftEncoderCount, 0, COUNTS_PER_REV);
-MotorController rightController(17, 0.057, 0, 0, &rightEncoderCount, 1, COUNTS_PER_REV);
+MotorController leftController(17, Initial_KP, Initial_KI, Initial_KD, &leftEncoderCount, 0, COUNTS_PER_REV);
+MotorController rightController(17, Initial_KP, Initial_KI, Initial_KD, &rightEncoderCount, 1, COUNTS_PER_REV);
 
 struct dataPacket { // data packet, shared between A and B
-  int setLeftCPL;      // readonly, updated by A
-  int setRightCPL;     // readonly, updated by A
-  int currLeftCPL;     // output to A
-  int currRightCPL;    // output to A
+  int setLeftCPL;      // set by A, processed and reset by B
+  int setRightCPL;     // set by A, processed and reset by B
+  int currLeftCPL;     // set by B
+  int currRightCPL;    // set by B
   int reset;           // set by A, reset by B
-  float kp;            // readonly, updated by A
-  float ki;            // readonly, updated by A
-  float kd;            // readonly, updated by 
+  float kp;            // set by A
+  float ki;            // set by A
+  float kd;            // set by A
 };
 
 dataPacket data;
 esp_now_peer_info_t peerInfo;
+
+void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
+{
+  // copy received data for processing
+  memcpy(&data, incomingData, sizeof(data));
+
+  // disable encoder reading
+  noInterrupts();
+
+  // reset encoders if necessary
+  if (data.reset != 0)
+  {
+    leftEncoderCount -= leftController.prevCount;
+    leftController.prevCount = 0;
+    rightEncoderCount -= rightController.prevCount;
+    rightController.prevCount = 0;
+    data.reset = 0;
+  }
+  
+  // set left and right setpoints if necessary
+  if (data.setLeftCPL != SETPOINT_RESET)
+  {
+    leftController.newSetpoint(data.setLeftCPL);
+    data.setLeftCPL = SETPOINT_RESET;
+  }
+  if (data.setRightCPL != SETPOINT_RESET)
+  {
+    rightController.newSetpoint(data.setRightCPL);
+    data.setRightCPL = SETPOINT_RESET;
+  }
+
+  // update PID controllers' outputs
+  leftController.update();
+  rightController.update();
+
+  // update PID controllers' PID values
+  leftController.setPID(data.kp, data.ki, data.kd);
+  rightController.setPID(data.kp, data.ki, data.kd);
+
+  // update CPL data from controllers
+  data.currLeftCPL = leftController.currCPL;
+  data.currRightCPL = rightController.currCPL;
+
+  // re-enable encoder reading
+  interrupts();
+
+  // send processed data back to board A
+  esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
+
+}
+
+int ESPNowInit(char board)
+{
+  // Turn this board into a wifi station
+  WiFi.mode(WIFI_STA);
+
+  // initialize ESP now
+  if (esp_now_init() != ESP_OK) return 1;
+
+  // set the correct MAC address for peer
+  if (board == 'b') memcpy(peerInfo.peer_addr, A_MAC, 6);
+  if (board == 'a') memcpy(peerInfo.peer_addr, B_MAC, 6);
+
+  // register peer
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) return 2;
+
+  // add received data callback
+  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
+
+  return 0;
+}
 
 void readRightEncoder() { 
   // Interrupt to update the right encoder count.
@@ -98,28 +177,13 @@ void readLeftEncoder() {
   else leftEncoderCount--;
 }
 
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
-{
-  memcpy(&data, incomingData, sizeof(data));
-
-  if (data.reset)
-  {
-    // zero out the encoder counts and data.reset
-    leftEncoderCount -= leftController.prevCount;
-    leftController.prevCount = 0;
-    rightEncoderCount -= rightController.prevCount;
-    rightController.prevCount = 0;
-    data.reset = 0;
-  }
-}
-
 void setup() 
 {
   // wait for motor driver to turn on
   delay(3000);
 
   // setup pins and serial
-  Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17); // connection to MDDS60
+  Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
   pinMode(RA, INPUT_PULLUP);
   pinMode(RB, INPUT_PULLUP);
   pinMode(LA, INPUT_PULLUP);
@@ -129,45 +193,22 @@ void setup()
   pinMode(LV, OUTPUT);
   digitalWrite(LV, HIGH);
 
-  // initial data packet
+  // set initial data packet
   data.currLeftCPL = 0;
   data.currRightCPL = 0;
-  data.setLeftCPL = 0;
-  data.setRightCPL = 0;
+  data.setLeftCPL = SETPOINT_RESET;
+  data.setRightCPL = SETPOINT_RESET;
   data.reset = 0;
-  data.kp = 0.057 / 2;
-  data.ki = 0;
-  data.kd = 0;
+  data.kp = Initial_KP;
+  data.ki = Initial_KI;
+  data.kd = Initial_KD;
 
-  // setup ESP now
-  WiFi.mode(WIFI_STA);
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
-  }
-  memcpy(peerInfo.peer_addr, A_MAC, 6);
-  peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
-  if (esp_now_add_peer(&peerInfo) != ESP_OK){
-    Serial.println("Failed to add peer");
-    return;
-  }
-  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-
-  t0 = millis();
+  ESPNowInit('b');
 }
 
 void loop()
 {
-  if (millis() - t0 >= DT_MILLIS)
-  {
-    noInterrupts();
-    leftController.update();
-    rightController.update();
-    data.currLeftCPL = leftEncoderCount;
-    data.currRightCPL = rightEncoderCount;
-    esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
-    interrupts();
-    t0 = millis();
-  }
+  // nothing happens in here. The motor control updating
+  // happens when data is received. It is defined in
+  // the receive data callback.
 }

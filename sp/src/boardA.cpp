@@ -10,18 +10,54 @@
 unsigned long t0;
 
 struct dataPacket { // data packet, shared between A and B
-  int setLeftCPL;      // input to B
-  int setRightCPL;     // input to B
-  int currLeftCPL;     // readonly, updated by B
-  int currRightCPL;    // readonly, updated by B
-  int reset;           // set by A, then reset by B
-  float kp;            // input to B
-  float ki;            // input to B
-  float kd;            // input to B
+  int setLeftCPL;      // set by A, processed and reset by B
+  int setRightCPL;     // set by A, processed and reset by B
+  int currLeftCPL;     // set by B
+  int currRightCPL;    // set by B
+  int reset;           // set by A, reset by B
+  float kp;            // set by A
+  float ki;            // set by A
+  float kd;            // set by A
 };
 
 dataPacket data;
 esp_now_peer_info_t peerInfo;
+
+void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&data, incomingData, sizeof(data));
+
+  // pass along relevant data to PC
+  if (DEBUG) {
+    printAllData();
+  }
+  else {
+  Serial.write((byte*)(&data.currLeftCPL), sizeof(int));
+  Serial.write((byte*)(&data.currRightCPL), sizeof(int));
+  }
+}
+
+int ESPNowInit(char board)
+{
+  // Turn this board into a wifi station
+  WiFi.mode(WIFI_STA);
+
+  // initialize ESP now
+  if (esp_now_init() != ESP_OK) return 1;
+
+  // set the correct MAC address for peer
+  if (board == 'b') memcpy(peerInfo.peer_addr, A_MAC, 6);
+  if (board == 'a') memcpy(peerInfo.peer_addr, B_MAC, 6);
+
+  // register peer
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) return 2;
+
+  // add received data callback
+  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
+
+  return 0;
+}
 
 void printAllData() {
   Serial.println(data.setLeftCPL);
@@ -40,19 +76,6 @@ void printAllData() {
   Serial.print(" ");
   Serial.print(data.kd);
   Serial.println();
-}
-
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  memcpy(&data, incomingData, sizeof(data));
-
-  // pass along relevant data to PC
-  if (DEBUG) {
-    printAllData();
-  }
-  else {
-  Serial.write((byte*)(&data.currLeftCPL), sizeof(int));
-  Serial.write((byte*)(&data.currRightCPL), sizeof(int));
-  }
 }
 
 void serialReadFloat(float &f) { 
@@ -125,27 +148,11 @@ void setup() {
   data.setLeftCPL = 0;
   data.setRightCPL = 0;
   data.reset = 0;
-  data.kp = 0.057 / 2;
-  data.ki = 0;
-  data.kd = 0;
+  data.kp = Initial_KP;
+  data.ki = Initial_KI;
+  data.kd = Initial_KD;
 
-  // set up ESP now
-  WiFi.mode(WIFI_STA);
-
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
-  }
-  
-  memcpy(peerInfo.peer_addr, B_MAC, 6);
-  peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
-  
-  if (esp_now_add_peer(&peerInfo) != ESP_OK){
-    Serial.println("Failed to add peer");
-    return;
-  }
-  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
+  ESPNowInit('a');
 
   t0 = millis();
 }
@@ -153,10 +160,15 @@ void setup() {
 void loop() {
   doCommand();
 
-  // exchange data every DT seconds. 
-  if (millis() - t0 >= DT_MILLIS) {
+  if (millis() - t0 >= DT_MILLIS) 
+  {
+    // send over the data every DT seconds.
+    // when B receives the data,
+    // it processes any new motor setpoints,
+    // resets the encoders if necessary,
+    // updates the left and right CPL values,
+    // then sends it back.
     esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
-    if (result != ESP_OK) Serial.println("Error sending data from A to B");
     t0 = millis();
   }
 

@@ -19,7 +19,6 @@ uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define RA 14 // must be interrupt capable
 #define RB 12
 #define LV 4 // goes to "lv" on level shifter, 3.3V output
-
 // Motor output is pin 17. It's assigned automatically when you initialize that serial port.
 
 #define DT 0.05 // time in between each PID update in seconds
@@ -30,6 +29,14 @@ uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define TWIST_SETPOINT 's'
 #define RESET_ENCODERS 'r'
 #define SET_PID 'e'
+
+// "no command" value
+#define SETPOINT_RESET -1
+
+// PID parameters
+#define Initial_KP 0.057
+#define Initial_KI 0
+#define Initial_KD 0
 
 
 
