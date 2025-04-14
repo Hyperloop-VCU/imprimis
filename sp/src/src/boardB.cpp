@@ -39,7 +39,7 @@ class MotorController {
         this->integral += currError * DT;
       }
       this->prevError = currError;
-      setSpeed((byte)(this->pidOutput));
+      setSpeed((this->pidOutput));
   
     }
   
@@ -50,34 +50,20 @@ class MotorController {
       this->KD = d;
     }
 
-    void setSpeed(byte spd) {
-      spd = (long)spd;
-
-      spd = constrain(spd, -255, 255);
-      if (this->right) 
-      {
-        if (spd >= 0 && spd <= 255)
-        {
-          spd = map(spd, 0, 255, 192, 255);
-        }
-        else
-        {
-          spd = map(-spd, 0, 255, 128, 191);
-        }
-
-      }
-      else 
-      {
-        if (spd >= 0 && spd <= 255) 
-        {
-          spd = map(spd, 0, 255, 0, 63);
-        }
-        else
-        {
-          spd = map(-spd, 0, 255, 64, 127);
-        }
-      }
-      Serial2.write((byte)spd);
+    void setSpeed(float pidOutput)
+    {
+      // PID output ranges from -255 to 255.
+      // setSpeed converts this into the appropriate single-byte
+      // serial simplified command, and writes it.
+      // bit 7 is which motor
+      // bit 6 is direction
+      // bits 0-5 are speed. (decimal: 0-63)
+      
+      unsigned int channel = this->right ? (1 << 7) : 0;            // bit 7
+      unsigned int direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
+      unsigned int speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
+      byte data = speed | direction | channel;
+      Serial2.write(data);
     }
   
   };
