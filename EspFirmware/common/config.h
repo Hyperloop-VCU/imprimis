@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 #include <math.h>
 
 // physical measurements
@@ -38,13 +41,36 @@ uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define Initial_KI 0
 #define Initial_KD 0
 
-
-
-
 // useful constants
 const float ANGVEL_2_CPL = (COUNTS_PER_REV * DT) / 2*M_PI;
-//const float CPL_2_LINVEL = CPL_2_ANGVEL * WHEEL_RADIUS;
 const float LINVEL_2_CPL = ANGVEL_2_CPL / WHEEL_RADIUS;
-//const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
-const float MANUAL_TURN_COEFF = (1 - MANUAL_TURNING_FACTOR) / 255;
 const int DT_MILLIS = 1000*DT;
+
+#endif
+
+/*
+void setManualMotorInput() { 
+  // Get differential drive input from the RC receiver, and set the motor speeds.
+  int linearInput = pulseIn(RC_MANUAL_LIN, HIGH, 30000); // 30 millisecond timeout
+  int angularInput = pulseIn(RC_MANUAL_ANG, HIGH, 30000);
+  if (linearInput < 950 || linearInput > 2050) { // ensure motor speeds are 0 if the RC signal is invalid
+    linearInput = 1500;
+  }
+  if (angularInput < 950 || angularInput > 2050) {
+    angularInput = 1500;
+  }
+  int linNormalized = map(linearInput, 1000, 2000, -255, 255);
+  int angNormalized = map(angularInput, 1000, 2000, -255, 255);
+  int leftManualInput = round(linNormalized + angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized));
+  int rightManualInput = round(linNormalized - angNormalized * (1 - MANUAL_TURN_COEFF * linNormalized));
+  leftController.corrected_setSpeed(leftManualInput);
+  rightController.corrected_setSpeed(rightManualInput);
+}
+  
+// should be between 0 and 1. Sets how "hard" to turn at high speeds.
+#define MANUAL_TURNING_FACTOR 0.5
+//const float MANUAL_TURN_COEFF = (1 - MANUAL_TURNING_FACTOR) / 255;
+
+//const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
+//const float CPL_2_LINVEL = CPL_2_ANGVEL * WHEEL_RADIUS;
+*/
