@@ -1,0 +1,8 @@
+<library path="diff_drive_system">
+  <class
+    name="diff_drive_hw/DiffDriveSystem"
+    type="DiffDriveSystem"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>Two-wheel differential drive hardware interface</description>
+  </class>
+</library>
