@@ -6,10 +6,10 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     pkg_share = os.path.join(get_package_share_directory('imprimis'))
-    default_model_path = os.path.join(pkg_share, 'src/description/sam_bot_description.urdf')
-    default_rviz_config_path = os.path.join(pkg_share, 'config/urdf_config.rviz')
-    world_path=os.path.join(pkg_share, 'worlds/my_world.sdf')
-    
+    default_model_path = os.path.join(pkg_share, 'description', 'robot.urdf.xacro')
+    default_rviz_config_path = os.path.join(pkg_share, 'config', 'urdf_config.rviz')
+    world_path = os.path.join(pkg_share, 'worlds', 'my_world.sdf')
+
     robot_state_publisher_node = launch_ros.actions.Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -54,7 +54,7 @@ def generate_launch_description():
         launch.actions.ExecuteProcess(cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', world_path], output='screen'),
         joint_state_publisher_node,
         robot_state_publisher_node,
-        spawn_entity,
-        robot_localization_node,
+        #spawn_entity,
+        #robot_localization_node,
         rviz_node
     ])

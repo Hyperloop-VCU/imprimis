@@ -1,3 +1,0 @@
-CMake Error: The source directory "/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/timmy_bot" does not exist.
-Specify --help for usage, or press the help button on the CMake GUI.
-make: *** [Makefile:222: cmake_check_build_system] Error 1

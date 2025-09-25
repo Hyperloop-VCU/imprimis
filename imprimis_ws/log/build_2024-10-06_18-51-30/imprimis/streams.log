@@ -1,6 +1,0 @@
-[0.011s] Invoking command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/vboxuser/imprimis/imprimis_ws/build/imprimis -- -j4 -l4
-[0.020s] CMake Error: The current CMakeCache.txt directory /home/vboxuser/imprimis/imprimis_ws/build/imprimis/CMakeCache.txt is different than the directory /home/hyperlabs/Desktop/imprimis/imprimis_ws/build/imprimis where CMakeCache.txt was created. This may result in binaries being created in the wrong place. If you are not sure, reedit the CMakeCache.txt
-[0.043s] CMake Error: The source directory "/home/hyperlabs/Desktop/imprimis/imprimis_ws/src/imprimis" does not exist.
-[0.043s] Specify --help for usage, or press the help button on the CMake GUI.
-[0.044s] make: *** [Makefile:222: cmake_check_build_system] Error 1
-[0.048s] Invoked command in '/home/vboxuser/imprimis/imprimis_ws/build/imprimis' returned '2': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/vboxuser/imprimis/imprimis_ws/build/imprimis -- -j4 -l4
