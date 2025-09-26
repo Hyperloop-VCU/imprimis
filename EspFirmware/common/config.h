@@ -1,54 +1,91 @@
+// Main configuration file for the ESP32 firmware.
+// Controls the config board A and board B.
+
+
+// TODO: remove the physical measurements section
+// and calculate the ANGVEL_2_CPL constant at runtime,
+// with the physical measurements passed to board A as a paremeter.
+// This ensures the measurements only need to be defined in the high-lvl ros2 control config.
+
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <math.h>
 
-// physical measurements
+
+
+// physical measurements of the robot - will be removed later
 #define WHEEL_RADIUS 0.1651
 #define HALF_WHEEL_TRACK_LENGTH 0.4432
 #define COUNTS_PER_REV 3750 // 18.75 * 200
-#define MAX_SPEED -1 // TODO
 
-// should be between 0 and 1. Sets how "hard" to turn at high speeds.
-#define MANUAL_TURNING_FACTOR 0.5
+
+
 
 // MAC addresses for ESP NOW
-uint8_t A_MAC[] = {0x14, 0x2B, 0x2F, 0xDA, 0x7D, 0x10};
-uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
+const uint8_t A_MAC[] = {0x14, 0x2B, 0x2F, 0xDA, 0x7D, 0x10};
+const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
+
+
+
 
 // pins for board B
-#define LA 26 // must be interrupt capable
-#define LB 27
+// Motor output is pin 17. It's assigned automatically when the serial port is initialized.
+#define LA 25 // must be interrupt capable
+#define LB 26
 #define RA 14 // must be interrupt capable
 #define RB 12
-#define LV 4 // goes to "lv" on level shifter, 3.3V output
-// Motor output is pin 17. It's assigned automatically when you initialize that serial port.
+#define LV 13 // goes to "lv" on level shifter, 3.3V output
 
-#define DT 0.05 // time in between each PID update in seconds
+
+
+// timing
 #define SERIAL_BAUD_RATE_A 115200 // A to the PC
 #define SERIAL_BAUD_RATE_B 9600  // B to the motors
+#define DEBUG_BAUD_RATE_B 115200 // B to the (usually not connected) PC
 
-// serial commands
-#define TWIST_SETPOINT 's'
+
+
+
+// serial commands (used by board A only)
+#define ANGVEL_SETPOINT 's'
 #define RESET_ENCODERS 'r'
 #define SET_PID 'e'
 
-// "no command" value
+
+
+
+// value that the setLeftCPL and setRightCPL fields take on when there is no
+// new setpoint to be processed.
 #define SETPOINT_RESET -1
 
-// PID parameters
+
+
+
+// PID initial parameters
 #define Initial_KP 0.057
 #define Initial_KI 0
 #define Initial_KD 0
 
-// useful constants
-const float ANGVEL_2_CPL = (COUNTS_PER_REV * DT) / 2*M_PI;
-const float LINVEL_2_CPL = ANGVEL_2_CPL / WHEEL_RADIUS;
-const int DT_MILLIS = 1000*DT;
+
+
+
+// initial DT setting (should be close to reality - to avoid a large burst on startup)
+#define INITIAL_DT 0.0333 // 30 Hz
+
 
 #endif
 
-/*
+// Useful constant formulas
+// constant to convert angular velocity -> counts per loop = (COUNTS_PER_REV * DT) / 2*M_PI
+// constant to convert counts per loop -> angular velocity = 1 / ANGVEL_2_CPL
+
+
+/* Very old code for handling manual input to the motors.
+#define MANUAL_TURNING_FACTOR 0.5 // should be between 0 and 1. Sets how "hard" to turn at high speeds.
+const float MANUAL_TURN_COEFF = (1 - MANUAL_TURNING_FACTOR) / 255;
+const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
+const float CPL_2_LINVEL = CPL_2_ANGVEL * WHEEL_RADIUS;
+
 void setManualMotorInput() { 
   // Get differential drive input from the RC receiver, and set the motor speeds.
   int linearInput = pulseIn(RC_MANUAL_LIN, HIGH, 30000); // 30 millisecond timeout
@@ -66,11 +103,4 @@ void setManualMotorInput() {
   leftController.corrected_setSpeed(leftManualInput);
   rightController.corrected_setSpeed(rightManualInput);
 }
-  
-// should be between 0 and 1. Sets how "hard" to turn at high speeds.
-#define MANUAL_TURNING_FACTOR 0.5
-//const float MANUAL_TURN_COEFF = (1 - MANUAL_TURNING_FACTOR) / 255;
-
-//const float COUNTS_2_METERS = (2*M_PI * WHEEL_RADIUS) / COUNTS_PER_REV;
-//const float CPL_2_LINVEL = CPL_2_ANGVEL * WHEEL_RADIUS;
 */

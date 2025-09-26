@@ -1,65 +1,81 @@
+
+// This is the firmware for ESP32 board "A" connected to the PC.
+// Board A has the following responsibilities:
+//   - interpreting inputs from the ROS hardware interface (angular velocity commands)
+//   - providing outputs which go to the hardware interface (current angular velocity of each wheel)
+//   - controlling the flow of data between the two ESP boards
+
+// The timing of board B depends heavily on the rate at which the data is being sent to it
+// by board A. Whenever the hardware interface writes a velocity command to this board,
+// the data is sent.
+
+#define DEBUG 1
+
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
 
-#define DEBUG 1
 
-// This is the firmware for ESP32 board "A" connected to the PC
 
+
+
+// Global variables
 unsigned long t0;
-
-dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
+dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD}; // initial data
 esp_now_peer_info_t peerInfo;
 
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  memcpy(&data, incomingData, sizeof(data));
 
-  // pass along relevant data to PC
-  if (DEBUG) {
+
+
+// Receive data callback: runs whenever board B sends data to board A (when a velocity command appears)
+// Sets board A's local data to what board B sent it, then passes along
+// the position and velocity of each motor to the PC.
+// Whenever A sends data to B, B does its processing, updates the data if necessary,
+// then sends the data back to A.
+void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
+{
+  memcpy(&data, incomingData, sizeof(data));
+  if (DEBUG) 
+  {
     printAllData(&data);
   }
-  else {
-  Serial.write((byte*)(&data.currLeftCPL), sizeof(int));
-  Serial.write((byte*)(&data.currRightCPL), sizeof(int));
+  else 
+  {
+    Serial.write((byte*)(&data.currLeftAngvel), sizeof(int));
+    Serial.write((byte*)(&data.currRightAngvel), sizeof(int));
   }
 }
 
-void updateSetpoints(float setLinearX, float setAngularZ) {
-  /* Use a twist message to calculate the counts-per-loop values for the PID controllers, and set them.
-  Zero PID integrals to prevent error interference. */
-  data.setLeftCPL = round(LINVEL_2_CPL * (setLinearX + setAngularZ * HALF_WHEEL_TRACK_LENGTH));
-  data.setRightCPL = round(LINVEL_2_CPL * (setLinearX - setAngularZ * HALF_WHEEL_TRACK_LENGTH));
-}
 
-void resetEncoders() {
-  data.reset = 1;
-}
 
-void updatePIDgains(float kp, float ki, float kd) {
-  data.kp = kp;
-  data.ki = ki;
-  data.kd = kd;
-}
 
-void doCommand() {
-  // Read the first character from serial data, and execute the command associated with that character.
 
-  if (!Serial.available()) return; // do nothing if there is no serial data to read
+// Read the first character from serial data, and execute the command associated with that character.
+// does nothing if there is no serial data to read
+// command RESET_ENCODERS: resets the encoder counts to 0.
+// command TWIST_SETPOINT: gives a new setpoint to the PID controllers.
+// command SET_PID: updates the pid gains of the controllers. sets both the left and right wheel controllers to the same gain.
+void doCommand() 
+{
+
+  if (!Serial.available()) return;
 
   char chr = Serial.read();
   switch(chr) {
 
     case RESET_ENCODERS:
-      resetEncoders();
+      data.reset = 1;
       break;
 
-    case TWIST_SETPOINT: {
-      float receivedLinX, receivedAngZ;
-      serialReadFloat(receivedLinX);
-      serialReadFloat(receivedAngZ);
-      updateSetpoints(receivedLinX, receivedAngZ);
+    case ANGVEL_SETPOINT: {
+      float receivedLeftAngvel, receivedRightAngvel;
+      serialReadFloat(receivedLeftAngvel);
+      serialReadFloat(receivedRightAngvel);
+      data.setLeftAngvel = receivedLeftAngvel;
+      data.setRightAngvel = receivedRightAngvel;
+      esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
 
@@ -68,35 +84,34 @@ void doCommand() {
       serialReadFloat(p);
       serialReadFloat(i);
       serialReadFloat(d);
-      updatePIDgains(p, i, d);
+      data.kp = p;
+      data.ki = i;
+      data.kd = d;
     }
   }
 
 }
 
-void setup() {  
 
+
+
+// Setup function: runs once at power-on
+// Connects to board B, registers the on-data-receive callback,
+// and initializes the value of t0.
+void setup() 
+{  
   Serial.begin(SERIAL_BAUD_RATE_A);
-
   ESPNowInit('a', &peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-
   t0 = millis();
 }
 
-void loop() {
+
+
+
+// Main loop function: runs over and over again forever
+// just calls doCommand over and over again.
+void loop() 
+{
   doCommand();
-
-  if (millis() - t0 >= DT_MILLIS) 
-  {
-    // send over the data every DT seconds.
-    // when B receives the data,
-    // it processes any new motor setpoints,
-    // resets the encoders if necessary,
-    // updates the left and right CPL values,
-    // then sends it back.
-    esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
-    t0 = millis();
-  }
-
 }

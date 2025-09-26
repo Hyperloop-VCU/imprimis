@@ -1,3 +1,15 @@
+// This is the firmware for ESP32 board "B" connected to the motor driver and encoders
+// Board B has the following responsibilities:
+//  - Accept desired counts-per-loop (CPL) commands from board A
+//  - Report the actual the CPL of each motor back to board A
+//  - Run one PID controller for each motor to make them move.
+
+// The PID loop runs once each time board A sends data to board B.
+
+// '1' to print debug information
+#define DEBUG_BOARD_B 1
+
+
 #include <math.h>
 #include <esp_now.h>
 #include <Arduino.h>
@@ -6,18 +18,20 @@
 #include "../../common/comms.cpp"
 #include "MotorController.cpp"
 
-#define DEBUG 0
 
-// This is the firmware for ESP32 board "B" connected to the motor driver and encoders
-unsigned long t0;
 
-int leftEncoderCount = 0, rightEncoderCount = 0;
-MotorController leftController(17, Initial_KP, Initial_KI, Initial_KD, &leftEncoderCount, 0, COUNTS_PER_REV, DEBUG);
-MotorController rightController(17, Initial_KP, Initial_KI, Initial_KD, &rightEncoderCount, 1, COUNTS_PER_REV, DEBUG);
-
+// global variables
+int leftEncoderCount = 0;
+int rightEncoderCount = 0;
+MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, DEBUG_BOARD_B, INITIAL_DT);
+MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, DEBUG_BOARD_B, INITIAL_DT);
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
 esp_now_peer_info_t peerInfo;
 
+
+
+
+// On-data-received callback, runs when board A sends data to board B.
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
   // copy received data for processing
@@ -29,36 +43,34 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   // reset encoders if necessary
   if (data.reset != 0)
   {
-    leftEncoderCount -= leftController.prevCount;
-    leftController.prevCount = 0;
-    rightEncoderCount -= rightController.prevCount;
-    rightController.prevCount = 0;
+    leftController.reset();
+    rightController.reset();
     data.reset = 0;
   }
   
   // set left and right setpoints if necessary
-  if (data.setLeftCPL != SETPOINT_RESET)
+  if (data.setLeftAngvel != SETPOINT_RESET)
   {
-    leftController.newSetpoint(data.setLeftCPL);
-    data.setLeftCPL = SETPOINT_RESET;
+    leftController.newSetpoint(data.setLeftAngvel);
+    data.setLeftAngvel = SETPOINT_RESET;
   }
-  if (data.setRightCPL != SETPOINT_RESET)
+  if (data.setRightAngvel != SETPOINT_RESET)
   {
-    rightController.newSetpoint(data.setRightCPL);
-    data.setRightCPL = SETPOINT_RESET;
+    rightController.newSetpoint(data.setRightAngvel);
+    data.setRightAngvel = SETPOINT_RESET;
   }
 
   // update PID controllers' outputs
-  leftController.update();
-  rightController.update();
+  leftController.update(leftEncoderCount, millis());
+  rightController.update(rightEncoderCount, millis());
 
   // update PID controllers' PID values
   leftController.setPID(data.kp, data.ki, data.kd);
   rightController.setPID(data.kp, data.ki, data.kd);
 
-  // update CPL data from controllers
-  data.currLeftCPL = leftController.currCPL;
-  data.currRightCPL = rightController.currCPL;
+  // update angvel data from controllers
+  data.currLeftAngvel = leftController.get_wheel_angvel();
+  data.currRightAngvel = rightController.get_wheel_angvel();
 
   // re-enable encoder reading
   interrupts();
@@ -68,25 +80,40 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 
 }
 
-void readRightEncoder() { 
-  // Interrupt to update the right encoder count.
+
+
+
+
+// Interrupt to update the right encoder count.
+void readRightEncoder() 
+{ 
   if (!digitalRead(RB)) rightEncoderCount--;
   else rightEncoderCount++;
 }
 
-void readLeftEncoder() { 
-  // Interrupt to update the left encoder count. (It's reversed because the motor is flipped)
+// Interrupt to update the left encoder count. 
+void readLeftEncoder() 
+{ 
   if(!digitalRead(LB)) leftEncoderCount++;
-  else leftEncoderCount--;
+  else leftEncoderCount--; // reversed for some reason, I don't know why
 }
 
+
+
+
+
+// Setup function: runs once on board B power-on
+// sets up the I/O pins and serial port,
+// then initializes ESP_now and registers the callback.
 void setup() 
 {
-  // wait for motor driver to turn on
+  // Normally, this board receives power the same instant that the motor driver does.
+  // we have to wait for the motor driver to turn on.
   delay(3000);
 
   // setup pins and serial
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
+  if (DEBUG_BOARD_B) Serial.begin(DEBUG_BAUD_RATE_B);
   pinMode(RA, INPUT_PULLUP);
   pinMode(RB, INPUT_PULLUP);
   pinMode(LA, INPUT_PULLUP);
@@ -96,16 +123,16 @@ void setup()
   pinMode(LV, OUTPUT);
   digitalWrite(LV, HIGH);
 
+
+  // setup ESP-now and begin
+  // TODO: handle board B turning on when board A is not turned on
   ESPNowInit('b', &peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-
-  if (DEBUG) Serial.begin(9600);
-  Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
 }
 
-void loop()
-{
-  // nothing happens in here. The motor control updating
-  // happens when data is received. It is defined in
-  // the receive data callback.
-}
+
+
+
+// nothing happens in the main loop function. 
+// all the logic happens in the on-data-received callback.
+void loop() {}
