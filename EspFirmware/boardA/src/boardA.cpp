@@ -136,5 +136,5 @@ void loop()
   data.setLeftAngvel = leftAV;
   data.setRightAngvel = rightAV;
   esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
-  delay(30);
+  delay(100);
 }

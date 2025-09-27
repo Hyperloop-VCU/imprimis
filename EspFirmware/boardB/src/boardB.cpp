@@ -135,9 +135,11 @@ void loop()
 {
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
-    leftController.reset();
-    rightController.reset();
     leftController.setSpeed(0);
     rightController.setSpeed(0);
+    leftController.reset();
+    rightController.reset();
+    data.setLeftAngvel = 0;
+    data.setRightAngvel = 0;
   }
 }

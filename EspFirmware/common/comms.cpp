@@ -31,15 +31,14 @@ struct dataPacket
 // Uses C-style pass by pointer.
 void printAllData(dataPacket* data)
 {
-  Serial.println("setLeftAngvel: " + String(data->setLeftAngvel));
-  Serial.println("setRightAngvel: " + String(data->setRightAngvel));
-  Serial.println("currLeftAngvel: " + String(data->currLeftAngvel));
-  Serial.println("currRightAngvel: " + String(data->currRightAngvel));
-  Serial.println("reset: " + String(data->reset));
-  Serial.println("kp: " + String(data->kp));
-  Serial.println("ki: " + String(data->ki));
-  Serial.println("kd: " + String(data->kd));
-  Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+  Serial.print("setLeftAngvel: " + String(data->setLeftAngvel));
+  Serial.print(", setRightAngvel: " + String(data->setRightAngvel));
+  Serial.print(", currLeftAngvel: " + String(data->currLeftAngvel));
+  Serial.print(", currRightAngvel: " + String(data->currRightAngvel));
+  Serial.print(", reset: " + String(data->reset));
+  Serial.print(", kp: " + String(data->kp));
+  Serial.print(", ki: " + String(data->ki));
+  Serial.println(", kd: " + String(data->kd));
 }
   
 
