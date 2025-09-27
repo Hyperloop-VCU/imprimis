@@ -19,22 +19,22 @@ class MotorController
   int prevError; 
   int countsPerRev;
   float integral;
-  float pidOutput;
   int right;
+  bool debugB;
 
 
   public:
   // constructor
-  MotorController(float kp, float ki, float kd, int Right, int countsPerRev) 
+  MotorController(float kp, float ki, float kd, int Right, int countsPerRev, bool debugB) 
   : KP(kp),
     KI(ki), 
     KD(kd),
     countsPerRev(countsPerRev), 
-    pidOutput(0.0),  
     prevError(0), 
     integral(0.0), 
     prevCount(0),
     right(Right),
+    debugB(debugB),
     time_of_last_update(millis())
     {}
 
@@ -57,15 +57,24 @@ class MotorController
 
     // do PID and set output
     int currError = setpointCPL - currCPL;
-    pidOutput = (KP * currError) + (KI * integral); // + (KD * (currError - this->prevError) / DT_s);
+    float pidOutput = (KP * currError) + (KI * integral); // + (KD * (currError - this->prevError) / DT_s);
     if (abs(pidOutput) <= 255) integral += currError * DT_seconds;
 
     // set previous values
     prevError = currError;
     prevCount = currCount;
+    time_of_last_update = millis();
+
+    // TODO: remove these print statements
+    if (debugB) {
+    Serial.print("DT: ");
+    Serial.print(DT_seconds);
+    Serial.print(", currCPL: ");
+    Serial.print(currCPL);
+    }
 
     // make the motor move
-    setSpeed((this->pidOutput));
+    setSpeed((pidOutput));
     return wheel_angvel;
 
   }
@@ -87,6 +96,18 @@ class MotorController
     uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
     uint8_t speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
     uint8_t data = speed | direction | channel;
+
+    // TODO: remove these print statements
+    if (debugB) {
+    Serial.print(", PID output: ");
+    Serial.print(pidOutput);
+    Serial.print(", Motor: ");
+    Serial.print(channel >> 7);
+    Serial.print(", Direction: ");
+    Serial.print(direction >> 6);
+    Serial.print(", Speed: ");
+    Serial.println(speed);
+    }
 
     Serial2.write(data);
   }
