@@ -14,11 +14,11 @@
 // Data packet structure definition.
 struct dataPacket 
 {
-    int setLeftAngvel;         // Desired counts-per-loop value of the left PID controller
-    int setRightAngvel;        // Desired counts-per-loop value of the right PID controller
-    int currLeftAngvel;     // Current angular velocity of the left wheel
-    int currRightAngvel;    // Current angular velocity of the right wheel
-    int reset;              // Flag which indicates if board B needs to reset the encoder counts.
+    float setLeftAngvel;         // Desired counts-per-loop value of the left PID controller
+    float setRightAngvel;        // Desired counts-per-loop value of the right PID controller
+    float currLeftAngvel;     // Current angular velocity of the left wheel
+    float currRightAngvel;    // Current angular velocity of the right wheel
+    bool reset;              // Flag which indicates if board B needs to reset the encoder counts.
     float kp;               // Proportional gain of each wheel's PID controller
     float ki;               // Integral gain of each wheel's PID controller
     float kd;               // Derivative gain of each wheel's PID controller
