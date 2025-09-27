@@ -129,7 +129,7 @@ void setup()
 // Main loop function: runs over and over again forever
 // just calls doCommand over and over again.
 // TODO: do something when is_connected = false
-float leftAV = 0, rightAV = 0;
+float leftAV = 3, rightAV = 3;
 void loop() 
 {
   //doCommand();

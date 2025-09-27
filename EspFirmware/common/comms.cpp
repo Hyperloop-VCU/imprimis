@@ -39,6 +39,7 @@ void printAllData(dataPacket* data)
   Serial.println("kp: " + String(data->kp));
   Serial.println("ki: " + String(data->ki));
   Serial.println("kd: " + String(data->kd));
+  Serial.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 }
   
 
