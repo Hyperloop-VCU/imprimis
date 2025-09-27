@@ -9,8 +9,6 @@
 // by board A. Whenever the hardware interface writes a velocity command to this board,
 // the data is sent.
 
-#define DEBUG 1
-
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
@@ -25,6 +23,8 @@
 unsigned long t0;
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD}; // initial data
 esp_now_peer_info_t peerInfo;
+bool is_connected = false;
+int retryCount = 0;
 
 
 
@@ -37,26 +37,35 @@ esp_now_peer_info_t peerInfo;
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
   memcpy(&data, incomingData, sizeof(data));
-  if (DEBUG) 
+  //printAllData(&data);
+  //Serial.write((byte*)(&data.currLeftAngvel), sizeof(int));
+  //Serial.write((byte*)(&data.currRightAngvel), sizeof(int));
+}
+
+
+// Send data callback: runs whenever board A sends data to board B.
+// Ensures board B received the data. Handles retry and is_connected logic.
+void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
+{
+  Serial.println(is_connected);
+  if (status != ESP_NOW_SEND_SUCCESS)
   {
-    printAllData(&data);
+    if (retryCount > MAX_SEND_RETRIES) is_connected = false;
+    else retryCount++;
+    return;
   }
-  else 
-  {
-    Serial.write((byte*)(&data.currLeftAngvel), sizeof(int));
-    Serial.write((byte*)(&data.currRightAngvel), sizeof(int));
-  }
+  is_connected = true;
+  retryCount = 0;
 }
 
 
 
 
-
-// Read the first character from serial data, and execute the command associated with that character.
-// does nothing if there is no serial data to read
-// command RESET_ENCODERS: resets the encoder counts to 0.
-// command TWIST_SETPOINT: gives a new setpoint to the PID controllers.
-// command SET_PID: updates the pid gains of the controllers. sets both the left and right wheel controllers to the same gain.
+// Reads the first character from serial data and executes the command associated with that character.
+// Does nothing if there is no serial data to read
+// command RESET_ENCODERS: Resets the encoder counts and PID integral to 0.
+// command ANGVEL_SETPOINT: Gives a new angular-velocity setpoint to the PID controllers.
+// command SET_PID: Updates the pid gains of the controllers. Sets both the left and right wheel controllers to the same gain.
 void doCommand() 
 {
 
@@ -75,7 +84,8 @@ void doCommand()
       serialReadFloat(receivedRightAngvel);
       data.setLeftAngvel = receivedLeftAngvel;
       data.setRightAngvel = receivedRightAngvel;
-      esp_err_t result = esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+      // send data to B
+      esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
 
@@ -95,15 +105,22 @@ void doCommand()
 
 
 
-// Setup function: runs once at power-on
-// Connects to board B, registers the on-data-receive callback,
-// and initializes the value of t0.
+// Setup function: runs once on board A power-on
+// Initializes the serial port and registers board B as a peer.
+// Note that board B does not need to be on for this function to run successfully.
 void setup() 
 {  
+  delay(100);
   Serial.begin(SERIAL_BAUD_RATE_A);
-  ESPNowInit('a', &peerInfo);
+  WiFi.mode(WIFI_STA);
+  esp_now_init();
+  memcpy(peerInfo.peer_addr, B_MAC, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-  t0 = millis();
+  esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
+
 }
 
 
@@ -111,7 +128,13 @@ void setup()
 
 // Main loop function: runs over and over again forever
 // just calls doCommand over and over again.
+// TODO: do something when is_connected = false
+float leftAV = 0, rightAV = 0;
 void loop() 
 {
-  doCommand();
+  //doCommand();
+  data.setLeftAngvel = leftAV;
+  data.setRightAngvel = rightAV;
+  esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+  delay(30);
 }

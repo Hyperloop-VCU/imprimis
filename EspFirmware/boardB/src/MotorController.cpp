@@ -15,31 +15,25 @@ class MotorController
   private:
   float KP, KI, KD;
   unsigned long time_of_last_update;
-  float last_DT;
   int prevCount;
-  int setpointCPL; 
   int prevError; 
   int countsPerRev;
   float integral;
-  float wheel_angvel;
   float pidOutput;
   int right;
 
 
   public:
   // constructor
-  MotorController(float kp, float ki, float kd, int Right, int countsPerRev, float initialDT) 
+  MotorController(float kp, float ki, float kd, int Right, int countsPerRev) 
   : KP(kp),
     KI(ki), 
     KD(kd),
     countsPerRev(countsPerRev), 
-    pidOutput(0.0), 
-    setpointCPL(0), 
+    pidOutput(0.0),  
     prevError(0), 
     integral(0.0), 
-    last_DT(initialDT),
-    prevCount(0),  
-    wheel_angvel(0.0),
+    prevCount(0),
     right(Right),
     time_of_last_update(millis())
     {}
@@ -51,13 +45,15 @@ class MotorController
   // Updates the wheel angular velocity.
   // int currCount: current encoder count
   // unsigned long current_time: current time as read from the millis() function.
-  void update(int currCount, unsigned long current_time) 
+  // Returns the angular velocity of the wheel.
+  float update(float setpointAngvel, int currCount, unsigned long current_time) 
   {
 
-    // calculate wheel info, DT, wheel angvel
+    // calculate CPL, DT, wheel angvel, and setpoint CPL
     int currCPL = currCount - prevCount;
     float DT_seconds = (current_time - time_of_last_update) / 1000.0;
-    wheel_angvel = currCPL * ((2 * M_PI) / (countsPerRev * DT_seconds));
+    int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
+    float wheel_angvel = currCPL * ((2 * M_PI) / (countsPerRev * DT_seconds));
 
     // do PID and set output
     int currError = setpointCPL - currCPL;
@@ -67,10 +63,10 @@ class MotorController
     // set previous values
     prevError = currError;
     prevCount = currCount;
-    last_DT = DT_seconds;
 
     // make the motor move
     setSpeed((this->pidOutput));
+    return wheel_angvel;
 
   }
 
@@ -87,10 +83,10 @@ class MotorController
   void setSpeed(float pidOutput)
   {
     
-    unsigned int channel = this->right ? (1 << 7) : 0;            // bit 7
-    unsigned int direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
-    unsigned int speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
-    byte data = speed | direction | channel;
+    uint8_t channel = this->right ? (1 << 7) : 0;            // bit 7
+    uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
+    uint8_t speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
+    uint8_t data = speed | direction | channel;
 
     Serial2.write(data);
   }
@@ -107,8 +103,6 @@ class MotorController
   }
 
 
-
-
   // resets the encoder count and zeros the integral.
   void reset()
   {
@@ -116,21 +110,4 @@ class MotorController
     this->integral = 0;
   }
 
-
-
-  // returns the angular velocity of the controlled wheel.
-  float get_wheel_angvel()
-  {
-    return this->wheel_angvel;
-  }
-
-
-  // Gives the PID controller a new setpoint, which will take effect on the next call to update().
-  void newSetpoint(float angvel)
-  {
-    this->integral = 0; // prevent error interference from prev setpoint
-    this->setpointCPL = round(angvel * countsPerRev * last_DT / (2*M_PI));
-    
-  }
-    
 };

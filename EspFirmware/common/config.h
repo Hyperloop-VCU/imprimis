@@ -11,7 +11,8 @@
 #define CONFIG_H
 
 
-
+// if the data fails to be sent from A to B or B to A this many times in a row, the system will shut down
+#define MAX_SEND_RETRIES 10
 
 // physical measurements of the robot - will be removed later
 #define WHEEL_RADIUS 0.1651
@@ -19,13 +20,9 @@
 #define COUNTS_PER_REV 3750 // 18.75 * 200
 
 
-
-
 // MAC addresses for ESP NOW
 const uint8_t A_MAC[] = {0x14, 0x2B, 0x2F, 0xDA, 0x7D, 0x10};
 const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
-
-
 
 
 // pins for board B
@@ -38,12 +35,10 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 
 
-// timing
+// baud rates
 #define SERIAL_BAUD_RATE_A 115200 // A to the PC
 #define SERIAL_BAUD_RATE_B 9600  // B to the motors
 #define DEBUG_BAUD_RATE_B 115200 // B to the (usually not connected) PC
-
-
 
 
 // serial commands (used by board A only)
@@ -51,18 +46,13 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define RESET_ENCODERS 'r'
 #define SET_PID 'e'
 
-
-
 // PID initial parameters
 #define Initial_KP 0.057
 #define Initial_KI 0
 #define Initial_KD 0
 
-
-
-
-// initial DT setting (should be close to reality - avoid high-output from PID controllers on startup)
-#define INITIAL_DT 0.0333 // 30 Hz
+// timeout for board B. It will wait this long for data from A before stopping the robot.
+const unsigned long timeout_ms = 1000;
 
 
 #endif
