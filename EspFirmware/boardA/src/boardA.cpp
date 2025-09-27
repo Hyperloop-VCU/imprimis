@@ -47,7 +47,6 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 // Ensures board B received the data. Handles retry and is_connected logic.
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-  Serial.println(is_connected);
   if (status != ESP_NOW_SEND_SUCCESS)
   {
     if (retryCount > MAX_SEND_RETRIES) is_connected = false;

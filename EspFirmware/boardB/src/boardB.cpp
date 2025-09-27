@@ -26,15 +26,18 @@
 #include "MotorController.cpp"
 
 
+bool debugB = true; // true to initialize the USB-C serial and print info to it
+
 
 // global variables
 volatile int leftEncoderCount = 0;
 volatile int rightEncoderCount = 0;
-MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV);
-MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV);
+MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, 0);
+MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, 0);
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
+
 
 
 
@@ -61,11 +64,23 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   rightController.setPID(data.kp, data.ki, data.kd);
 
   // update PID controllers' outputs and angular velocities
+
+  if (debugB && 0) {
+  Serial.print(" LEFT RECEIVED: ");
+  Serial.print(data.setLeftAngvel);
+  Serial.print(" | ");
+  }
   data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis());
+  if (debugB && 0)
+  {
+  Serial.print("RIGHT RECEIVED: ");
+  Serial.print(data.setRightAngvel);
+  Serial.print(" | ");
+  }
   data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis());
 
   // send processed data back to board A
-  printAllData(&data); // TODO remove this printing
+  printAllData(&data);
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
 
 }
@@ -101,7 +116,7 @@ void setup()
 
   // setup serial
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
-  if (1) Serial.begin(DEBUG_BAUD_RATE_B);
+  if (debugB) Serial.begin(DEBUG_BAUD_RATE_B);
 
   // setup pins
   pinMode(RA, INPUT_PULLUP);
