@@ -14,7 +14,6 @@ class MotorController
   // private data members
   private:
   float KP, KI, KD;
-  int debug;
   unsigned long time_of_last_update;
   float last_DT;
   int prevCount;
@@ -29,12 +28,11 @@ class MotorController
 
   public:
   // constructor
-  MotorController(float kp, float ki, float kd, int Right, int countsPerRev, int debug, float initialDT) 
+  MotorController(float kp, float ki, float kd, int Right, int countsPerRev, float initialDT) 
   : KP(kp),
     KI(ki), 
     KD(kd),
     countsPerRev(countsPerRev), 
-    debug(debug),
     pidOutput(0.0), 
     setpointCPL(0), 
     prevError(0), 
@@ -43,7 +41,6 @@ class MotorController
     prevCount(0),  
     wheel_angvel(0.0),
     right(Right),
-    
     time_of_last_update(millis())
     {}
 
@@ -96,13 +93,6 @@ class MotorController
     byte data = speed | direction | channel;
 
     Serial2.write(data);
-    
-    // print raw binary output for debugging
-    if (this->debug) 
-    {
-      Serial.print("Motor value: ");
-      Serial.println(data, BIN);
-    }
   }
 
 

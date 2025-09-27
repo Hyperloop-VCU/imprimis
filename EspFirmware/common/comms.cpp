@@ -1,13 +1,10 @@
-// This file defines the format of the data packet shared between the two boards,
-// defines a function which initializes the ESP-now communication protocol,
-// defines utility functions to read data from the serial port.
+// This file defines the format of the data packet shared between the two boards
+// and defines utility functions to read data from the serial port.
 
 
 #ifndef COMMS_CPP
 #define COMMS_CPP
-#include <esp_now.h>
 #include <Arduino.h>
-#include <WiFi.h>
 #include "config.h"
 
 
@@ -33,49 +30,14 @@ struct dataPacket
 // Uses C-style pass by pointer.
 void printAllData(dataPacket* data)
 {
-  Serial.print(data->currLeftAngvel);
-  Serial.print(" ");
-  Serial.print(data->currRightAngvel);
-  Serial.print(" ");
-  Serial.print(data->setLeftAngvel);
-  Serial.print(" ");
-  Serial.print(data->setRightAngvel);
-  Serial.print(" ");
-  Serial.print(data->reset);
-  Serial.print(" ");
-  Serial.print(data->kp);
-  Serial.print(" ");
-  Serial.print(data->ki);
-  Serial.print(" ");
-  Serial.println(data->kd);
-}
-
-
-
-// Initialization function, which sets up ESP-now communication between the two boads.
-// Must be called individually on each board, and both boards must be powered on for it to work.
-// Return codes:
-//    0 : success
-//    1 : ESP initialization failed (shouldn't happen)
-//    2 : Could not find the other board
-int ESPNowInit(char board, esp_now_peer_info* peerInfo)
-{
-    // Turn this board into a wifi station
-    WiFi.mode(WIFI_STA);
-  
-    // initialize ESP now
-    if (esp_now_init() != ESP_OK) return 1;
-  
-    // set the correct MAC address for peer
-    if (board == 'b') memcpy(peerInfo->peer_addr, A_MAC, 6);
-    if (board == 'a') memcpy(peerInfo->peer_addr, B_MAC, 6);
-  
-    // register peer
-    peerInfo->channel = 0;  
-    peerInfo->encrypt = false;
-    if (esp_now_add_peer(peerInfo) != ESP_OK) return 2;
-  
-    return 0;
+  Serial.println("setLeftAngvel: " + String(data->setLeftAngvel));
+  Serial.println("setRightAngvel: " + String(data->setRightAngvel));
+  Serial.println("currLeftAngvel: " + String(data->currLeftAngvel));
+  Serial.println("currRightAngvel: " + String(data->currRightAngvel));
+  Serial.println("reset: " + String(data->reset));
+  Serial.println("kp: " + String(data->kp));
+  Serial.println("ki: " + String(data->ki));
+  Serial.println("kd: " + String(data->kd));
 }
   
 

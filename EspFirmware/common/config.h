@@ -53,14 +53,6 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 
 
-
-// value that the setLeftCPL and setRightCPL fields take on when there is no
-// new setpoint to be processed.
-#define SETPOINT_RESET -1
-
-
-
-
 // PID initial parameters
 #define Initial_KP 0.057
 #define Initial_KI 0
@@ -69,7 +61,7 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 
 
-// initial DT setting (should be close to reality - to avoid a large burst on startup)
+// initial DT setting (should be close to reality - avoid high-output from PID controllers on startup)
 #define INITIAL_DT 0.0333 // 30 Hz
 
 

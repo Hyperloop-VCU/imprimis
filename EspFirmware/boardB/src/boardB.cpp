@@ -6,9 +6,6 @@
 
 // The PID loop runs once each time board A sends data to board B.
 
-// '1' to print debug information
-#define DEBUG_BOARD_B 1
-
 
 #include <math.h>
 #include <esp_now.h>
@@ -18,13 +15,13 @@
 #include "../../common/comms.cpp"
 #include "MotorController.cpp"
 
-
+#define BOARD 'B'
 
 // global variables
 int leftEncoderCount = 0;
 int rightEncoderCount = 0;
-MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, DEBUG_BOARD_B, INITIAL_DT);
-MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, DEBUG_BOARD_B, INITIAL_DT);
+MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, INITIAL_DT);
+MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, INITIAL_DT);
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
 esp_now_peer_info_t peerInfo;
 
@@ -69,8 +66,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   rightController.setPID(data.kp, data.ki, data.kd);
 
   // update angvel data from controllers
-  data.currLeftAngvel = leftController.get_wheel_angvel();
-  data.currRightAngvel = rightController.get_wheel_angvel();
+  leftController.get_wheel_angvel();
+  rightController.get_wheel_angvel();
 
   // re-enable encoder reading
   interrupts();
@@ -107,13 +104,12 @@ void readLeftEncoder()
 // then initializes ESP_now and registers the callback.
 void setup() 
 {
-  // Normally, this board receives power the same instant that the motor driver does.
-  // we have to wait for the motor driver to turn on.
-  delay(3000);
 
-  // setup pins and serial
+  // setup serial
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
-  if (DEBUG_BOARD_B) Serial.begin(DEBUG_BAUD_RATE_B);
+  if (1) Serial.begin(DEBUG_BAUD_RATE_B);
+
+  // setup pins
   pinMode(RA, INPUT_PULLUP);
   pinMode(RB, INPUT_PULLUP);
   pinMode(LA, INPUT_PULLUP);
@@ -124,10 +120,15 @@ void setup()
   digitalWrite(LV, HIGH);
 
 
-  // setup ESP-now and begin
-  // TODO: handle board B turning on when board A is not turned on
-  ESPNowInit('b', &peerInfo);
+  // setup ESP-now, register receive callback
+  WiFi.mode(WIFI_STA);
+  esp_now_init();
+  memcpy(peerInfo.peer_addr, A_MAC, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
+
 }
 
 
@@ -135,4 +136,6 @@ void setup()
 
 // nothing happens in the main loop function. 
 // all the logic happens in the on-data-received callback.
-void loop() {}
+void loop() 
+{
+}
