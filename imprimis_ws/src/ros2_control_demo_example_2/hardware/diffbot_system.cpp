@@ -30,15 +30,30 @@
 
 namespace ros2_control_demo_example_2
 {
+
+
+// Initializes serial comms with the ESP32.
+// returns an error if the initialization failed.
+hardware_interface::CallbackReturn DiffBotSystemHardware::init_comms()
+{
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+// Initialization: runs once on startup.
+// The command and state interfaces are defined in the ros2 control XACRO.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
   const hardware_interface::HardwareInfo & info)
 {
+
+  // initialize child class - SystemInterface
   if (
     hardware_interface::SystemInterface::on_init(info) !=
     hardware_interface::CallbackReturn::SUCCESS)
   {
     return hardware_interface::CallbackReturn::ERROR;
   }
+
+  // setup logger and clock
   logger_ = std::make_shared<rclcpp::Logger>(
     rclcpp::get_logger("controller_manager.resource_manager.hardware_component.system.DiffBot"));
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock());
@@ -49,10 +64,16 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
   hw_stop_sec_ =
     hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   // END: This part here is for exemplary purposes - Please do not copy to your production code
+
+  // Allocates memory for the state/command buffers and initializes each to NAN.
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
+
+  // Ensures that the state/command interface definitionsline up with what it expects.
+  // These state/command interfaces are defined in the ros2 control XACRO.
+  // This is probably removable, but don't want to take any chances
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
     // DiffBotSystem has exactly two states and one command interface on each joint
@@ -100,9 +121,16 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
     }
   }
 
+  
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+
+
+
+
+// Runs once on startup. Defines all the state interfaces (wheel velocities, estop, etc) for ros2 control.
 std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
@@ -119,6 +147,12 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
   return state_interfaces;
 }
 
+
+
+
+
+
+// Runs once on startup. Defines all the command interfaces (movable wheels) for ros2 control.
 std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
@@ -132,6 +166,13 @@ std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_
   return command_interfaces;
 }
 
+
+
+
+
+
+// Runs once when the hardware interface is activated.
+// TODO: this should initialize serial communication with board A.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
@@ -161,6 +202,11 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+
+
+
+
+// Runs once when the hardware interface is deactivated.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
@@ -179,8 +225,17 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type DiffBotSystemHardware::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+
+
+
+
+// Runs continuously. This is called by ros2 control to read state information from the ESP board.
+// This function will read data from the ESP, and update the position and velocity state interfaces
+// for each wheel (hw_positions_[] = ... and hw_velocities_[] = ...).
+// Since the hardware only gives us the velocity, we just integrate it to get position.
+// period: the time elapsed since the last call to read()
+// the first parameter is unused, it's just the overall ROS time.
+hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
@@ -204,10 +259,20 @@ hardware_interface::return_type DiffBotSystemHardware::read(
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type ros2_control_demo_example_2 ::DiffBotSystemHardware::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+
+
+
+
+// Runs continuously. This is called by ros2 control to write commands to the connected ESP board.
+// hw_commands_[] contains the latest angular velocity requests (rad/s).
+// this function looks at those requests and forwards them to the ESP.
+// Both parameters are unused, and they are identical to read().
+// time: the overall ros time
+// period: the time elapsed since the last call to write()
+// We don't need to use those because the firmware handles the DT calculation.
+hardware_interface::return_type ros2_control_demo_example_2::DiffBotSystemHardware::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+
   std::stringstream ss;
   ss << "Writing commands:";
   for (auto i = 0u; i < hw_commands_.size(); i++)
@@ -219,13 +284,16 @@ hardware_interface::return_type ros2_control_demo_example_2 ::DiffBotSystemHardw
        << "\t" << "command " << hw_commands_[i] << " for '" << info_.joints[i].name.c_str() << "'!";
   }
   RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
 
-}  // namespace ros2_control_demo_example_2
+}  // end namespace ros2_control_demo_example_2
 
+
+
+
+// export this class for pluginlib
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(
   ros2_control_demo_example_2::DiffBotSystemHardware, hardware_interface::SystemInterface)

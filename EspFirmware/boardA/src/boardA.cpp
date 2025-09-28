@@ -38,8 +38,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 {
   memcpy(&data, incomingData, sizeof(data));
   //printAllData(&data);
-  //Serial.write((byte*)(&data.currLeftAngvel), sizeof(int));
-  //Serial.write((byte*)(&data.currRightAngvel), sizeof(int));
+  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
+  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
 
 
@@ -96,8 +96,13 @@ void doCommand()
       data.kp = p;
       data.ki = i;
       data.kd = d;
+      break;
     }
+
+    default:
+      break;
   }
+
 
 }
 
