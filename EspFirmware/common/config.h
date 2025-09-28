@@ -34,7 +34,6 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define LV 13 // goes to "lv" on level shifter, 3.3V output
 
 
-
 // baud rates
 #define SERIAL_BAUD_RATE_A 115200 // A to the PC
 #define SERIAL_BAUD_RATE_B 9600  // B to the motors
@@ -47,15 +46,32 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define SET_PID 'e'
 
 // PID initial parameters
-#define Initial_KP 1.0
-#define Initial_KI 0
-#define Initial_KD 0
+#define Initial_KP 1.5
+#define Initial_KI 1.5
+#define Initial_KD 0.0
+
+// the controllers calculate their own DT
+// by measuring the time between updates.
+// but on the first update, we don't know what DT should be,
+// so we use this value.
+#define Initial_DT 0.05
 
 // timeout for board B. It will wait this long for data from A before stopping the robot.
-const unsigned long timeout_ms = 1000;
+const unsigned long timeout_ms = 500;
 
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
 
 // Useful constant formulas
 // constant to convert angular velocity -> counts per loop = (COUNTS_PER_REV * DT) / 2*M_PI

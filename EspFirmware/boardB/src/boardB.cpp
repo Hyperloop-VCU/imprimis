@@ -26,17 +26,22 @@
 #include "MotorController.cpp"
 
 
-bool debugB = false; // true to initialize the USB-C serial and print info to it
+
+
+bool debugB = true; // true to initialize the USB-C serial and print info to it
+
+
 
 
 // global variables
-volatile int leftEncoderCount = 0;
-volatile int rightEncoderCount = 0;
+volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
+volatile int rightEncoderCount = 1;
 MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, debugB);
 MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, debugB);
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
+bool inactive = true;
 
 
 
@@ -70,18 +75,19 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   Serial.print(data.setLeftAngvel);
   Serial.print(" | ");
   }
-  data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis());
+  data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis(), inactive);
   if (debugB)
   {
   Serial.print("RIGHT RECEIVED: ");
   Serial.print(data.setRightAngvel);
   Serial.print(" | ");
   }
-  data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis());
+  data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis(), inactive);
 
   // send processed data back to board A
   //printAllData(&data);
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
+  inactive = false;
 
 }
 
@@ -90,14 +96,17 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 
 
 // Interrupt to update the right encoder count.
-void readRightEncoder() 
+void IRAM_ATTR readRightEncoder() 
 { 
   if (!digitalRead(RB)) rightEncoderCount--;
   else rightEncoderCount++;
 }
 
+
+
+
 // Interrupt to update the left encoder count. 
-void readLeftEncoder() 
+void IRAM_ATTR readLeftEncoder() 
 { 
   if(!digitalRead(LB)) leftEncoderCount++;
   else leftEncoderCount--; // reversed for some reason, I don't know why
@@ -150,7 +159,7 @@ void loop()
 {
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
-    if (debugB) Serial.println("Inactive - stopping the robot");
+    if (debugB) Serial.println("Inactive - robot stopped.");
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
     leftController.reset();
@@ -158,5 +167,6 @@ void loop()
     data.setLeftAngvel = 0;
     data.setRightAngvel = 0;
     delay(10);
+    inactive = true;
   }
 }

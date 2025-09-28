@@ -43,22 +43,26 @@ class MotorController
 
   // Updates the PID controller and PID output.
   // Updates the wheel angular velocity.
+  // float setpointAngvel: desired angular velocity
   // int currCount: current encoder count
   // unsigned long current_time: current time as read from the millis() function.
+  // bool first_update: if true, uses DT_seconds = Initial_DT defined in config.
   // Returns the angular velocity of the wheel.
-  float update(float setpointAngvel, int currCount, unsigned long current_time) 
+  float update(float setpointAngvel, int currCount, unsigned long current_time, bool first_update) 
   {
 
     // calculate CPL, DT, wheel angvel, and setpoint CPL
+    float DT_seconds;
     int currCPL = currCount - prevCount;
-    float DT_seconds = (current_time - time_of_last_update) / 1000.0;
+    if (first_update) DT_seconds = Initial_DT;
+    else DT_seconds = (current_time - time_of_last_update) / 1000.0;
     int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
     float wheel_angvel = currCPL * ((2 * M_PI) / (countsPerRev * DT_seconds));
 
     // do PID and set output
     int currError = setpointCPL - currCPL;
+    if (abs(integral)*KI < 120) integral += currError * DT_seconds; // clamp integral term to maximum magnitude
     float pidOutput = (KP * currError) + (KI * integral); // + (KD * (currError - this->prevError) / DT_s);
-    if (abs(pidOutput) <= 255) integral += currError * DT_seconds;
 
     // set previous values
     prevError = currError;
@@ -69,13 +73,15 @@ class MotorController
     if (debugB) {
     Serial.print("DT: ");
     Serial.print(DT_seconds);
+    Serial.print(", currCount: ");
+    Serial.print(currCount);
     Serial.print(", currCPL: ");
     Serial.print(currCPL);
     }
 
     // make the motor move
     setSpeed(pidOutput, debugB);
-    return wheel_angvel;
+    return -3.218;
 
   }
 
@@ -95,12 +101,15 @@ class MotorController
     uint8_t channel = this->right ? (1 << 7) : 0;            // bit 7
     uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
     uint8_t speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
+    if (speed > 63) speed = 63;
     uint8_t data = speed | direction | channel;
 
     // TODO: remove these print statements
     if (printInfo) {
     Serial.print(", PID output: ");
     Serial.print(pidOutput);
+    Serial.print(", KP: ");
+    Serial.print(KP);
     Serial.print(", Motor: ");
     Serial.print(channel >> 7);
     Serial.print(", Direction: ");
@@ -130,5 +139,8 @@ class MotorController
     this->prevCount = 0;
     this->integral = 0;
   }
+
+  // should be called before using the controller again
+  // after not having used it for a while.
 
 };
