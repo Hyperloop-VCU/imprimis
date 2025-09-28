@@ -74,7 +74,7 @@ class MotorController
     }
 
     // make the motor move
-    setSpeed((pidOutput));
+    setSpeed(pidOutput, debugB);
     return wheel_angvel;
 
   }
@@ -89,7 +89,7 @@ class MotorController
   //  - bit 7 controls which motor to write to,
   //  - bit 6 controls the direction: fwd or reverse,
   //  - bits 0-5 control speed. (decimal: 0-63)
-  void setSpeed(float pidOutput)
+  void setSpeed(float pidOutput, bool printInfo)
   {
     
     uint8_t channel = this->right ? (1 << 7) : 0;            // bit 7
@@ -98,7 +98,7 @@ class MotorController
     uint8_t data = speed | direction | channel;
 
     // TODO: remove these print statements
-    if (debugB) {
+    if (printInfo) {
     Serial.print(", PID output: ");
     Serial.print(pidOutput);
     Serial.print(", Motor: ");

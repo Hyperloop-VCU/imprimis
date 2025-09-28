@@ -26,14 +26,14 @@
 #include "MotorController.cpp"
 
 
-bool debugB = true; // true to initialize the USB-C serial and print info to it
+bool debugB = false; // true to initialize the USB-C serial and print info to it
 
 
 // global variables
 volatile int leftEncoderCount = 0;
 volatile int rightEncoderCount = 0;
-MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, 0);
-MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, 0);
+MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, debugB);
+MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, debugB);
 dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
@@ -65,13 +65,13 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 
   // update PID controllers' outputs and angular velocities
 
-  if (debugB && 0) {
+  if (debugB) {
   Serial.print(" LEFT RECEIVED: ");
   Serial.print(data.setLeftAngvel);
   Serial.print(" | ");
   }
   data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis());
-  if (debugB && 0)
+  if (debugB)
   {
   Serial.print("RIGHT RECEIVED: ");
   Serial.print(data.setRightAngvel);
@@ -80,7 +80,7 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis());
 
   // send processed data back to board A
-  printAllData(&data);
+  //printAllData(&data);
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
 
 }
@@ -150,11 +150,13 @@ void loop()
 {
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
-    leftController.setSpeed(0);
-    rightController.setSpeed(0);
+    if (debugB) Serial.println("Inactive - stopping the robot");
+    leftController.setSpeed(0, false);
+    rightController.setSpeed(0, false);
     leftController.reset();
     rightController.reset();
     data.setLeftAngvel = 0;
     data.setRightAngvel = 0;
+    delay(10);
   }
 }
