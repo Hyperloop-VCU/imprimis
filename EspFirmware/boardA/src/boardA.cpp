@@ -128,12 +128,7 @@ void setup()
 // Main loop function: runs over and over again forever
 // just calls doCommand over and over again.
 // TODO: do something when is_connected = false
-float leftAV = 3, rightAV = 3;
 void loop() 
 {
-  //doCommand();
-  data.setLeftAngvel = leftAV;
-  data.setRightAngvel = rightAV;
-  esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
-  delay(100);
+  doCommand();
 }
