@@ -28,16 +28,12 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace ros2_control_demo_example_2
-{
+#include "ros2_control_demo_example_2/serial_comms.hpp"
+
+namespace ros2_control_demo_example_2 {
 
 
-// Initializes serial comms with the ESP32.
-// returns an error if the initialization failed.
-hardware_interface::CallbackReturn DiffBotSystemHardware::init_comms()
-{
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
+
 
 // Initialization: runs once on startup.
 // The command and state interfaces are defined in the ros2 control XACRO.
@@ -59,10 +55,10 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock());
 
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  hw_start_sec_ =
-    hardware_interface::stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  hw_stop_sec_ =
-    hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
+  //hw_start_sec_ =
+    //hardware_interface::stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
+  //hw_stop_sec_ =
+    //hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   // Allocates memory for the state/command buffers and initializes each to NAN.
@@ -120,9 +116,6 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
-
-  
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -172,21 +165,45 @@ std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_
 
 
 // Runs once when the hardware interface is activated.
-// TODO: this should initialize serial communication with board A.
+// Tries to initialize serial comms with board A on three different ports.
+// Fatal error if it can't.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(get_logger(), "Activating ...please wait...");
+  // setup serial connection
+  esp32 = std::make_shared<SerialLink>(115200, 0.01);
 
-  for (auto i = 0; i < hw_start_sec_; i++)
+  // try ports
+  const char* ports[] =
   {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+    "/dev/ttyUSB0",
+    "/dev/ttyUSB1",
+    "/dev/ttyUSB2"
+  };
 
-  // set some default values
+  bool serial_init_success = false;
+  for (size_t i = 0; i < std::size(ports); i++)
+  {
+    if (esp32->initialize_link(ports[i]) != SerialLink::Status::Ok)
+    {
+      RCLCPP_INFO(get_logger(), "Tried and failed to initialize comms with board A on port: %s", ports[i]);
+    }
+    else
+    {
+      RCLCPP_INFO(get_logger(), "\n\n[INFO] Successfully initialized comms with board A on port: %s\n", ports[i]);
+      serial_init_success = true;
+      break;
+    }
+  }
+
+  // fatal error if we can't open any of the ports
+  if (!serial_init_success)
+  {
+    RCLCPP_FATAL(get_logger(), "\n\n[FATAL] could not reach board A on any of the configured ports.\n\n");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  // default zeros for command and state interfaces
   for (auto i = 0u; i < hw_positions_.size(); i++)
   {
     if (std::isnan(hw_positions_[i]))
@@ -197,8 +214,6 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
     }
   }
 
-  RCLCPP_INFO(get_logger(), "Successfully activated!");
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -207,20 +222,11 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
 
 
 // Runs once when the hardware interface is deactivated.
+// SerialLink is automatically closed in the destructor.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(get_logger(), "Deactivating ...please wait...");
 
-  for (auto i = 0; i < hw_stop_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_stop_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
-  RCLCPP_INFO(get_logger(), "Successfully deactivated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -230,31 +236,61 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
 
 
 // Runs continuously. This is called by ros2 control to read state information from the ESP board.
-// This function will read data from the ESP, and update the position and velocity state interfaces
-// for each wheel (hw_positions_[] = ... and hw_velocities_[] = ...).
+// Reads data from the ESP to update all the state interfaces.
+// This is where a bad/broken connection is detected and handled.
 // Since the hardware only gives us the velocity, we just integrate it to get position.
 // period: the time elapsed since the last call to read()
 // the first parameter is unused, it's just the overall ROS time.
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
-  ss << "Reading states:";
-  for (std::size_t i = 0; i < hw_velocities_.size(); i++)
-  {
-    // Simulate DiffBot wheels's movement as a first-order system
-    // Update the joint status: this is a revolute joint without any limit.
-    // Simply integrates
-    hw_positions_[i] = hw_positions_[i] + period.seconds() * hw_velocities_[i];
 
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t"
-          "position "
-       << hw_positions_[i] << " and velocity " << hw_velocities_[i] << " for '"
-       << info_.joints[i].name.c_str() << "'!";
+
+  // read velocity
+  float leftAngvel, rightAngvel;
+  auto read_status = esp32->read_current_angvels(leftAngvel, rightAngvel);
+  if (read_status == SerialLink::Status::Ok)
+  {
+    // read succeeded
+    hw_velocities_[0] = static_cast<double>(leftAngvel);
+    hw_velocities_[1] = static_cast<double>(rightAngvel);
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  else
+  {
+    // read failed
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from microcontroller.");
+    hw_velocities_[0] = 0; // assume the motors powered off, velocity=0
+    hw_velocities_[1] = 0;
+  }
+
+
+  // integrate velocity to get position
+  hw_positions_[0] = hw_positions_[0] + period.seconds() * hw_velocities_[0];
+  hw_positions_[1] = hw_positions_[1] + period.seconds() * hw_velocities_[1];
+
+
+  // print the newly-read states if debugging
+  if (PRINT_READ_STATES && read_status == SerialLink::Status::Ok)
+  {
+    std::stringstream ss;
+    ss << "Reading states:";
+
+    // left wheel
+    ss << std::fixed << std::setprecision(2) << std::endl
+        << "\t"
+          "position "
+        << hw_positions_[0] << " and velocity " << hw_velocities_[0] << " for '"
+        << info_.joints[0].name.c_str() << "'!";
+
+    // right wheel
+    ss << std::fixed << std::setprecision(2) << std::endl
+        << "\t"
+          "position "
+        << hw_positions_[1] << " and velocity " << hw_velocities_[1] << " for '"
+        << info_.joints[1].name.c_str() << "'!";
+
+    
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  }
 
   return hardware_interface::return_type::OK;
 }
@@ -273,24 +309,32 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
 hardware_interface::return_type ros2_control_demo_example_2::DiffBotSystemHardware::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
 
-  std::stringstream ss;
-  ss << "Writing commands:";
-  for (auto i = 0u; i < hw_commands_.size(); i++)
+  // print commands written if debugging
+  if (PRINT_COMMANDS)
   {
-    // Simulate sending commands to the hardware
-    hw_velocities_[i] = hw_commands_[i];
-
+    std::stringstream ss;
+    ss << "Writing commands:";
     ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << "command " << hw_commands_[i] << " for '" << info_.joints[i].name.c_str() << "'!";
+        << "\t" << "command " << hw_commands_[0] << " for '" << info_.joints[0].name.c_str() << "'!";
+    ss << std::fixed << std::setprecision(2) << std::endl
+        << "\t" << "command " << hw_commands_[1] << " for '" << info_.joints[1].name.c_str() << "'!";
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+
+  // write commands
+  if (esp32->write_angvel_commands(hw_commands_[0], hw_commands_[1]) != SerialLink::Status::Ok)
+  {
+    // Handle failed serial writing. We don't need to do anything here - If board A didn't get the data,
+    // it will not send data back, read() will fail, and we will handle a bad/lost connection in there.
+  }
 
   return hardware_interface::return_type::OK;
 }
 
+
+
+
 }  // end namespace ros2_control_demo_example_2
-
-
 
 
 // export this class for pluginlib

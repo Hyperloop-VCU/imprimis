@@ -31,6 +31,8 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "ros2_control_demo_example_2/serial_comms.hpp"
+
 namespace ros2_control_demo_example_2
 {
 class DiffBotSystemHardware : public hardware_interface::SystemInterface
@@ -70,15 +72,23 @@ public:
   rclcpp::Clock::SharedPtr get_clock() const { return clock_; }
 
 private:
-  // Parameters for the DiffBot simulation
+
+  // Parameters (TODO remove these)
   double hw_start_sec_;
   double hw_stop_sec_;
+
+  // Comms link with microcontroller
+  std::shared_ptr<SerialLink> esp32;
+
+  // debugging flags
+  bool PRINT_READ_STATES = true;
+  bool PRINT_COMMANDS = false;
 
   // Objects for logging
   std::shared_ptr<rclcpp::Logger> logger_;
   rclcpp::Clock::SharedPtr clock_;
 
-  // Store the command for the simulated robot
+  // State and command interface data
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;

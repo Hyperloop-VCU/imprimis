@@ -8,7 +8,9 @@ endif()
 # set the same behavior for windows as it is on linux
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-# find dependencies
+# declare all dependencies except serial
+# the serial dependency isn't a standard ros package,
+# so it must be handled differently.
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
@@ -16,31 +18,48 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
 )
 
-# find dependencies
+# find all dependencies
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-## COMPILE
+
+# find serial dependency
+find_package(serial REQUIRED)
+
+
+# add target
 add_library(
   ros2_control_demo_example_2
   SHARED
   hardware/diffbot_system.cpp
+  hardware/serial_comms.cpp  
 )
+
+
+# target include dirs and compile features
 target_compile_features(ros2_control_demo_example_2 PUBLIC cxx_std_17)
 target_include_directories(ros2_control_demo_example_2 PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
 $<INSTALL_INTERFACE:include/ros2_control_demo_example_2>
 )
+
+
+# add all dependencies except serial
 ament_target_dependencies(
   ros2_control_demo_example_2 PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+# add serial dependency
+target_link_libraries(ros2_control_demo_example_2 PUBLIC ${serial_LIBRARIES})
+target_include_directories(ros2_control_demo_example_2 PUBLIC ${serial_INCLUDE_DIRS})
+
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface ros2_control_demo_example_2.xml)
+
 
 # INSTALL
 install(
@@ -62,6 +81,7 @@ install(TARGETS ros2_control_demo_example_2
   RUNTIME DESTINATION bin
 )
 
+
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
 
@@ -72,5 +92,5 @@ endif()
 
 ## EXPORTS
 ament_export_targets(export_ros2_control_demo_example_2 HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} serial)
 ament_package()
