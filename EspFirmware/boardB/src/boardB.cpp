@@ -28,7 +28,7 @@
 
 
 
-bool debugB = false; // true to initialize the USB-C serial and print info to it
+bool debugB = true; // true to initialize the USB-C serial and print info to it
 
 
 
@@ -36,8 +36,8 @@ bool debugB = false; // true to initialize the USB-C serial and print info to it
 // global variables
 volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
 volatile int rightEncoderCount = 1;
-MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(2.7, 1.7, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(2.0, 1.5, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
@@ -56,8 +56,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   // copy received data for processing
   memcpy(&data, incomingData, sizeof(data));
 
-  // reset encoders if necessary
-  if (data.reset)
+  // reset if necessary we're commanded to, or we're activating
+  if (inactive || data.reset)
   {
     leftController.reset();
     rightController.reset();
@@ -177,11 +177,7 @@ void loop()
     }
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
-    leftController.reset();
-    rightController.reset();
-    data.setLeftAngvel = 0;
-    data.setRightAngvel = 0;
-    delay(10);
     inactive = true;
+    delay(50);
   }
 }

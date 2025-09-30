@@ -16,7 +16,8 @@ class MotorController
   float KP, KI, KD;
   unsigned long time_of_last_update;
   int prevCount;
-  int prevError; 
+  int prevError;
+  int prevSetpoint;
   int countsPerRev;
   float integral;
   int right;
@@ -33,6 +34,7 @@ class MotorController
     prevError(0), 
     integral(0.0), 
     prevCount(0),
+    prevSetpoint(0),
     right(Right),
     debugB(debugB),
     time_of_last_update(millis())
@@ -61,12 +63,14 @@ class MotorController
 
     // do PID and set output
     int currError = setpointCPL - currCPL;
+    if (abs(prevSetpoint - setpointCPL) > 0.1) integral = 0; // zero integral if setpoint changed too much
     if (abs(integral)*KI < 120) integral += currError * DT_seconds; // clamp integral term to maximum magnitude
     float pidOutput = (KP * currError) + (KI * integral); // + (KD * (currError - this->prevError) / DT_s);
 
     // set previous values
     prevError = currError;
     prevCount = currCount;
+    prevSetpoint = setpointCPL;
     time_of_last_update = millis();
 
     if (debugB) {

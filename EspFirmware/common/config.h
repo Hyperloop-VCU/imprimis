@@ -49,11 +49,6 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define RESET_ENCODERS 'r'
 #define SET_PID 'e'
 
-// PID initial parameters
-#define Initial_KP 0.0
-#define Initial_KI 0.0
-#define Initial_KD 0.0
-
 // the controllers calculate their own DT
 // by measuring the time between updates.
 // but on the first update, we don't know what DT should be,
