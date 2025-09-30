@@ -28,7 +28,7 @@
 
 
 
-bool debugB = true; // true to initialize the USB-C serial and print info to it
+bool debugB = false; // true to initialize the USB-C serial and print info to it
 
 
 
@@ -38,7 +38,7 @@ volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers
 volatile int rightEncoderCount = 1;
 MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, debugB);
 MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, debugB);
-dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD};
+dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
 bool inactive = true;
@@ -57,35 +57,44 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   memcpy(&data, incomingData, sizeof(data));
 
   // reset encoders if necessary
-  if (data.reset != 0)
+  if (data.reset)
   {
     leftController.reset();
     rightController.reset();
-    data.reset = 0;
+    data.reset = false;
   }
   
-  // update controller parameters
-  leftController.setPID(data.kp, data.ki, data.kd);
-  rightController.setPID(data.kp, data.ki, data.kd);
+  // update controller PID gains if necessary
+  if (data.gainChange == 1) 
+  {
+    leftController.setPID(data.newKp, data.newKi, data.newKd);
+    data.gainChange = 0;
+  }
+  else if (data.gainChange == 2) 
+  {
+    rightController.setPID(data.newKp, data.newKi, data.newKd);
+    data.gainChange = 0;
+  }
 
   // update PID controllers' outputs and angular velocities
-
-  if (debugB) {
-  Serial.print(" LEFT RECEIVED: ");
-  Serial.print(data.setLeftAngvel);
-  Serial.print(" | ");
+  if (debugB) 
+  {
+    Serial.print(" LEFT RECEIVED: ");
+    Serial.print(data.setLeftAngvel);
+    Serial.print(" | ");
   }
   data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis(), inactive);
+  data.leftEncoderCount = leftEncoderCount;
   if (debugB)
   {
-  Serial.print("RIGHT RECEIVED: ");
-  Serial.print(data.setRightAngvel);
-  Serial.print(" | ");
+    Serial.print("RIGHT RECEIVED: ");
+    Serial.print(data.setRightAngvel);
+    Serial.print(" | ");
   }
   data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis(), inactive);
+  data.rightEncoderCount = rightEncoderCount;
 
   // send processed data back to board A
-  //printAllData(&data);
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
   inactive = false;
 

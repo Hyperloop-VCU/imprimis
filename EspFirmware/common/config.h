@@ -46,8 +46,8 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define SET_PID 'e'
 
 // PID initial parameters
-#define Initial_KP 1.5
-#define Initial_KI 1.5
+#define Initial_KP 0.0
+#define Initial_KI 0.0
 #define Initial_KD 0.0
 
 // the controllers calculate their own DT

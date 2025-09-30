@@ -45,9 +45,12 @@ public:
     // sends the character 'r' + newline
     Status write_reset_encoders();
 
-    // send: e [p] [i] [d]\n
-    // example: "e 2.3 0.1 0.3\n"
-    Status write_PID(float p, float i, float d);
+
+    // if right is true, change the PID gains of the right controller
+    // if right is false, change the PID gains of the left controller
+    // send: e [p] [i] [d] [gainChange: 1 or 2]\n
+    // example: "e 2.3 0.1 0.3 1\n"
+    Status write_PID(float p, float i, float d, bool right);
 
     // returns true if the serial connection is up, false if it isn't
     bool is_connected() const;

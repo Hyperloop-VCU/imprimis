@@ -114,12 +114,16 @@ SerialLink::Status SerialLink::write_reset_encoders()
 
 
 
-SerialLink::Status SerialLink::write_PID(float p, float i, float d) 
+SerialLink::Status SerialLink::write_PID(float p, float i, float d, bool right) 
 {
     if (!is_connected()) return Status::NotConnected;
 
     std::ostringstream ss;
-    ss << std::fixed << std::setprecision(6) << "e " << p << ' ' << i << ' ' << d << '\n';
+    ss << std::fixed << std::setprecision(3) << "e " << p << ' ' << i << ' ' << d << ' ';
+    if (right) ss << 2 << '\n'; // integer 2 tells the board to update the right controller
+    else ss << 1 << '\n';       // integer 1 tells the board to update the left controller
+                                // using an enum here was a big hassle, it would have to be consistent across everything
+
     const std::string cmd = ss.str();
 
     try {

@@ -69,10 +69,11 @@ class MotorController
     prevCount = currCount;
     time_of_last_update = millis();
 
-    // TODO: remove these print statements
     if (debugB) {
     Serial.print("DT: ");
     Serial.print(DT_seconds);
+    Serial.print(", KP: ");
+    Serial.print(KP);
     Serial.print(", currCount: ");
     Serial.print(currCount);
     Serial.print(", currCPL: ");
@@ -81,7 +82,7 @@ class MotorController
 
     // make the motor move
     setSpeed(pidOutput, debugB);
-    return -3.218;
+    return wheel_angvel;
 
   }
 
@@ -102,6 +103,9 @@ class MotorController
     uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
     uint8_t speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
     if (speed > 63) speed = 63;
+
+    if (right) direction ^= (1 << 6); // make left motor spin the right way
+
     uint8_t data = speed | direction | channel;
 
     // TODO: remove these print statements

@@ -21,7 +21,7 @@
 
 // Global variables
 unsigned long t0;
-dataPacket data = {0, 0, 0, 0, 0, Initial_KP, Initial_KI, Initial_KD}; // initial data
+dataPacket data = initialData(); // initial data
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
 int retryCount = 0;
@@ -37,9 +37,9 @@ int retryCount = 0;
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
   memcpy(&data, incomingData, sizeof(data));
-  //printAllData(&data);
-  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
+  printAllData(&data);
+  //Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
+  //Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
 
 
@@ -90,12 +90,19 @@ void doCommand()
 
     case SET_PID: {
       float p, i, d;
+      int gainChange;
       serialReadFloat(p);
       serialReadFloat(i);
       serialReadFloat(d);
-      data.kp = p;
-      data.ki = i;
-      data.kd = d;
+      serialReadInt(gainChange);
+      data.newKp = p;
+      data.newKi = i;
+      data.newKd = d;
+      data.gainChange = gainChange;
+      Serial.print(data.newKp);
+      Serial.print(data.newKi);
+      Serial.print(data.newKd);
+      Serial.println(gainChange);
       break;
     }
 
