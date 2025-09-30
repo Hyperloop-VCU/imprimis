@@ -61,6 +61,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   {
     leftController.reset();
     rightController.reset();
+    leftEncoderCount = 0;
+    rightEncoderCount = 0;
     data.reset = false;
   }
   
@@ -84,7 +86,6 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
     Serial.print(" | ");
   }
   data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis(), inactive);
-  data.leftEncoderCount = leftEncoderCount;
   if (debugB)
   {
     Serial.print("RIGHT RECEIVED: ");
@@ -92,7 +93,6 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
     Serial.print(" | ");
   }
   data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis(), inactive);
-  data.rightEncoderCount = rightEncoderCount;
 
   // send processed data back to board A
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
@@ -168,7 +168,7 @@ void loop()
 {
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
-    if (debugB) Serial.println("Inactive - robot stopped.");
+    if (debugB && !inactive) Serial.println("Inactive - robot stopped.");
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
     leftController.reset();

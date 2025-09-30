@@ -25,12 +25,7 @@ struct dataPacket
     float newKd;                 // Derivative gain of each wheel's PID controller
 
     float pidLeftError;          // left PID controller error value
-    float pidRightError;         // right PID controller error value
-
-    int leftEncoderCount;           // left encoder count
-    int rightEncoderCount;          // right encoder count
-
-    
+    float pidRightError;         // right PID controller error value    
 };
 
 
@@ -49,8 +44,6 @@ struct dataPacket initialData()
     .newKd = 0.0,
     .pidLeftError = 0.0,
     .pidRightError = 0.0,
-    .leftEncoderCount = 0,
-    .rightEncoderCount = 0
   };
 
   return data;
@@ -67,8 +60,6 @@ void printAllData(dataPacket* data)
   Serial.print(", currLeftAngvel: " + String(data->currLeftAngvel));
   Serial.print(", currRightAngvel: " + String(data->currRightAngvel));
   Serial.print(", reset: " + String(data->reset));
-  Serial.print(", leftEncoderCount: " + String(data->leftEncoderCount));
-  Serial.print(", rightRightError: " + String(data->rightEncoderCount));
   Serial.print(", pidLeftError: " + String(data->pidLeftError));
   Serial.println(", pidRightError: " + String(data->pidRightError));
 }

@@ -78,31 +78,18 @@ void doCommand()
       break;
 
     case ANGVEL_SETPOINT: {
-      float receivedLeftAngvel, receivedRightAngvel;
-      serialReadFloat(receivedLeftAngvel);
-      serialReadFloat(receivedRightAngvel);
-      data.setLeftAngvel = receivedLeftAngvel;
-      data.setRightAngvel = receivedRightAngvel;
+      serialReadFloat(data.setLeftAngvel);
+      serialReadFloat(data.setRightAngvel);
       // send data to B
       esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
 
     case SET_PID: {
-      float p, i, d;
-      int gainChange;
-      serialReadFloat(p);
-      serialReadFloat(i);
-      serialReadFloat(d);
-      serialReadInt(gainChange);
-      data.newKp = p;
-      data.newKi = i;
-      data.newKd = d;
-      data.gainChange = gainChange;
-      Serial.print(data.newKp);
-      Serial.print(data.newKi);
-      Serial.print(data.newKd);
-      Serial.println(gainChange);
+      serialReadFloat(data.newKp);
+      serialReadFloat(data.newKi);
+      serialReadFloat(data.newKd);
+      serialReadInt(data.gainChange);
       break;
     }
 
