@@ -17,7 +17,11 @@
 // physical measurements of the robot - will be removed later
 #define WHEEL_RADIUS 0.1651
 #define HALF_WHEEL_TRACK_LENGTH 0.4432
-#define COUNTS_PER_REV 3750 // 18.75 * 200
+
+
+// encoder counts per one wheel revolution.
+#define LEFT_COUNTS_PER_REV 4661
+#define RIGHT_COUNTS_PER_REV 4653
 
 
 // MAC addresses for ESP NOW

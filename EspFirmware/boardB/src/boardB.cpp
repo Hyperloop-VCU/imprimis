@@ -36,8 +36,8 @@ bool debugB = false; // true to initialize the USB-C serial and print info to it
 // global variables
 volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
 volatile int rightEncoderCount = 1;
-MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, COUNTS_PER_REV, debugB);
-MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, COUNTS_PER_REV, debugB);
+MotorController leftController(Initial_KP, Initial_KI, Initial_KD, 0, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(Initial_KP, Initial_KI, Initial_KD, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
@@ -168,7 +168,13 @@ void loop()
 {
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
-    if (debugB && !inactive) Serial.println("Inactive - robot stopped.");
+    if (debugB)
+    {
+      if (!inactive) Serial.println("Inactive - robot stopped.");
+      Serial.print(leftEncoderCount);
+      Serial.print(" ");
+      Serial.println(rightEncoderCount);
+    }
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
     leftController.reset();
