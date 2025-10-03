@@ -33,7 +33,7 @@ class Esp32:
         print(f"Could not read data from ESP32")
         return (0.0, 0.0)
     
-    def send_PI(self, p: float, i: float, d: float, motor: int = 1):
+    def send_PI(self, p: float, i: float, d: float, motor: int):
         msg = f"e {p:.2f} {i:.2f} {d:.2f} {motor}"
         self.ser.write(bytes(msg + '\n', 'utf-8'))
     
@@ -96,8 +96,9 @@ ax.set_ylabel("Angular velocity")
 # attach mouse move event callback
 fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 esp32 = Esp32("/dev/ttyUSB0", 115200, 1.0)
-esp32.send_PI(0.6, 2.0, 0.0, 1)
-esp32.send_PI(0.6, 2.0, 0.0, 2)
+time.sleep(1)
+esp32.send_PI(0.55, 1.5, 0.0, 1)
+esp32.send_PI(0.55, 1.5, 0.0, 2)
 start_time = time.time()
 
 ani = animation.FuncAnimation(fig, update, init_func=init, interval=33, blit=True)
