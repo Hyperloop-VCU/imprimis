@@ -1,56 +1,19 @@
 import serial
-import threading
-import time
-
-# === CONFIGURATION ===
-PORT = "/dev/ttyUSB1"   # Change to match your ESP32 port
-BAUD = 115200
-SEND_RATE = 1.0 / 20.0  
 
 
-def user_input_loop():
-    """Thread to update x and y from user input."""
-    global x, y, running
-    while running:
-        try:
-            line = input("Enter new values for x and y (format: x y): ")
-            parts = line.strip().split()
-            if len(parts) == 2:
-                x = float(parts[0])
-                y = float(parts[1])
-                print(f"Updated values: x={x}, y={y}")
-            else:
-                print("Invalid format. Please type: x y")
-        except Exception as e:
-            print(f"Input error: {e}")
+prt = input("Enter port: ")
+arduino = serial.Serial(port=prt, baudrate=115200, timeout=.1)
+
+def send_message(msg):
+    arduino.write(bytes(msg + '\n', 'utf-8'))  # Send the message
 
 
-def main():
-    global x, y, running
-    # Initial values
-    x, y = 0.0, 0.0
-    running = True
 
-    # Open serial connection
-    ser = serial.Serial(PORT, BAUD, timeout=1)
+while True:
+    message = input("Enter a message to send to Arduino (or 'exit' to quit): ")
+    if message.lower() == "exit":
+        break
+    send_message(message)
 
-    # Start user input thread
-    t = threading.Thread(target=user_input_loop, daemon=True)
-    t.start()
+arduino.close()
 
-    print("Starting message loop. Press Ctrl+C to quit.")
-
-    try:
-        while running:
-            msg = f"s {x:.3f} {y:.3f}\n"
-            ser.write(msg.encode())
-            time.sleep(SEND_RATE)
-    except KeyboardInterrupt:
-        print("\nStopping...")
-    finally:
-        running = False
-        ser.close()
-
-
-if __name__ == "__main__":
-    main()

@@ -5,6 +5,11 @@ import time
 import struct
 from threading import Thread
 
+
+
+
+# This class handles all communication with the ESP32.
+
 class Esp32:
     def __init__(self, port: str, baudrate: int, timeout: float):
         
@@ -35,37 +40,67 @@ class Esp32:
     def close(self):
         if self.ser.open(): self.ser.close()
 
-def init():
-    line.set_data([], [])
-    return line,
 
+
+
+# Initializes the lines to be plotted
+def init():
+    left_line.set_data([], [])
+    right_line.set_data([], [])
+    setpoint_line.set_data([], [])
+    return left_line, right_line, setpoint_line
+
+# Runs every frame
 def update(frame):
     t = time.time() - start_time
     x_data.append(t)
-    left_data.append(esp32.read_angvels()[1])
+    lAngvel, rAngvel = esp32.read_angvels()
+    left_data.append(lAngvel)
+    right_data.append(rAngvel)
+    setpoint_data.append(cursor_y)
 
     # Keep only the last 10 seconds of data
     if t > 10:
         ax.set_xlim(t - 10, t)
 
-    line.set_data(x_data, left_data)
-    esp32.send_setpoint(0.5, 0.5)
-    return line,
+    left_line.set_data(x_data, left_data)
+    right_line.set_data(x_data, right_data)
+    setpoint_line.set_data(x_data, setpoint_data)
+    esp32.send_setpoint(cursor_y, cursor_y)
+    return left_line, right_line, setpoint_line
+
+# Gets the current Y-position of the mouse
+def on_mouse_move(event):
+    global cursor_y
+    if event.inaxes is None:
+        cursor_y = 0.0
+    else:
+        cursor_y = event.ydata
+
 
 # Storage for data
-x_data, left_data = [], []
+x_data, left_data, right_data, setpoint_data = [], [], [], []
+cursor_y = 0.0
 
 # Create the figure and axis
 fig, ax = plt.subplots()
-line, = ax.plot([], [], lw=1)
-ax.set_xlim(0, 10)   # 10 seconds window
-ax.set_ylim(-2.0, 2.0)    # adjust depending on expected value range
+left_line, = ax.plot([], [], lw=1, label="Left")
+right_line, = ax.plot([], [], lw=1, label="Right")
+setpoint_line, = ax.plot([], [], "k--", lw=1, label="Setpoint")
+ax.set_xlim(0, 10)
+ax.set_ylim(-2.0, 2.0)
+ax.legend(loc="upper right")
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Angular velocity")
 
+# attach mouse move event callback
+fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 esp32 = Esp32("/dev/ttyUSB0", 115200, 1.0)
-
-esp32.send_PI(0.6, 2.0, 0.00, 2)
+esp32.send_PI(0.6, 2.0, 0.0, 1)
+esp32.send_PI(0.6, 2.0, 0.0, 2)
 start_time = time.time()
 
 ani = animation.FuncAnimation(fig, update, init_func=init, interval=33, blit=True)
 plt.show()
+
 esp32.close()
