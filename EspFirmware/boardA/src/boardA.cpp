@@ -90,6 +90,8 @@ void doCommand()
       serialReadFloat(data.newKi);
       serialReadFloat(data.newKd);
       serialReadInt(data.gainChange);
+      // send data to B
+      esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
 

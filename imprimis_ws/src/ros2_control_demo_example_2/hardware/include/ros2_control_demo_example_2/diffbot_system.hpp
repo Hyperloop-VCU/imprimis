@@ -82,7 +82,7 @@ private:
 
   // debugging flags
   bool PRINT_READ_STATES = true;
-  bool PRINT_COMMANDS = false;
+  bool PRINT_COMMANDS = true;
 
   // Objects for logging
   std::shared_ptr<rclcpp::Logger> logger_;
