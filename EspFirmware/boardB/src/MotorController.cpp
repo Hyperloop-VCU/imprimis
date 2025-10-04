@@ -7,9 +7,10 @@
 #include <math.h>
 #include "../../common/config.h"
 
+#define MAX_INTEGRAL 32
+
 class MotorController 
 {
-  
 
   // private data members
   private:
@@ -31,7 +32,7 @@ class MotorController
     KI(ki), 
     KD(kd),
     countsPerRev(countsPerRev), 
-    prevError(0), 
+    prevError(0),
     integral(0.0), 
     prevCount(0),
     prevSetpoint(0),
@@ -49,6 +50,7 @@ class MotorController
   // int currCount: current encoder count
   // unsigned long current_time: current time as read from the millis() function.
   // bool first_update: if true, uses DT_seconds = Initial_DT defined in config.
+  // nominal PID output ranges from 0 to 64, negative or positive
   // Returns the angular velocity of the wheel.
   float update(float setpointAngvel, int currCount, unsigned long current_time, bool first_update) 
   {
@@ -61,11 +63,16 @@ class MotorController
     int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
     float wheel_angvel = currCPL * ((2 * M_PI) / (countsPerRev * DT_seconds));
 
-    // do PID and set output
+    // calculate error
     int currError = setpointCPL - currCPL;
-    if (abs(prevSetpoint - setpointCPL) > 0.1) integral = 0; // zero integral if setpoint changed too much
-    if (abs(integral)*KI < 120) integral += currError * DT_seconds; // clamp integral term to maximum magnitude
-    float pidOutput = (KP * currError) + (KI * integral); // + (KD * (currError - this->prevError) / DT_s);
+
+    // handle integral
+    integral += currError * DT_seconds;
+    if (integral >= MAX_INTEGRAL) integral = MAX_INTEGRAL;
+    else if (integral <= -MAX_INTEGRAL) integral = -MAX_INTEGRAL;
+
+    // do PID output
+    float pidOutput = (KP * currError) + (KI * integral) + (KD * (currError - prevError) / DT_seconds);
 
     // set previous values
     prevError = currError;
@@ -75,11 +82,9 @@ class MotorController
 
     if (debugB) {
     Serial.print("DT: ");
-    Serial.print(DT_seconds);
-    Serial.print(", KP: ");
-    Serial.print(KP);
-    Serial.print(", currCount: ");
-    Serial.print(currCount);
+    Serial.print(DT_seconds, 4);
+    Serial.print(" I: ");
+    Serial.print(integral);
     Serial.print(", currCPL: ");
     Serial.print(currCPL);
     }
@@ -93,8 +98,7 @@ class MotorController
 
 
 
-  // sets the speed of each motor given a value between -255 and 255.
-  // PID output ranges from -255 to 255.
+  // sets the speed of each motor given a float value between -63 and +63.
   // setSpeed converts this into the appropriate single-byte
   // serial simplified command, and writes it.
   //  - bit 7 controls which motor to write to,
@@ -105,10 +109,14 @@ class MotorController
     
     uint8_t channel = this->right ? (1 << 7) : 0;            // bit 7
     uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
-    uint8_t speed = map(abs((int)pidOutput), 0, 255, 0, 63); // bits 0-5
-    if (speed > 63) speed = 63;
+    uint8_t speed = abs(pidOutput); // bits 0-5
 
-    if (right) direction ^= (1 << 6); // make left motor spin the right way
+    if (right) // make right motor spin the right way
+    {
+      direction ^= (1 << 6);
+    }
+
+    if (speed > 63) speed = 63;
 
     uint8_t data = speed | direction | channel;
 
@@ -116,8 +124,8 @@ class MotorController
     if (printInfo) {
     Serial.print(", PID output: ");
     Serial.print(pidOutput);
-    Serial.print(", KP: ");
-    Serial.print(KP);
+    Serial.print(", KI: ");
+    Serial.print(KI);
     Serial.print(", Motor: ");
     Serial.print(channel >> 7);
     Serial.print(", Direction: ");

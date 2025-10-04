@@ -28,7 +28,7 @@
 
 
 
-bool debugB = true; // true to initialize the USB-C serial and print info to it
+bool debugB = false; // true to initialize the USB-C serial and print info to it
 
 
 
@@ -36,8 +36,8 @@ bool debugB = true; // true to initialize the USB-C serial and print info to it
 // global variables
 volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
 volatile int rightEncoderCount = 1;
-MotorController leftController(2.7, 1.7, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(2.0, 1.5, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(0.6, 2.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(0.6, 2.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
