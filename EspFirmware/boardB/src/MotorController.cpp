@@ -8,6 +8,9 @@
 #include "../../common/config.h"
 
 #define MAX_INTEGRAL 32
+#define OUTPUT_AVG_FILTER_LENGTH 1 // filter is disabled
+#define ERROR_THRESHOLD 10
+#define LOCK_UPDATES_REQUIRED 3
 
 class MotorController 
 {
@@ -16,10 +19,13 @@ class MotorController
   private:
   float KP, KI, KD;
   unsigned long time_of_last_update;
-  int prevCount;
   int prevError;
+  int lock_updates;
+  bool locked;
   int prevSetpoint;
   int countsPerRev;
+  float prevOutput;
+  float pastOutputs[OUTPUT_AVG_FILTER_LENGTH];
   float integral;
   int right;
   bool debugB;
@@ -32,65 +38,82 @@ class MotorController
     KI(ki), 
     KD(kd),
     countsPerRev(countsPerRev), 
-    prevError(0),
-    integral(0.0), 
-    prevCount(0),
-    prevSetpoint(0),
     right(Right),
-    debugB(debugB),
-    time_of_last_update(millis())
-    {}
+    debugB(debugB)
+    {
+      reset();
+    }
 
 
 
 
   // Updates the PID controller and PID output.
   // Updates the wheel angular velocity.
-  // float setpointAngvel: desired angular velocity
-  // int currCount: current encoder count
-  // unsigned long current_time: current time as read from the millis() function.
-  // bool first_update: if true, uses DT_seconds = Initial_DT defined in config.
-  // nominal PID output ranges from 0 to 64, negative or positive
-  // Returns the angular velocity of the wheel.
-  float update(float setpointAngvel, int currCount, unsigned long current_time, bool first_update) 
+  // nominal PID output ranges from 0 to 63, negative or positive
+
+  // Will hold the PID output constant if the actual velocity has been "good" for some time.
+
+  // setpointAngvel : desired angular velocity
+  // count          : encoder counds since the last call to update. Should be zeroed after each update.
+  // current_time   : current time as read from the millis() function.
+  // first_update   : if true, uses DT_seconds = Initial_DT defined in config.
+  // returns        : the angular velocity of the wheel.
+  float update(float setpointAngvel, int count, unsigned long current_time, bool first_update) 
   {
 
-    // calculate CPL, DT, wheel angvel, and setpoint CPL
+    // calculate CPL, DT, wheel angvel, setpoint CPL, and error
     float DT_seconds;
-    int currCPL = currCount - prevCount;
     if (first_update) DT_seconds = Initial_DT;
     else DT_seconds = (current_time - time_of_last_update) / 1000.0;
     int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
-    float wheel_angvel = currCPL * ((2 * M_PI) / (countsPerRev * DT_seconds));
+    float wheel_angvel = count * ((2 * M_PI) / (countsPerRev * DT_seconds));
+    int currError = setpointCPL - count;
 
-    // calculate error
-    int currError = setpointCPL - currCPL;
+    // figure out if we're locked
+    if (count > setpointCPL - ERROR_THRESHOLD && count < setpointCPL + ERROR_THRESHOLD)
+    {
+      lock_updates++;
+    }
+    else lock_updates = 0;
 
-    // handle integral
-    integral += currError * DT_seconds;
-    if (integral >= MAX_INTEGRAL) integral = MAX_INTEGRAL;
-    else if (integral <= -MAX_INTEGRAL) integral = -MAX_INTEGRAL;
+
 
     // do PID output
-    float pidOutput = (KP * currError) + (KI * integral) + (KD * (currError - prevError) / DT_seconds);
+    float pidOutput;
+    if (lock_updates >= LOCK_UPDATES_REQUIRED) // locked case
+    {
+      pidOutput = prevOutput;
+      lock_updates = LOCK_UPDATES_REQUIRED;
+    }
+    else // unlocked case
+    {
+      integral += currError * DT_seconds;
+      if (integral >= MAX_INTEGRAL) integral = MAX_INTEGRAL;
+      else if (integral <= -MAX_INTEGRAL) integral = -MAX_INTEGRAL;
+      pidOutput = (KP * currError) + (KI * integral) + (KD * (currError - prevError) / DT_seconds);
+      lock_updates = 0;
+    }
 
     // set previous values
     prevError = currError;
-    prevCount = currCount;
     prevSetpoint = setpointCPL;
+    prevOutput = pidOutput;
     time_of_last_update = millis();
 
-    if (debugB) {
-    Serial.print("DT: ");
-    Serial.print(DT_seconds, 4);
-    Serial.print(" I: ");
-    Serial.print(integral);
-    Serial.print(", currCPL: ");
-    Serial.print(currCPL);
+    // print information if needed
+    if (debugB) 
+    {
+      Serial.print("DT: ");
+      Serial.print(DT_seconds, 4);
+      Serial.print(" I: ");
+      Serial.print(integral);
+      Serial.print(", currCPL: ");
+      Serial.print(count);
     }
 
     // make the motor move
-    setSpeed(pidOutput, debugB);
+    float filteredOutput = filterPIDOutput(pidOutput);
+    setSpeed(filteredOutput, debugB);
     return wheel_angvel;
 
   }
@@ -107,20 +130,18 @@ class MotorController
   void setSpeed(float pidOutput, bool printInfo)
   {
     
-    uint8_t channel = this->right ? (1 << 7) : 0;            // bit 7
-    uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;        // bit 6
-    uint8_t speed = abs(pidOutput); // bits 0-5
+    // get channel, direction, and speed sections of the data byte
+    uint8_t channel = this->right ? (1 << 7) : 0;      // bit 7
+    uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;  // bit 6
+    uint8_t speed = abs(pidOutput);                    // bits 0-5
 
-    if (right) // make right motor spin the right way
-    {
-      direction ^= (1 << 6);
-    }
+    // ensure right motor is spinning properly
+    if (right) direction ^= (1 << 6);
 
+    // clamp speed
     if (speed > 63) speed = 63;
 
-    uint8_t data = speed | direction | channel;
-
-    // TODO: remove these print statements
+    // Print information if necessary
     if (printInfo) {
     Serial.print(", PID output: ");
     Serial.print(pidOutput);
@@ -134,10 +155,32 @@ class MotorController
     Serial.println(speed);
     }
 
+    // actually make the motor move
+    uint8_t data = speed | direction | channel;
     Serial2.write(data);
   }
 
 
+
+// Applies a simple moving average filter of length OUTPUT_AVG_FILTER_LENGTH.
+// Takes the unfiltered count as an argument and returns the filtered count.
+float filterPIDOutput(float PIDOutput)
+{
+
+  // add new count to the end
+  pastOutputs[OUTPUT_AVG_FILTER_LENGTH-1] = PIDOutput;
+
+  // get the output
+  float avg = 0.0;
+  for (int i = 0; i < OUTPUT_AVG_FILTER_LENGTH; i++) avg += pastOutputs[i];
+  avg /= OUTPUT_AVG_FILTER_LENGTH;
+
+  // make room for the next data point by shifting elements left
+  for (int i = 1; i < OUTPUT_AVG_FILTER_LENGTH; i++) pastOutputs[i-1] = pastOutputs[i];
+
+
+  return avg;
+}
 
 
   // setter of the PID gains.
@@ -148,15 +191,18 @@ class MotorController
     this->KD = d;
   }
 
-
-  // resets the encoder count and zeros the integral.
-  void reset()
-  {
-    this->prevCount = 0;
-    this->integral = 0;
-  }
-
   // should be called before using the controller again
   // after not having used it for a while.
+  void reset()
+  {
+    this->integral = 0;
+    this->prevError = 0;
+    this->prevSetpoint = 0;
+    this->prevOutput = 0.0;
+    this->lock_updates = 0;
+    this->locked = false;
+    for (int i = 0; i < OUTPUT_AVG_FILTER_LENGTH; i++) pastOutputs[i] = 0;
+    time_of_last_update = millis();
+  }
 
 };

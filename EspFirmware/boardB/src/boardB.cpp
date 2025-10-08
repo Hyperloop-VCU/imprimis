@@ -36,8 +36,8 @@ bool debugB = false; // true to initialize the USB-C serial and print info to it
 // global variables
 volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
 volatile int rightEncoderCount = 1;
-MotorController leftController(0.6, 2.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(0.6, 2.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(0.5, 2.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(0.5, 2.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
@@ -86,6 +86,7 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
     Serial.print(" | ");
   }
   data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis(), inactive);
+  leftEncoderCount = 0;
   if (debugB)
   {
     Serial.print("RIGHT RECEIVED: ");
@@ -93,7 +94,7 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
     Serial.print(" | ");
   }
   data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis(), inactive);
-
+  rightEncoderCount = 0;
   // send processed data back to board A
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
   inactive = false;
