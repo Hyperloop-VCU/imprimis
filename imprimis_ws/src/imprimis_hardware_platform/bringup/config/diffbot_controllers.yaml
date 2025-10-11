@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30  # Hardware update rate (lower-level)
+    update_rate: 100  # Hardware update rate (lower-level)
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -28,6 +28,8 @@ diffbot_base_controller:
 
     open_loop: false
     enable_odom_tf: true
+
+    publish_command: true
 
     cmd_vel_timeout: 0.5
     #publish_limited_velocity: true

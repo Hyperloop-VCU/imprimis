@@ -36,6 +36,10 @@ class Esp32:
     def send_PI(self, p: float, i: float, d: float, motor: int):
         msg = f"e {p:.2f} {i:.2f} {d:.2f} {motor}"
         self.ser.write(bytes(msg + '\n', 'utf-8'))
+
+    def reset(self):
+        msg = 'r'
+        self.ser.write(bytes(msg + '\n', 'utf-8'))
     
     def close(self):
         if self.ser.open(): self.ser.close()
@@ -88,7 +92,7 @@ left_line, = ax.plot([], [], lw=1, label="Left")
 right_line, = ax.plot([], [], lw=1, label="Right")
 setpoint_line, = ax.plot([], [], "k--", lw=1, label="Setpoint")
 ax.set_xlim(0, 10)
-ax.set_ylim(-2.0, 2.0)
+ax.set_ylim(-3.0, 3.0)
 ax.legend(loc="upper right")
 ax.set_xlabel("Time (s)")
 ax.set_ylabel("Angular velocity")
@@ -97,11 +101,12 @@ ax.set_ylabel("Angular velocity")
 fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 esp32 = Esp32("/dev/ttyUSB0", 115200, 1.0)
 time.sleep(1)
-esp32.send_PI(1.0, 0.0, 0.0, 1)
-esp32.send_PI(1.0, 0.0, 0.0, 2)
+esp32.send_PI(2.0, 6.0, 0.0, 1)
+esp32.send_PI(2.0, 6.0, 0.0, 2)
+esp32.reset()
 start_time = time.time()
 
-ani = animation.FuncAnimation(fig, update, init_func=init, interval=33, blit=True)
+ani = animation.FuncAnimation(fig, update, init_func=init, interval=10, blit=True)
 plt.show()
 
 esp32.close()
