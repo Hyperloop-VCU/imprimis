@@ -32,9 +32,9 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 // pins for board B
 // Motor output is pin 17. It's assigned automatically when the serial port is initialized.
 #define LA 25 // must be interrupt capable
-#define LB 26
-#define RA 14 // must be interrupt capable
-#define RB 12
+#define LB 34
+#define RA 35 // must be interrupt capable
+#define RB 18
 #define LV 13 // goes to "lv" on level shifter, 3.3V output
 
 
@@ -53,7 +53,7 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 // by measuring the time between updates.
 // but on the first update, we don't know what DT should be,
 // so we use this value.
-#define Initial_DT 0.05
+#define Initial_DT 0.01
 
 // timeout for board B. It will wait this long for data from A before stopping the robot.
 const unsigned long timeout_ms = 500;

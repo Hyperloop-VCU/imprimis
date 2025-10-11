@@ -36,8 +36,8 @@ bool debugB = false; // true to initialize the USB-C serial and print info to it
 // global variables
 volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
 volatile int rightEncoderCount = 1;
-MotorController leftController(0.5, 2.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(0.5, 2.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(2.0, 6.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(2.0, 6.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = 0;
@@ -102,17 +102,12 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 }
 
 
-
-
-
 // Interrupt to update the right encoder count.
 void IRAM_ATTR readRightEncoder() 
 { 
   if (!digitalRead(RB)) rightEncoderCount--;
   else rightEncoderCount++;
 }
-
-
 
 
 // Interrupt to update the left encoder count. 
@@ -137,11 +132,10 @@ void setup()
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
   if (debugB) Serial.begin(DEBUG_BAUD_RATE_B);
 
-  // setup pins
-  pinMode(RA, INPUT_PULLUP);
-  pinMode(RB, INPUT_PULLUP);
   pinMode(LA, INPUT_PULLUP);
+  pinMode(RA, INPUT_PULLUP);
   pinMode(LB, INPUT_PULLUP);
+  pinMode(RB, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(RA), readRightEncoder, FALLING);
   attachInterrupt(digitalPinToInterrupt(LA), readLeftEncoder, FALLING);
   pinMode(LV, OUTPUT);
@@ -175,10 +169,11 @@ void loop()
       Serial.print(leftEncoderCount);
       Serial.print(" ");
       Serial.println(rightEncoderCount);
+
     }
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
     inactive = true;
-    delay(50);
+    delay(10);
   }
 }
