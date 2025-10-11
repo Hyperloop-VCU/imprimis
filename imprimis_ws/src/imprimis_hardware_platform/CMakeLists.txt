@@ -15,12 +15,14 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
+  description
   rclcpp_lifecycle
 )
 
 # find all dependencies
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake REQUIRED)
+find_package(description REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -66,14 +68,12 @@ install(
   DIRECTORY hardware/include/
   DESTINATION include/imprimis_hardware_platform
 )
+
 install(
-  DIRECTORY description/launch description/ros2_control description/urdf description/rviz
+  DIRECTORY launch config
   DESTINATION share/imprimis_hardware_platform
 )
-install(
-  DIRECTORY bringup/launch bringup/config
-  DESTINATION share/imprimis_hardware_platform
-)
+
 install(TARGETS imprimis_hardware_platform
   EXPORT export_imprimis_hardware_platform
   ARCHIVE DESTINATION lib
@@ -84,10 +84,6 @@ install(TARGETS imprimis_hardware_platform
 
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
-
-  ament_add_pytest_test(example_2_urdf_xacro test/test_urdf_xacro.py)
-  ament_add_pytest_test(view_example_2_launch test/test_view_robot_launch.py)
-  ament_add_pytest_test(run_example_2_launch test/test_diffbot_launch.py)
 endif()
 
 ## EXPORTS

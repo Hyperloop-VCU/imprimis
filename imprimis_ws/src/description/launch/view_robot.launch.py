@@ -24,14 +24,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "description_package",
-            default_value="ros2_control_demo_description",
-            description="Description package with robot URDF/xacro files. Usually the argument \
-        is not set, it enables use of a custom description.",
-        )
-    )
+
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
@@ -69,7 +62,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("imprimis_hardware_platform"), "urdf", description_file]
+                [FindPackageShare("description"), "urdf", description_file]
             ),
             " ",
             "prefix:=",
@@ -80,7 +73,7 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("imprimis_hardware_platform"), "rviz", "diffbot_view.rviz"]
+        [FindPackageShare("description"), "rviz", "diffbot_view.rviz"]
     )
     print(rviz_config_file)
 

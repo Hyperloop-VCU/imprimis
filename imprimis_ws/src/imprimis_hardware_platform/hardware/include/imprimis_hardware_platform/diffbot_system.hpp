@@ -81,8 +81,8 @@ private:
   std::shared_ptr<SerialLink> esp32;
 
   // debugging flags
-  bool PRINT_READ_STATES = true;
-  bool PRINT_COMMANDS = true;
+  bool PRINT_READ_STATES = false;
+  bool PRINT_COMMANDS = false;
 
   // Objects for logging
   std::shared_ptr<rclcpp::Logger> logger_;
