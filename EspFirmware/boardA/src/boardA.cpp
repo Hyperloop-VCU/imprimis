@@ -25,12 +25,12 @@ const short status_yellowPin = 26;
 int status_YellowMilliseconds = 1000;
 bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
+unsigned long time_of_last_command_recieve = millis();
 
 unsigned long t0;
 dataPacket data = initialData(); // initial data
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
-int retryCount = 0;
 
 
 
@@ -44,8 +44,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 {
   memcpy(&data, incomingData, sizeof(data));
   //printAllData(&data);
-  //Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-  //Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
+  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
+  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
 
 
@@ -55,12 +55,12 @@ void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   if (status != ESP_NOW_SEND_SUCCESS)
   {
-    if (retryCount > MAX_SEND_RETRIES) is_connected = false;
-    else retryCount++;
-    return;
+    is_connected = false;
   }
-  is_connected = true;
-  retryCount = 0;
+  else
+  {
+    is_connected = true;
+  }
 }
 
 
@@ -75,6 +75,8 @@ void doCommand()
 {
 
   if (!Serial.available()) return;
+
+  time_of_last_command_recieve = millis();
 
   char chr = Serial.read();
   switch(chr) {
@@ -140,13 +142,21 @@ void setup()
 void loop() 
 {
   // Digital Write to pins 25-Green 26-Yellow
-  // difftime gets the time difference in seconds - convert to milliseconds, and check if enough time has passed
-  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) {
+  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) 
+  {
     status_YellowLightOn = !status_YellowLightOn;
     digitalWrite(status_yellowPin, (status_YellowLightOn ? HIGH : LOW));
     status_YellowLastSwitched = millis();
   }
-  digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
-
+  
   doCommand();
+
+  if (millis() - time_of_last_command_recieve > 500)
+  {
+    digitalWrite(status_greenPin, LOW);
+  }
+  else
+  {
+    digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
+  }
 }

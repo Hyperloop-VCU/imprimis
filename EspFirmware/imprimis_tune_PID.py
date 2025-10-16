@@ -99,14 +99,14 @@ ax.set_ylabel("Angular velocity")
 
 # attach mouse move event callback
 fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
-esp32 = Esp32("/dev/ttyUSB0", 115200, 1.0)
+esp32 = Esp32("/dev/ttyUSB1", 115200, 1.0)
 time.sleep(1)
 esp32.send_PI(2.0, 6.0, 0.0, 1)
 esp32.send_PI(2.0, 6.0, 0.0, 2)
 esp32.reset()
 start_time = time.time()
 
-ani = animation.FuncAnimation(fig, update, init_func=init, interval=10, blit=True)
+ani = animation.FuncAnimation(fig, update, init_func=init, interval=50, blit=True)
 plt.show()
 
 esp32.close()
