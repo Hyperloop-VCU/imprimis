@@ -3,18 +3,12 @@
 //  - Accept angular velocity commands from board A
 //  - Report the actual angular velocity of each wheel back to board A
 //  - Run one PID controller for each motor to make them move
-//  - Read from the encoders to close the PID loop
+//  - Read from the encoders
 
-// The PID loop runs once each time board A sends data to board B.
-// The "DT" parameter is thus inferred from the rate at which A sends data to B.
-// This rate is controlled by how fast A receives data, which is ultimately controlled by
-// Ros2 control and the hardware interface.
-// This way, only the ros2_control config's update_rate needs to be changed
-// for the whole system to use a different DT.
+// The PID loop runs at a fixed rate, but the controllers still calculate their own DT.
 
-// A timer is constantly counting down, and it gets reset to its starting value when data is received.
-// If the timer ever reaches 0, we stop the robot.
-// The robot may be restarted if A resumes sending the data.
+// If we haven't received data for some time,
+// we give both controllers a setpoint of '0' to stop the robot.
 
 
 #include <math.h>
@@ -40,7 +34,8 @@ MotorController leftController(2.0, 6.0, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
 MotorController rightController(2.0, 6.0, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data = initialData();
 esp_now_peer_info_t peerInfo;
-volatile unsigned long time_of_last_data_receive = 0;
+volatile unsigned long time_of_last_data_receive = millis();
+unsigned long time_of_last_controller_update = millis();
 bool inactive = true;
 
 
@@ -56,7 +51,7 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   // copy received data for processing
   memcpy(&data, incomingData, sizeof(data));
 
-  // reset if necessary we're commanded to, or we're activating
+  // reset if we're commanded to, or we're activating
   if (inactive || data.reset)
   {
     leftController.reset();
@@ -78,23 +73,12 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
     data.gainChange = 0;
   }
 
-  // update PID controllers' outputs and angular velocities
-  if (debugB) 
-  {
-    Serial.print(" LEFT RECEIVED: ");
-    Serial.print(data.setLeftAngvel);
-    Serial.print(" | ");
-  }
-  data.currLeftAngvel = leftController.update(data.setLeftAngvel, leftEncoderCount, millis(), inactive);
-  leftEncoderCount = 0;
-  if (debugB)
-  {
-    Serial.print("RIGHT RECEIVED: ");
-    Serial.print(data.setRightAngvel);
-    Serial.print(" | ");
-  }
-  data.currRightAngvel = rightController.update(data.setRightAngvel, rightEncoderCount, millis(), inactive);
-  rightEncoderCount = 0;
+  // update controller setpoints and get angular velocities
+  leftController.newSetpoint(data.setLeftAngvel);
+  rightController.newSetpoint(data.setRightAngvel);
+  data.currLeftAngvel = leftController.getAngvel();
+  data.currRightAngvel = rightController.getAngvel();
+
   // send processed data back to board A
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
   inactive = false;
@@ -156,24 +140,44 @@ void setup()
 
 
 // main loop function
-// the main logic happens on data receive, in the receiveDataCB function.
+// the loop updates the PID controllers at a fixed rate.
 // this loop constantly checks if it's been too long since the last data packet was received.
 // if it has been too long, it directly sets the motors to stop, bypassing the PID controllers.
 void loop() 
 {
+
+  // Stop the robot if we haven't received data for a while
   if (millis() - time_of_last_data_receive > timeout_ms)
   {
     if (debugB)
     {
-      if (!inactive) Serial.println("Inactive - robot stopped.");
       Serial.print(leftEncoderCount);
       Serial.print(" ");
       Serial.println(rightEncoderCount);
-
+      if (!inactive) Serial.println("Inactive - robot stopped.");
     }
     leftController.setSpeed(0, false);
     rightController.setSpeed(0, false);
     inactive = true;
     delay(10);
+  }
+
+
+  // Update PID controllers at a fixed rate
+  if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS)
+  {
+    if (!inactive)
+    {
+      leftController.update(leftEncoderCount, millis(), inactive);
+      rightController.update(rightEncoderCount, millis(), inactive);
+      rightEncoderCount = 0;
+      leftEncoderCount = 0;
+    }
+    else
+    {
+      leftController.setSpeed(0.0, false);
+      rightController.setSpeed(0.0, false);
+    }
+    time_of_last_controller_update = millis();
   }
 }

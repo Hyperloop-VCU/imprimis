@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include "../../common/config.h"
+#include <atomic>
 
 #define MAX_INTEGRAL 32
 
@@ -14,7 +15,9 @@ class MotorController
 
   // private data members
   private:
-  float KP, KI, KD;
+  std::atomic<float> KP, KI, KD;
+  std::atomic<float> setpointAngvel;
+  std::atomic<float> currAngvel;
   unsigned long time_of_last_update;
   int prevError;
   int countsPerRev;
@@ -26,16 +29,15 @@ class MotorController
   public:
   // constructor
   MotorController(float kp, float ki, float kd, int Right, int countsPerRev, bool debugB) 
-  : KP(kp),
-    KI(ki), 
-    KD(kd),
-    countsPerRev(countsPerRev), 
-    right(Right),
-    debugB(debugB)
+  :  KP(kp)
+  ,  KI(ki)
+  ,  KD(kd)
+  ,  countsPerRev(countsPerRev)
+  ,  right(Right)
+  ,  debugB(debugB)
     {
       reset();
     }
-
 
 
 
@@ -43,19 +45,15 @@ class MotorController
   // Updates the wheel angular velocity.
   // nominal PID output ranges from 0 to 63, negative or positive
 
-  // Will hold the PID output constant if the actual velocity has been "good" for some time.
-
-  // setpointAngvel : desired angular velocity
   // count          : encoder counds since the last call to update. Should be zeroed after each update.
   // current_time   : current time as read from the millis() function.
-  // first_update   : if true, uses DT_seconds = Initial_DT defined in config.
-  // returns        : the angular velocity of the wheel.
-  float update(float setpointAngvel, int count, unsigned long current_time, bool first_update) 
+  // first_update   : if true, does not calculate DT based on previous update calls; just uses 1 / update period.
+void update(int count, unsigned long current_time, bool first_update) 
   {
 
     // calculate DT, CPL, error, and wheel angvel
     float DT_seconds;
-    if (first_update) DT_seconds = Initial_DT;
+    if (first_update) DT_seconds = 1 / (PID_UPDATE_PERIOD_MS / 1000.0);
     else DT_seconds = (current_time - time_of_last_update) / 1000.0;
     int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
     int currError = setpointCPL - count;
@@ -71,18 +69,9 @@ class MotorController
     prevError = currError;
     time_of_last_update = millis();
 
-    // print information if needed
-    if (debugB) 
-    {
-      Serial.print("DT: ");
-      Serial.print(DT_seconds, 4);
-      Serial.print(", ERR: ");
-      Serial.print(currError);
-    }
-
     // make the motor move
     setSpeed(pidOutput, debugB);
-    return wheel_angvel;
+    currAngvel = wheel_angvel;
 
   }
 
@@ -109,24 +98,12 @@ class MotorController
     // clamp speed
     if (speed > 63) speed = 63;
 
-    // Print information if necessary
-    if (printInfo) {
-    //Serial.print(", PID output: ");
-    //Serial.print(pidOutput);
-    //Serial.print(", KI: ");
-    //Serial.print(KI);
-    //Serial.print(", Motor: ");
-    //Serial.print(channel >> 7);
-    //Serial.print(", Direction: ");
-    //Serial.print(direction >> 6);
-    Serial.print(", Speed: ");
-    Serial.println(speed);
-    }
-
     // actually make the motor move
     uint8_t data = speed | direction | channel;
     Serial2.write(data);
   }
+
+
 
   // setter of the PID gains.
   void setPID(float p, float i, float d) 
@@ -136,13 +113,30 @@ class MotorController
     this->KD = d;
   }
 
+
+
   // should be called before using the controller again
   // after not having used it for a while.
   void reset()
   {
-    this->integral = 0;
+    this->integral = 0.0;
     this->prevError = 0;
-    time_of_last_update = millis();
+    this->setpointAngvel = 0.0;
+    this->currAngvel = 0.0;
+    this->time_of_last_update = millis();
+  }
+
+  // Setter for the angvelSetpoint
+  void newSetpoint(float newAngvelSetpoint)
+  {
+    this->setpointAngvel = newAngvelSetpoint;
+  }
+
+
+  // getter of the angvel
+  float getAngvel()
+  {
+    return this->currAngvel;
   }
 
 };

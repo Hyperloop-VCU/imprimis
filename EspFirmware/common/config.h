@@ -1,11 +1,5 @@
 // Main configuration file for the ESP32 firmware.
-// Controls the config board A and board B.
-
-
-// TODO: remove the physical measurements section
-// and calculate the ANGVEL_2_CPL constant at runtime,
-// with the physical measurements passed to board A as a paremeter.
-// This ensures the measurements only need to be defined in the high-lvl ros2 control config.
+// Contains definitions and constants for board A and board B.
 
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -14,7 +8,7 @@
 // if the data fails to be sent from A to B or B to A this many times in a row, the system will shut down
 #define MAX_SEND_RETRIES 10
 
-// physical measurements of the robot - will be removed later
+// physical measurements of the robot - should eventually be paramaterized in ROS and sent to this board on startup
 #define WHEEL_RADIUS 0.1651
 #define HALF_WHEEL_TRACK_LENGTH 0.4432
 
@@ -40,8 +34,8 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 // baud rates
 #define SERIAL_BAUD_RATE_A 115200 // A to the PC
-#define SERIAL_BAUD_RATE_B 9600  // B to the motors
-#define DEBUG_BAUD_RATE_B 115200 // B to the (usually not connected) PC
+#define SERIAL_BAUD_RATE_B 9600   // B to the motors
+#define DEBUG_BAUD_RATE_B 115200  // B to the (usually not connected) PC
 
 
 // serial commands (used by board A only)
@@ -49,11 +43,9 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 #define RESET_ENCODERS 'r'
 #define SET_PID 'e'
 
-// the controllers calculate their own DT
-// by measuring the time between updates.
-// but on the first update, we don't know what DT should be,
-// so we use this value.
-#define Initial_DT 0.01
+
+// Fixed period at which to update the PID controllers. Changing this will require changing the PID gains.
+#define PID_UPDATE_PERIOD_MS 10.0 // 100 Hz
 
 // timeout for board B. It will wait this long for data from A before stopping the robot.
 const unsigned long timeout_ms = 500;
