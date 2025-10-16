@@ -20,6 +20,12 @@
 
 
 // Global variables
+const short status_greenPin = 25;
+const short status_yellowPin = 26;
+int status_YellowMilliseconds = 1000;
+bool status_YellowLightOn = false;
+unsigned long status_YellowLastSwitched = 0;
+
 unsigned long t0;
 dataPacket data = initialData(); // initial data
 esp_now_peer_info_t peerInfo;
@@ -38,8 +44,8 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 {
   memcpy(&data, incomingData, sizeof(data));
   //printAllData(&data);
-  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
+  //Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
+  //Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
 
 
@@ -103,8 +109,6 @@ void doCommand()
 }
 
 
-
-
 // Setup function: runs once on board A power-on
 // Initializes the serial port and registers board B as a peer.
 // Note that board B does not need to be on for this function to run successfully.
@@ -121,6 +125,10 @@ void setup()
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
   esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
 
+  pinMode(status_greenPin, OUTPUT);
+  pinMode(status_yellowPin, OUTPUT);
+  // Get the current time
+  status_YellowLastSwitched = millis();
 }
 
 
@@ -131,5 +139,14 @@ void setup()
 // TODO: do something when is_connected = false
 void loop() 
 {
+  // Digital Write to pins 25-Green 26-Yellow
+  // difftime gets the time difference in seconds - convert to milliseconds, and check if enough time has passed
+  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) {
+    status_YellowLightOn = !status_YellowLightOn;
+    digitalWrite(status_yellowPin, (status_YellowLightOn ? HIGH : LOW));
+    status_YellowLastSwitched = millis();
+  }
+  digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
+
   doCommand();
 }
