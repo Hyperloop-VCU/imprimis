@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>description</name>
-  <version>0.0.0</version>
-  <description>Contains the robot URDF and other configuration files.</description>
+  <name>imprimis_description</name>
+  <version>0.0.1</version>
+  <description>Contains imprimis's URDF and other configuration files.</description>
   <maintainer email="rayneralla@icloud.com">ray</maintainer>
   <license>TODO: License declaration</license>
 

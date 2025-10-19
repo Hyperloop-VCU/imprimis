@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:macro name="diffbot" params="prefix">
+<xacro:macro name="diffbot">
 
 <!-- Constants for robot dimensions -->
 <xacro:property name="PI" value="3.1415926535897931"/>
@@ -21,7 +21,7 @@
 
 <xacro:include filename="inertial_macros.xacro" />
 
-<link name="${prefix}base_link">
+<link name="base_link">
 </link>
 
 <joint name="base_footprint_joint" type="fixed">
@@ -34,13 +34,13 @@
 </link>
 
 
-<joint name="${prefix}chassis_joint" type="fixed">
-  <parent link="${prefix}base_link"/>
-  <child link="${prefix}chassis"/>
+<joint name="chassis_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="chassis"/>
   <origin xyz="-0.85 0 0"/>
 </joint>
 
-<link name="${prefix}chassis">
+<link name="chassis">
   <visual>
     <origin xyz="${base_length/2} 0 ${base_height/2}" rpy="0 0 0"/>
     <geometry>
@@ -61,16 +61,16 @@
   </xacro:inertial_box>
 </link>
 
-<joint name="${prefix}left_wheel_joint" type="continuous">
-  <parent link="${prefix}base_link"/>
-  <child link="${prefix}left_wheel"/>
+<joint name="left_wheel_joint" type="continuous">
+  <parent link="base_link"/>
+  <child link="left_wheel"/>
   <origin xyz="0 ${base_width/2+wheel_yoff} ${wheel_zoff}" rpy="-${pi/2} 0 0"/>
   <axis xyz="0 0 1"/>
   <dynamics damping="0.2"/>
 </joint>
 
     <!-- left wheel Link -->
-<link name="${prefix}left_wheel">
+<link name="left_wheel">
   <collision>
     <origin xyz="0 0 0"/>
     <geometry>
@@ -96,16 +96,16 @@
     </inertial>
   </link>
 
-    <joint name="${prefix}right_wheel_joint" type="continuous">
-      <parent link="${prefix}base_link"/>
-      <child link="${prefix}right_wheel"/>
+    <joint name="right_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="right_wheel"/>
       <origin xyz="0 ${-(base_width/2+wheel_yoff)} ${wheel_zoff}" rpy="${pi/2} 0 0"/>
       <axis xyz="0 0 -1"/>
       <dynamics damping="0.1"/>
     </joint>
 
     <!-- right wheel Link -->
-    <link name="${prefix}right_wheel">
+    <link name="right_wheel">
       <collision>
         <geometry>
           <cylinder length="${wheel_len}" radius="${wheel_radius}"/>

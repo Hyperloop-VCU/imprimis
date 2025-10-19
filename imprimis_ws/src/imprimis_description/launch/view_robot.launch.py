@@ -40,21 +40,11 @@ def generate_launch_description():
         with this launch file.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "prefix",
-            default_value='""',
-            description="Prefix of the joint names, useful for \
-        multi-robot setup. If changed than also joint names in the controllers' configuration \
-        have to be updated.",
-        )
-    )
 
     # Initialize Arguments
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     gui = LaunchConfiguration("gui")
-    prefix = LaunchConfiguration("prefix")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -62,18 +52,15 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("description"), "urdf", description_file]
+                [FindPackageShare("imprimis_description"), "urdf", description_file]
             ),
-            " ",
-            "prefix:=",
-            prefix,
         ]
     )
 
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("description"), "rviz", "diffbot_view.rviz"]
+        [FindPackageShare("imprimis_description"), "rviz", "diffbot_view.rviz"]
     )
     print(rviz_config_file)
 

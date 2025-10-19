@@ -51,7 +51,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("description"), "urdf", "diffbot.urdf.xacro"]
+                [FindPackageShare("imprimis_description"), "urdf", "diffbot.urdf.xacro"]
             ),
             " ",
             "use_mock_hardware:=",
@@ -68,7 +68,7 @@ def generate_launch_description():
         ]
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("description"), "rviz", "diffbot.rviz"]
+        [FindPackageShare("imprimis_description"), "rviz", "diffbot.rviz"]
     )
 
     control_node = Node(
