@@ -14,7 +14,8 @@
 
 from launch import LaunchDescription
 from launch import LaunchContext
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.substitutions import PythonExpression
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler, LogInfo
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
@@ -24,6 +25,9 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+
+    LogInfo(msg="Starting up imprimis hardware...")
+
     # Declare arguments
     declared_arguments = []
     declared_arguments.append(
@@ -35,15 +39,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_mock_hardware",
-            default_value="false",
-            description="Start robot with mock hardware mirroring command to its states.",
+            "hardware_type",
+            default_value="real",
+            choices=("real", "fake", "simulated"),
+            description="Choose between real hardware, completely faked hardware, or gazebo-simulated hardware.",
         )
     )
 
     # Initialize Arguments
     gui = LaunchConfiguration("gui")
-    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    hardware_type = LaunchConfiguration("hardware_type")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -54,8 +59,8 @@ def generate_launch_description():
                 [FindPackageShare("imprimis_description"), "urdf", "diffbot.urdf.xacro"]
             ),
             " ",
-            "use_mock_hardware:=",
-            use_mock_hardware,
+            "hardware_type:=",
+            hardware_type,
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -131,6 +136,7 @@ def generate_launch_description():
         robot_controller_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
         delay_joint_state_broadcaster_after_robot_controller_spawner,
+
     ]
 
     return LaunchDescription(declared_arguments + nodes)

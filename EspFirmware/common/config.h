@@ -45,7 +45,7 @@ const uint8_t B_MAC[] = {0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
 
 // Fixed period at which to update the PID controllers. Changing this will require changing the PID gains.
-#define PID_UPDATE_PERIOD_MS 10.0 // 100 Hz
+#define PID_UPDATE_PERIOD_MS 5.0 // 200 Hz
 
 // timeout for board B. It will wait this long for data from A before stopping the robot.
 const unsigned long timeout_ms = 500;
