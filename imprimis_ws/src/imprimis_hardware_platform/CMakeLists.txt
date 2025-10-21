@@ -15,14 +15,17 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
-  #imprimis_description
   rclcpp_lifecycle
 )
+
+
+# We don't need to link against gazebo, but it does need to be visible
+find_package(gazebo_ros REQUIRED)
+
 
 # find all dependencies
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake REQUIRED)
-#find_package(imprimis_description REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()

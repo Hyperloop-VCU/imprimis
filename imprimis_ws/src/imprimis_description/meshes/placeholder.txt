@@ -1,0 +1,2 @@
+This is a placeholder file, to ensure that the "meshes" directory is present
+in the repository.

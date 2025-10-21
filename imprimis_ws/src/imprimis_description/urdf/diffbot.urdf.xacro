@@ -14,8 +14,7 @@
   <xacro:include filename="$(find imprimis_description)/urdf/diffbot.ros2_control.xacro" />
   <xacro:diffbot_ros2_control name="DiffBot" hardware_type="$(arg hardware_type)"/>
 
-  <!-- Import and expand gazebo information -->
+  <!-- Import gazebo information -->
   <xacro:include filename="$(find imprimis_description)/urdf/gazebo_info.xacro"/>
-  <xacro:gazebo_info/>
 
 </robot>
