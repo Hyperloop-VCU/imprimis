@@ -39,6 +39,13 @@
   <exec_depend>gazebo_ros2_control</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>velodyne_description</exec_depend>
+  <exec_depend>velodyne_driver</exec_depend>
+  <exec_depend>velodyne_gazebo_plugins</exec_depend>
+  <exec_depend>velodyne_laserscan</exec_depend>
+  <exec_depend>velodyne_msgs</exec_depend>
+  <exec_depend>velodyne_pointcloud</exec_depend>
+  <exec_depend>velodyne_simulator</exec_depend>
 
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>controller_manager</test_depend>

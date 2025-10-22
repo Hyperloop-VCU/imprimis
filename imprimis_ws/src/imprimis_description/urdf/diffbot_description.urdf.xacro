@@ -166,12 +166,14 @@
 </link>
 
 
+<!-- Lidar pole joint-->
 <joint name="lidar_pole_joint" type="fixed">
   <parent link="chassis"/>
   <child link="lidar_pole"/>
   <origin xyz="${lidar_pole_xoff} 0 ${base_height}"/>
 </joint>
 
+<!-- Lidar pole link-->
 <link name="lidar_pole">
   <visual>
     <geometry>
@@ -188,6 +190,12 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </xacro:inertial_box>
 </link>
+
+<!-- Lidar joint and link -->
+<xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+  <xacro:VLP-16 parent="lidar_pole" name="velodyne" topic="/velodyne_points" organize_cloud="false" hz="10" samples="440" gpu="false">
+    <origin xyz="0 0 ${lidar_pole_height/2}" rpy="0 0 0" />
+  </xacro:VLP-16>
 
 
 </xacro:macro>
