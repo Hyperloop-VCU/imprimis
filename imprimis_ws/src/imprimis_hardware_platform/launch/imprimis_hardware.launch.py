@@ -119,6 +119,26 @@ def generate_launch_description():
         arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
     )
 
+    # Actual velodyne LIDAR driver, if we are using real hardware
+    velodyne_driver_launch_include = IncludeLaunchDescription(
+            PathJoinSubstitution([
+                FindPackageShare('velodyne_driver'),
+                'launch',
+                'velodyne_driver_node-VLP16-launch.py'
+            ]),
+            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        ) 
+    
+    # Convert LIDAR packets to usable data, if we are using real hardware
+    velodyne_converter_launch_include = IncludeLaunchDescription(
+            PathJoinSubstitution([
+                FindPackageShare('velodyne_pointcloud'),
+                'launch',
+                'velodyne_transform_node-VLP16-launch.py'
+            ]),
+            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        ) 
+
 
     # Gazebo, if we're using simulated hardware
     gazebo_launch_include = IncludeLaunchDescription(
@@ -170,6 +190,9 @@ def generate_launch_description():
         gazebo_launch_include,           # sim only
         spawn_imprimis_gazebo,           # sim only
         controller_input_launch_include, # if we need it
+        velodyne_driver_launch_include,   # real hardware only
+        velodyne_converter_launch_include # real hardware only
+
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
