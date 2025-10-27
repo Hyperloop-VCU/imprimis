@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>imprimis_description</name>
-  <version>0.0.1</version>
-  <description>Contains imprimis's URDF, and a launch file to view the URDF.</description>
+  <name>imprimis_nav_configs</name>
+  <version>0.0.0</version>
+  <description>Configuration and launch files for robot_localization, SLAM, and nav2 on imprimis.</description>
   <maintainer email="rayneralla@icloud.com">ray</maintainer>
   <license>TODO: License declaration</license>
 
@@ -11,16 +11,11 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz</exec_depend>
   <exec_depend>xacro</exec_depend>
-  <exec_depend>rviz2</exec_depend>
-  <exec_depend>velodyne_description</exec_depend>
-  <exec_depend>velodyne_driver</exec_depend>
-  <exec_depend>velodyne_gazebo_plugins</exec_depend>
-  <exec_depend>velodyne_laserscan</exec_depend>
-  <exec_depend>velodyne_msgs</exec_depend>
-  <exec_depend>velodyne_pointcloud</exec_depend>
-  <exec_depend>velodyne_simulator</exec_depend>
-
 
   <export>
     <build_type>ament_cmake</build_type>

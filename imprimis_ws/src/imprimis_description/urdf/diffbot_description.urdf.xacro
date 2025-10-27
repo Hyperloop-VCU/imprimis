@@ -17,7 +17,7 @@
 <xacro:property name="base_top_width" value="0.749"/>
 <xacro:property name="base_top_height" value="0.305"/>
 <xacro:property name="lidar_pole_side" value="0.025"/> <!-- TODO measure lidar pole values -->
-<xacro:property name="lidar_pole_height" value="1.0"/>
+<xacro:property name="lidar_pole_height" value="0.6"/>
 <xacro:property name="lidar_pole_xoff" value="0.5"/>
 <xacro:property name="lidar_pole_mass" value="2.0"/>
 
@@ -170,7 +170,7 @@
 <joint name="lidar_pole_joint" type="fixed">
   <parent link="chassis"/>
   <child link="lidar_pole"/>
-  <origin xyz="${lidar_pole_xoff} 0 ${base_height}"/>
+  <origin xyz="${lidar_pole_xoff} 0 ${(3/2) * base_height}"/>
 </joint>
 
 <!-- Lidar pole link-->
