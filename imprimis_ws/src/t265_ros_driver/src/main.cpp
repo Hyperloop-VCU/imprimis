@@ -102,7 +102,7 @@ class t265Node : public rclcpp::Node
     pipe.start(cfg);
 
 
-    _publisher = create_publisher<nav_msgs::msg::Odometry>("camera_odom", 10);
+    _publisher = create_publisher<nav_msgs::msg::Odometry>("/t265/odom", 10);
   }
 
 
@@ -121,23 +121,23 @@ class t265Node : public rclcpp::Node
       auto msg = nav_msgs::msg::Odometry();
       msg.header.stamp = this->now();
       msg.header.frame_id = "odom";
-      msg.child_frame_id = "base_link";
+      msg.child_frame_id = "lidar_pole";
 
       // set message data 
       // I have to do it like this, since rs2 defines custom vector types that don't implicitly cast
-      msg.pose.pose.position.x = pose_data.translation.x; // position (m)
-      msg.pose.pose.position.y = pose_data.translation.y;
-      msg.pose.pose.position.z = pose_data.translation.z;
-      msg.pose.pose.orientation.x = pose_data.rotation.x; // rotation (quat, r)
-      msg.pose.pose.orientation.y = pose_data.rotation.y;
-      msg.pose.pose.orientation.z = pose_data.rotation.z;
+      msg.pose.pose.position.x = -pose_data.translation.z; // position (m)
+      msg.pose.pose.position.y = -pose_data.translation.x;
+      msg.pose.pose.position.z = pose_data.translation.y;
+      msg.pose.pose.orientation.x = pose_data.rotation.z; // rotation (quat, r)
+      msg.pose.pose.orientation.y = pose_data.rotation.x;
+      msg.pose.pose.orientation.z = pose_data.rotation.y;
       msg.pose.pose.orientation.w = pose_data.rotation.w;
-      msg.twist.twist.linear.x = pose_data.velocity.x; // velocity (m/s)
-      msg.twist.twist.linear.y = pose_data.velocity.y;
-      msg.twist.twist.linear.z = pose_data.velocity.z;
-      msg.twist.twist.angular.x = pose_data.angular_velocity.x; // angular velocity (r/s)
-      msg.twist.twist.angular.y = pose_data.angular_velocity.y;
-      msg.twist.twist.angular.z = pose_data.angular_velocity.z;
+      msg.twist.twist.linear.x = -pose_data.velocity.z; // velocity (m/s)
+      msg.twist.twist.linear.y = -pose_data.velocity.x;
+      msg.twist.twist.linear.z = pose_data.velocity.y;
+      msg.twist.twist.angular.x = pose_data.angular_velocity.z; // angular velocity (r/s)
+      msg.twist.twist.angular.y = pose_data.angular_velocity.x;
+      msg.twist.twist.angular.z = pose_data.angular_velocity.y;
       _publisher->publish(msg);
     }
     rclcpp::shutdown();
