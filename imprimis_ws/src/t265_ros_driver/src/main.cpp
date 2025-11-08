@@ -128,8 +128,8 @@ class t265Node : public rclcpp::Node
       msg.pose.pose.position.x = -pose_data.translation.z; // position (m)
       msg.pose.pose.position.y = -pose_data.translation.x;
       msg.pose.pose.position.z = pose_data.translation.y;
-      msg.pose.pose.orientation.x = pose_data.rotation.z; // rotation (quat, r)
-      msg.pose.pose.orientation.y = pose_data.rotation.x;
+      msg.pose.pose.orientation.x = -pose_data.rotation.z; // rotation (quat, r)
+      msg.pose.pose.orientation.y = -pose_data.rotation.x;
       msg.pose.pose.orientation.z = pose_data.rotation.y;
       msg.pose.pose.orientation.w = pose_data.rotation.w;
       msg.twist.twist.linear.x = -pose_data.velocity.z; // velocity (m/s)
