@@ -40,15 +40,15 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "control_type",
-            default_value="other",
-            choices=("keyboard", "controller", "other"),
-            description="How imprimis will actually be controlled. Choice between keyboard, joystick controller, or other. Keyboard input is not implemented yet.",
+            "use_controller",
+            default_value="false",
+            choices=("true", "false"),
+            description="Whether or not to start up the logitech controller input node",
         )
     )
     gui = LaunchConfiguration("gui")
     hardware_type = LaunchConfiguration("hardware_type")
-    control_type = LaunchConfiguration("control_type")
+    use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
 
 
@@ -187,7 +187,7 @@ def generate_launch_description():
                 'frame': 'base_link',
                 'joy_vel': 'diffbot_base_controller/cmd_vel'
                 }.items(),
-        condition=IfCondition(PythonExpression(["'", control_type, "' == 'controller'"]))
+        condition=IfCondition(use_controller)
         )
     
     

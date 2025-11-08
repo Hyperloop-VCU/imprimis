@@ -23,8 +23,8 @@ diffbot_base_controller:
     publish_rate: 50.0  # Output topic update rate (higher-level)
     odom_frame_id: odom
     base_frame_id: base_link
-    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
-    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
+    pose_covariance_diagonal : [0.002, 0.002, 0.002, 0.002, 0.002, 0.002]
+    twist_covariance_diagonal: [0.002, 0.002, 0.002, 0.002, 0.002, 0.002]
 
     open_loop: false
     enable_odom_tf: false

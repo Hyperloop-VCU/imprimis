@@ -82,12 +82,12 @@ class t265Node : public rclcpp::Node
   rs2::pipeline pipe;
   rs2::config cfg;
 
-
+  float covariance_diagonal;
 
   public:
 
   // Constructor for the node
-  t265Node() : Node("t265_node")
+  t265Node() : Node("t265_node"), covariance_diagonal(0.001)
   {
     RCLCPP_INFO(get_logger(), "Starting Intel Realsense t265 driver node.");
 
@@ -128,7 +128,7 @@ class t265Node : public rclcpp::Node
       msg.pose.pose.position.x = -pose_data.translation.z; // position (m)
       msg.pose.pose.position.y = -pose_data.translation.x;
       msg.pose.pose.position.z = pose_data.translation.y;
-      msg.pose.pose.orientation.x = -pose_data.rotation.z; // rotation (quat, r)
+      msg.pose.pose.orientation.x = pose_data.rotation.z; // rotation (quat, r)
       msg.pose.pose.orientation.y = -pose_data.rotation.x;
       msg.pose.pose.orientation.z = pose_data.rotation.y;
       msg.pose.pose.orientation.w = pose_data.rotation.w;
@@ -138,6 +138,13 @@ class t265Node : public rclcpp::Node
       msg.twist.twist.angular.x = pose_data.angular_velocity.z; // angular velocity (r/s)
       msg.twist.twist.angular.y = pose_data.angular_velocity.x;
       msg.twist.twist.angular.z = pose_data.angular_velocity.y;
+
+      for (int i = 0; i <= 35; i += 7)
+      {
+        msg.pose.covariance[i] = covariance_diagonal;
+        msg.twist.covariance[i] = covariance_diagonal;
+      }
+    
       _publisher->publish(msg);
     }
     rclcpp::shutdown();
