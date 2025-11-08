@@ -25,6 +25,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "publish_odom_tf",
+            default_value="true",
+            description="Enable/disable the diff drive controller publising the odom->base_link transform. Should be false when using robot_localization.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "hardware_type",
             default_value="real",
             choices=("real", "fake", "simulated"),
@@ -42,6 +49,7 @@ def generate_launch_description():
     gui = LaunchConfiguration("gui")
     hardware_type = LaunchConfiguration("hardware_type")
     control_type = LaunchConfiguration("control_type")
+    publish_odom_tf = LaunchConfiguration("publish_odom_tf")
 
 
     # Get URDF via xacro
@@ -61,11 +69,14 @@ def generate_launch_description():
 
 
     # controller manager, if we are not using simulated hardware
+    controller_config_filename = PythonExpression([
+    "'diffbot_controllers.yaml' if '", publish_odom_tf, "' == 'true' else 'diffbot_controllers_no_odom_tf.yaml'"
+])
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_hardware_platform"),
             "config",
-            "diffbot_controllers.yaml",
+            controller_config_filename,
         ]
     )
     controller_manager_node = Node(
