@@ -201,8 +201,8 @@ def generate_launch_description():
         gazebo_launch_include,           # sim only
         spawn_imprimis_gazebo,           # sim only
         controller_input_launch_include, # if we need it
-        velodyne_driver_launch_include,   # real hardware only
-        velodyne_converter_launch_include # real hardware only
+        #velodyne_driver_launch_include,   # real hardware only
+        #velodyne_converter_launch_include # real hardware only
 
     ]
 

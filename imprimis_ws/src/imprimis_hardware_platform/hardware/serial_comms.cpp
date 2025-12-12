@@ -4,9 +4,9 @@
 #include <serial/serial.h>
 #include <sstream>
 #include <iomanip>
-#include <iostream> // TODO
 #include <cstring>
 #include <memory>
+#include <cmath>
 
 namespace 
 {
@@ -68,6 +68,7 @@ SerialLink::Status SerialLink::read_current_angvels(float& leftAngVel, float& ri
         
         std::memcpy(&leftAngVel,  bytes.data(), sizeof(float)); // assuming left, right
         std::memcpy(&rightAngVel, bytes.data()+sizeof(float), sizeof(float));
+        if (std::isnan(leftAngVel) || std::isnan(rightAngVel)) return Status::ReadFailed;
         return Status::Ok;
     } 
     catch (...) 

@@ -16,10 +16,12 @@
 <xacro:property name="wheel_zoff" value="0.054"/>
 <xacro:property name="base_top_width" value="0.749"/>
 <xacro:property name="base_top_height" value="0.305"/>
-<xacro:property name="lidar_pole_side" value="0.025"/> <!-- TODO measure lidar pole values -->
-<xacro:property name="lidar_pole_height" value="0.6"/>
-<xacro:property name="lidar_pole_xoff" value="0.5"/>
+<xacro:property name="lidar_pole_side" value="0.023"/> 
+<xacro:property name="lidar_pole_height" value="0.635"/> <!-- height from the top of chassis to lidar-->
+<xacro:property name="lidar_pole_xoff" value="0.48"/> <!-- length from back of robot to lidar pole-->
 <xacro:property name="lidar_pole_mass" value="2.0"/>
+<xacro:property name="t265_mount_zoff" value="0.421"/> <!-- height from top of chassis to the camera-->
+<xacro:property name="lidar_pole_angle" value="0.035"/> <!-- tilt of the lidar pole along the x axis-->
 
 <!-- Constants for simulated caster wheel-->
 <xacro:property name="caster_mass" value="0.1"/>
@@ -170,7 +172,7 @@
 <joint name="lidar_pole_joint" type="fixed">
   <parent link="chassis"/>
   <child link="lidar_pole"/>
-  <origin xyz="${lidar_pole_xoff} 0 ${(3/2) * base_height}"/>
+  <origin xyz="${lidar_pole_xoff} 0 ${base_height}"/>
 </joint>
 
 <!-- Lidar pole link-->
@@ -180,21 +182,36 @@
       <box size="${lidar_pole_side} ${lidar_pole_side} ${lidar_pole_height}"/>
     </geometry>
   <material name="grey"/>
+  <origin xyz="0 0 ${lidar_pole_height/2}"/>
   </visual>
   <collision>
     <geometry>
       <box size="${lidar_pole_side} ${lidar_pole_side} ${lidar_pole_height}"/>
     </geometry>
+    <origin xyz="0 0 ${lidar_pole_height/2}"/>
   </collision>
   <xacro:inertial_box mass="${lidar_pole_mass}" x="${lidar_pole_side}" y="${lidar_pole_side}" z="${lidar_pole_height}"> <!-- inertial macro -->
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 ${lidar_pole_height/2}" rpy="0 0 0"/>
   </xacro:inertial_box>
 </link>
+
+<!-- t265 joint-->
+<joint name="t265_joint" type="fixed">
+  <parent link="lidar_pole"/>
+  <child link="t265"/>
+  <origin xyz="0 0 ${t265_mount_zoff}"/>
+</joint>
+
+<!-- t265 link -->
+<link name="t265">
+</link>
+
+
 
 <!-- Lidar joint and link -->
 <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
   <xacro:VLP-16 parent="lidar_pole" name="velodyne" topic="/velodyne_points" organize_cloud="false" hz="10" samples="440" gpu="false">
-    <origin xyz="0 0 ${lidar_pole_height/2}" rpy="0 0 0" />
+    <origin xyz="0 0 ${lidar_pole_height}" rpy="0 0 0" />
   </xacro:VLP-16>
 
 

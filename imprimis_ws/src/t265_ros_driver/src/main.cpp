@@ -121,7 +121,7 @@ class t265Node : public rclcpp::Node
       auto msg = nav_msgs::msg::Odometry();
       msg.header.stamp = this->now();
       msg.header.frame_id = "odom";
-      msg.child_frame_id = "lidar_pole";
+      msg.child_frame_id = "t265";
 
       // set message data 
       // I have to do it like this, since rs2 defines custom vector types that don't implicitly cast

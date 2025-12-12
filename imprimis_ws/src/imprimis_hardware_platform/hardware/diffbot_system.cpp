@@ -253,19 +253,16 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
     // read succeeded
     hw_velocities_[0] = static_cast<double>(leftAngvel);
     hw_velocities_[1] = static_cast<double>(rightAngvel);
+    // integrate velocity to get position
+    hw_positions_[0] = hw_positions_[0] + period.seconds() * hw_velocities_[0];
+    hw_positions_[1] = hw_positions_[1] + period.seconds() * hw_velocities_[1];
   }
   else
   {
     // read failed
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from microcontroller.");
-    hw_velocities_[0] = 0; // assume the motors powered off, velocity=0
-    hw_velocities_[1] = 0;
+    // velocity kept to what it was previously
   }
-
-
-  // integrate velocity to get position
-  hw_positions_[0] = hw_positions_[0] + period.seconds() * hw_velocities_[0];
-  hw_positions_[1] = hw_positions_[1] + period.seconds() * hw_velocities_[1];
 
 
   // print the newly-read states if debugging
