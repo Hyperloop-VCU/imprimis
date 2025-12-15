@@ -29,27 +29,6 @@ struct dataPacket
 };
 
 
-// Returns the initial data packet - all zeros
-struct dataPacket initialData()
-{
-  struct dataPacket data = 
-  {
-    .setLeftAngvel = 0.0,
-    .setRightAngvel = 0.0,
-    .currLeftAngvel = 0.0,
-    .reset = false,
-    .gainChange = 0, // 0 for no change, 1 for left, 2 for right. Can't use an enum because of serial data
-    .newKp = 0.0,
-    .newKi = 0.0,
-    .newKd = 0.0,
-    .pidLeftError = 0.0,
-    .pidRightError = 0.0,
-  };
-
-  return data;
-}
-
-
 
 // Debug function to print all the data in the packet (except gain change and PID gains) to the USB-C serial port.
 // Uses C-style pass by pointer.

@@ -32,7 +32,7 @@ volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers
 volatile int rightEncoderCount = 1;
 MotorController leftController(2.3, 6.2, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
 MotorController rightController(2.3, 6.2, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
-dataPacket data = initialData();
+dataPacket data{};
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = millis();
 unsigned long time_of_last_controller_update = millis();
