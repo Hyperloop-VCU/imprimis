@@ -26,6 +26,7 @@ esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = millis();
 unsigned long time_of_last_controller_update = millis();
 bool inactive = true;
+bool openLoop = true;
 
 
 // On-data-received callback, runs when board A sends data to board B.
@@ -34,8 +35,8 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   time_of_last_data_receive = millis();
   memcpy(&data, incomingData, sizeof(data));
 
-  // reset if we're commanded to, or we're activating
-  if (inactive || data.reset) {
+  // reset if we're commanded to, we're activating, or we're switching modes
+  if (inactive || data.reset || (openLoop != data.openLoop)) {
     leftController.reset();
     rightController.reset();
     leftEncoderCount = 0;
@@ -62,6 +63,7 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   // send processed data back to board A
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
   inactive = false;
+  openLoop = data.openLoop;
 }
 
 
@@ -125,10 +127,16 @@ void loop()
     return;
   }
 
-  // Update PID controllers at a fixed rate
+  // Update controllers at a fixed rate, regardless of open/closed loop
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
-    leftController.update(leftEncoderCount, millis());
-    rightController.update(rightEncoderCount, millis());
+    if (openLoop) {
+      leftController.update_openloop(leftEncoderCount, millis());
+      rightController.update_openloop(rightEncoderCount, millis());
+    }
+    else {
+      leftController.update(leftEncoderCount, millis());
+      rightController.update(rightEncoderCount, millis());
+    }
     leftEncoderCount = 0;
     rightEncoderCount = 0;
     time_of_last_controller_update = millis();
