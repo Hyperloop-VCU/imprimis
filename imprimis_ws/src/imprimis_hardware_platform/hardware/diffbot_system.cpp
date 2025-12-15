@@ -251,11 +251,11 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   if (read_status == SerialLink::Status::Ok)
   {
     // read succeeded
-    hw_velocities_[0] = static_cast<double>(leftAngvel);
-    hw_velocities_[1] = static_cast<double>(rightAngvel);
+    hw_velocities_[0] = static_cast<float>(leftAngvel);
+    hw_velocities_[1] = static_cast<float>(rightAngvel);
     // integrate velocity to get position
-    hw_positions_[0] = hw_positions_[0] + period.seconds() * hw_velocities_[0];
-    hw_positions_[1] = hw_positions_[1] + period.seconds() * hw_velocities_[1];
+    hw_positions_[0] += period.seconds() * hw_velocities_[0];
+    hw_positions_[1] += period.seconds() * hw_velocities_[1];
   }
   else
   {

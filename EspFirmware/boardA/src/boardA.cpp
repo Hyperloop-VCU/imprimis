@@ -6,37 +6,31 @@
 #include <WiFi.h>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
+#include <IBusBM.h>
 
 
 // Global variables
-const short status_greenPin = 25;
-const short status_yellowPin = 26;
-int status_YellowMilliseconds = 1000;
 bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
 unsigned long time_of_last_command_recieve = millis();
 unsigned long t0;
-dataPacket data{}; // initial data
+dataPacket data{};
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
+bool manual_mode = true;
+IBusBM IBus;
 
 
-// Receive data callback: runs whenever board B sends data to board A (when a velocity command appears)
-// Sets board A's local data to what board B sent it, then passes along
-// the position and velocity of each motor to the PC.
-// Whenever A sends data to B, B does its processing, updates the data if necessary,
-// then sends the data back to A.
+// Receive data callback: runs whenever B sends data to A
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
   memcpy(&data, incomingData, sizeof(data));
-  float x = 0.1;
-  Serial.write((byte*)(&x), sizeof(float));
-  Serial.write((byte*)(&x), sizeof(float));
+  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
+  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
 
 
-// Send data callback: runs whenever board A sends data to board B.
-// Ensures board B received the data. Handles retry and is_connected logic.
+// Send data callback: runs whenever A sends data to B
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   if (status != ESP_NOW_SEND_SUCCESS) is_connected = false;
@@ -46,9 +40,9 @@ void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 
 // Reads the first character from serial data and executes the command associated with that character.
 // Does nothing if there is no serial data to read
-// command RESET_ENCODERS: Resets the encoder counts and PID integral to 0.
-// command ANGVEL_SETPOINT: Gives a new angular-velocity setpoint to the PID controllers.
-// command SET_PID: Updates the pid gains of the controllers. Sets both the left and right wheel controllers to the same gain.
+// command RESET_ENCODERS: Set data.reset to true, does not send to board B right away
+// command ANGVEL_SETPOINT: Send new angular velocity setpoints to board B
+// command SET_PID: Send new PID gains to board B
 void doCommand() 
 {
 
@@ -64,7 +58,6 @@ void doCommand()
     case ANGVEL_SETPOINT: {
       serialReadFloat(data.setLeftAngvel);
       serialReadFloat(data.setRightAngvel);
-      // send data to B
       esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
@@ -74,7 +67,6 @@ void doCommand()
       serialReadFloat(data.newKi);
       serialReadFloat(data.newKd);
       serialReadInt(data.gainChange);
-      // send data to B
       esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
       break;
     }
@@ -84,11 +76,31 @@ void doCommand()
   }
 }
 
+bool is_autonomous()
+{
+  return IBus.readChannel(4) == 2000; // SWA on controller
+}
+
+// reads from the appropriate channels on the RC reciever and sends the right data to board B.
+void handle_manual_input()
+{
+  float x_normalized = (IBus.readChannel(0) - 1500.0) / 500.0;
+  float y_normalized = (IBus.readChannel(1) - 1500.0) / 500.0;
+  data.setLeftAngvel = y_normalized;
+  data.setRightAngvel = y_normalized;
+  data.setLeftAngvel += x_normalized;
+  data.setRightAngvel -= x_normalized;
+  esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+}
+
 
 void setup() 
 {  
-  delay(100);
+  // setup serial port and radio reciever data
   Serial.begin(SERIAL_BAUD_RATE_A);
+  IBus.begin(Serial2, 1, RC_IBUS_RX, -1);
+
+  // setup ESP-now and callbacks
   WiFi.mode(WIFI_STA);
   esp_now_init();
   memcpy(peerInfo.peer_addr, B_MAC, 6);
@@ -98,24 +110,38 @@ void setup()
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
   esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
 
-  pinMode(status_greenPin, OUTPUT);
-  pinMode(status_yellowPin, OUTPUT);
-  // Get the current time
+  // setup status lights
+  pinMode(GREEN_LIGHT, OUTPUT);
+  pinMode(YELLOW_LIGHT, OUTPUT);
   status_YellowLastSwitched = millis();
 }
 
 
 void loop() 
 {
-  // Digital Write to pins 25-Green 26-Yellow
-  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) {
+  bool autonomous = is_autonomous();
+
+  // handle yellow light
+  if (!autonomous) {
+    digitalWrite(YELLOW_LIGHT, HIGH);
+    status_YellowLightOn = true;
+  }
+  else if ((millis() - status_YellowLastSwitched) > YELLOW_SWITCH_PERIOD_MS) {
     status_YellowLightOn = !status_YellowLightOn;
-    digitalWrite(status_yellowPin, (status_YellowLightOn ? HIGH : LOW));
+    digitalWrite(YELLOW_LIGHT, (status_YellowLightOn ? HIGH : LOW));
     status_YellowLastSwitched = millis();
   }
   
-  doCommand();
+  // handle motor control
+  if (autonomous) {
+    data.openLoop = false;
+    doCommand();
+  }
+  else {
+    data.openLoop = true;
+    handle_manual_input();
+  }
 
-  if (millis() - time_of_last_command_recieve > 500) digitalWrite(status_greenPin, LOW);
-  else digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
+  // handle green light
+  digitalWrite(GREEN_LIGHT, (is_connected ? HIGH : LOW));
 }

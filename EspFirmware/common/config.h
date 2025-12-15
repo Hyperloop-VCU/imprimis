@@ -4,10 +4,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-
-// if the data fails to be sent from A to B or B to A this many times in a row, the system will shut down
-#define MAX_SEND_RETRIES 10
-
 // physical measurements of the robot - should eventually be paramaterized in ROS and sent to this board on startup
 #define WHEEL_RADIUS 0.1651
 #define HALF_WHEEL_TRACK_LENGTH 0.4432
@@ -22,9 +18,16 @@
 const uint8_t A_MAC[] = {0x80, 0xf3, 0xda, 0x62, 0xfa, 0xa8}; //{0x14, 0x2B, 0x2F, 0xDA, 0x7D, 0x10};
 const uint8_t B_MAC[] = {0x80, 0xf3, 0xda, 0x62, 0xfc, 0xa4}; //{0x14, 0x2B, 0x2F, 0xDB, 0xCB, 0x9C};
 
+// pins for board A
+#define GREEN_LIGHT 25
+#define YELLOW_LIGHT 26
+#define RC_IBUS_RX 27
 
-// pins for board B
-// Motor output is pin 17. It's assigned automatically when the serial port is initialized.
+// yellow light switching speed for autonomous mode, board A
+#define YELLOW_SWITCH_PERIOD_MS 1000
+
+
+// pins for board B (motor output is pin 17 by default)
 #define LA 25 // must be interrupt capable
 #define LB 34
 #define RA 35 // must be interrupt capable
