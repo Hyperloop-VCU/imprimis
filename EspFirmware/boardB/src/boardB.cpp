@@ -129,6 +129,8 @@ void loop()
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
     leftController.update(leftEncoderCount, millis());
     rightController.update(rightEncoderCount, millis());
+    leftEncoderCount = 0;
+    rightEncoderCount = 0;
     time_of_last_controller_update = millis();
   }
 }
