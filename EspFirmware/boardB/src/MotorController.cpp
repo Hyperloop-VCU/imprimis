@@ -34,8 +34,7 @@ class MotorController
     }
 
 
-  // Updates the PID controller and PID output and the wheel angular velocity.
-  // nominal PID output ranges from -63.0 to 63.0
+  // Updates the PID controller and PID output and the wheel angular velocity. Nominal PID output ranges from -63.0 to 63.0
   // count : encoder counts since the last call to update.
   // current_time : current time as read from the millis() function.
   void update(int count, unsigned long current_time) 
@@ -57,20 +56,41 @@ class MotorController
     // set previous values
     prevError = currError;
     time_of_last_update = millis();
+    first_update = false;
 
     // make the motor move
+    if (debugB) Serial.printf("%5s: CL %+2.2f\n", (right ? "RIGHT" : "LEFT"), pidOutput);
     setSpeed(pidOutput);
     currAngvel = wheel_angvel;
+  }
 
+  // Performs an open-loop update; does not use PID controller. Updates the current wheel angvel as well.
+  // The input is the internal setpoint, which should range from -1.0 to 1.0. -1.0 is full reverse, 0.0 is stop, and 1.0 is full forward.
+  void update_openloop(int count, unsigned long current_time)
+  {
+    // calculate DT and angvel
+    float DT_seconds;
+    if (first_update) DT_seconds = 1 / (PID_UPDATE_PERIOD_MS / 1000.0);
+    else DT_seconds = (current_time - time_of_last_update) / 1000.0;
+    currAngvel = count * ((2 * M_PI) / (countsPerRev * DT_seconds));
+
+    // print if needed
+    if (debugB) {
+      float set = setpointAngvel;
+      Serial.printf("%5s: OL %+2.2f\n", (right ? "RIGHT" : "LEFT"), set);
+    }
+
+    // make the motor move
+    setSpeed(setpointAngvel * 63.0);
+
+    // set previous values
+    time_of_last_update = millis();
     first_update = false;
   }
 
 
-    // sets the speed of the motor given a value between -63 and +63.
-    // setSpeed converts this into the appropriate single-byte serial simplified command and writes it.
-    // bit 7 controls which motor to write to,
-    // bit 6 controls the direction: fwd or reverse,
-    // bits 0-5 control speed. (decimal: 0-63)
+    // Sets the speed of the motor given a value between -63 and +63 by converting it into the appropriate single-byte serial simplified command and writing it.
+    // Bit 7 controls which motor to write to, bit 6 controls the direction, bits 0-5 control speed.
     void setSpeed(float pidOutput)
     {
       // get channel, direction, and speed sections of the data byte
@@ -85,16 +105,6 @@ class MotorController
       // actually make the motor move
       uint8_t data = speed | direction | channel;
       Serial2.write(data);
-
-      // print debug info if needed
-      if (debugB) {
-        if (right) Serial.print("RIGHT: ");
-        else Serial.print("LEFT: ");
-        char info[15];
-        sprintf(info, "%+2.2f   ", pidOutput);
-        Serial.print(info);
-        if (right) Serial.println();
-      }
     }
 
     // should be called before calling update again after not using that method for a while.
