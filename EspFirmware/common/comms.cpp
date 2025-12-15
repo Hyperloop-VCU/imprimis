@@ -1,62 +1,32 @@
 // This file defines the format of the data packet shared between the two boards
-// and defines utility functions to read data from the serial port.
-
-
+// and utility functions to read data from the serial port.
 #ifndef COMMS_CPP
 #define COMMS_CPP
 
 #include <Arduino.h>
-#include "config.h"
 
-
-
-// Data packet structure definition.
 struct dataPacket 
 {
-    float setLeftAngvel;         // Angular velocity setpoint for the left PID controller
-    float setRightAngvel;        // Angular velocity setpoint for the left PID controller
-    float currLeftAngvel;        // Current angular velocity of the left wheel
-    float currRightAngvel;       // Current angular velocity of the right wheel
-    bool reset;                  // Flag which indicates if board B needs to reset the encoder counts
-
-    int gainChange;              // indicates which PID controller to change when modifying the gains. 0 for no change, 1 for left, 2 for right. Can't use an enum because of serial data
-    float newKp;                 // Proportional gain of each wheel's PID controller
-    float newKi;                 // Integral gain of each wheel's PID controller
-    float newKd;                 // Derivative gain of each wheel's PID controller
-
-    float pidLeftError;          // left PID controller error value
-    float pidRightError;         // right PID controller error value    
+  float setLeftAngvel;         // Angular velocity setpoint for the left PID controller, or open-loop effort if openLoop=true
+  float setRightAngvel;        // Angular velocity setpoint for the right PID controller, or open-loop effort if openLoop=true
+  float currLeftAngvel;        // Current angular velocity of the left wheel
+  float currRightAngvel;       // Current angular velocity of the right wheel
+  bool reset;                  // If board A sets this to true, B will reset the motor controllers and encoder counts, then set it back to false
+  int gainChange;              // If board A sets this to 1, B will update the left controller and set it back to 0. If A sets it to 2, B will update the right controller and set it back to 0.
+  float newKp;                 // Proportional gain of PID controller
+  float newKi;                 // Integral gain of PID controller
+  float newKd;                 // Derivative gain of PID controller
+  bool openLoop;               // If true, board B will treat the setLeftAngvel and setRightAngvel as open-loop controls (1.0 for full forward, 0.0 for stop, -1.0 for reverse)
 };
 
-
-
-// Debug function to print all the data in the packet (except gain change and PID gains) to the USB-C serial port.
-// Uses C-style pass by pointer.
-void printAllData(dataPacket* data)
-{
-  Serial.print("setLeftAngvel: " + String(data->setLeftAngvel));
-  Serial.print(", setRightAngvel: " + String(data->setRightAngvel));
-  Serial.print(", currLeftAngvel: " + String(data->currLeftAngvel));
-  Serial.print(", currRightAngvel: " + String(data->currRightAngvel));
-  Serial.print(", reset: " + String(data->reset));
-  Serial.print(", pidLeftError: " + String(data->pidLeftError));
-  Serial.println(", pidRightError: " + String(data->pidRightError));
-}
-  
-
-
-
-// Utility: read a float from the serial input and store it in f.
+// Read a float from the serial input and store it in f.
 void serialReadFloat(float &f) 
 { 
   while (!Serial.available());
   f = Serial.parseFloat();
 }
 
-
-
-
-// Utility: read an int from the serial input and store it in i.
+// Read an int from the serial input and store it in i.
 void serialReadInt(int &i) 
 {
   while (!Serial.available());

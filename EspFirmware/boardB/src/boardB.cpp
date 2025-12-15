@@ -1,14 +1,6 @@
 // This is the firmware for ESP32 board "B" connected to the motor driver and encoders
-// Board B has the following responsibilities:
-//  - Accept angular velocity commands from board A
-//  - Report the actual angular velocity of each wheel back to board A
-//  - Run one PID controller for each motor to make them move
-//  - Read from the encoders
-
-// The PID loop runs at a fixed rate, but the controllers still calculate their own DT.
-
-// If we haven't received data for some time,
-// we give both controllers a setpoint of '0' to stop the robot.
+// B recieves wheel setpoint data from A and runs a PID controller on each motor. The PID loop runs at a fixed rate.
+// If we haven't received data for some time, we give both controllers a setpoint of '0' to stop the robot.
 
 
 #include <math.h>
@@ -20,18 +12,15 @@
 #include "MotorController.cpp"
 
 
-
-
-bool debugB = false; // true to initialize the USB-C serial and print info to it
-
-
+// true to initialize the USB-C serial and print info to it
+bool debugB = true;
 
 
 // global variables
-volatile int leftEncoderCount = -1; // should start at 0, but interrupt triggers once for some reason
-volatile int rightEncoderCount = 1;
-MotorController leftController(2.3, 6.2, 0.0, 0, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(2.3, 6.2, 0.0, 1, RIGHT_COUNTS_PER_REV, debugB);
+volatile int leftEncoderCount = 0;
+volatile int rightEncoderCount = 0;
+MotorController leftController(2.3, 6.2, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(2.3, 6.2, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
 dataPacket data{};
 esp_now_peer_info_t peerInfo;
 volatile unsigned long time_of_last_data_receive = millis();
@@ -39,21 +28,14 @@ unsigned long time_of_last_controller_update = millis();
 bool inactive = true;
 
 
-
-
 // On-data-received callback, runs when board A sends data to board B.
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
+void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len) 
 { 
-
-  // update timer
   time_of_last_data_receive = millis();
-
-  // copy received data for processing
   memcpy(&data, incomingData, sizeof(data));
 
   // reset if we're commanded to, or we're activating
-  if (inactive || data.reset)
-  {
+  if (inactive || data.reset) {
     leftController.reset();
     rightController.reset();
     leftEncoderCount = 0;
@@ -62,13 +44,11 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   }
   
   // update controller PID gains if necessary
-  if (data.gainChange == 1) 
-  {
+  if (data.gainChange == 1)  {
     leftController.setPID(data.newKp, data.newKi, data.newKd);
     data.gainChange = 0;
   }
-  else if (data.gainChange == 2) 
-  {
+  else if (data.gainChange == 2)  {
     rightController.setPID(data.newKp, data.newKi, data.newKd);
     data.gainChange = 0;
   }
@@ -82,7 +62,6 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   // send processed data back to board A
   esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
   inactive = false;
-
 }
 
 
@@ -102,20 +81,13 @@ void IRAM_ATTR readLeftEncoder()
 }
 
 
-
-
-
-// Setup function: runs once on board B power-on
-// sets up the I/O pins and serial port,
-// then initializes ESP_now and registers the callback.
-// Note that board A does not need to be on for this function to run successfully.
 void setup() 
 {
-
   // setup serial
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
   if (debugB) Serial.begin(DEBUG_BAUD_RATE_B);
 
+  // initialize pins, attach interrputs to encoder pins
   pinMode(LA, INPUT_PULLUP);
   pinMode(RA, INPUT_PULLUP);
   pinMode(LB, INPUT_PULLUP);
@@ -125,7 +97,6 @@ void setup()
   pinMode(LV, OUTPUT);
   digitalWrite(LV, HIGH);
 
-
   // setup ESP-now, register receive callback
   WiFi.mode(WIFI_STA);
   esp_now_init();
@@ -134,50 +105,30 @@ void setup()
   peerInfo.encrypt = false;
   esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-
 }
 
 
-
-// main loop function
-// the loop updates the PID controllers at a fixed rate.
-// this loop constantly checks if it's been too long since the last data packet was received.
-// if it has been too long, it directly sets the motors to stop, bypassing the PID controllers.
 void loop() 
 {
-
   // Stop the robot if we haven't received data for a while
-  if (millis() - time_of_last_data_receive > timeout_ms)
-  {
-    if (debugB)
-    {
-      Serial.print(leftEncoderCount);
-      Serial.print(" ");
-      Serial.println(rightEncoderCount);
+  if (millis() - time_of_last_data_receive > timeout_ms) {
+    if (debugB) {
+      //Serial.print(leftEncoderCount);
+      //Serial.print(" ");
+      //Serial.println(rightEncoderCount);
       if (!inactive) Serial.println("Inactive - robot stopped.");
     }
-    leftController.setSpeed(0, false);
-    rightController.setSpeed(0, false);
+    leftController.setSpeed(0.0);
+    rightController.setSpeed(0.0);
     inactive = true;
     delay(10);
+    return;
   }
 
-
   // Update PID controllers at a fixed rate
-  if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS)
-  {
-    if (!inactive)
-    {
-      leftController.update(leftEncoderCount, millis(), inactive);
-      rightController.update(rightEncoderCount, millis(), inactive);
-      rightEncoderCount = 0;
-      leftEncoderCount = 0;
-    }
-    else
-    {
-      leftController.setSpeed(0.0, false);
-      rightController.setSpeed(0.0, false);
-    }
+  if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
+    leftController.update(leftEncoderCount, millis());
+    rightController.update(rightEncoderCount, millis());
     time_of_last_controller_update = millis();
   }
 }
