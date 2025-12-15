@@ -1,22 +1,11 @@
 
 // This is the firmware for ESP32 board "A" connected to the PC.
-// Board A has the following responsibilities:
-//   - interpreting inputs from the ROS hardware interface (angular velocity commands)
-//   - providing outputs which go to the hardware interface (current angular velocity of each wheel)
-//   - controlling the flow of data between the two ESP boards
-
-// The timing of board B depends heavily on the rate at which the data is being sent to it
-// by board A. Whenever the hardware interface writes a velocity command to this board,
-// the data is sent.
 
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
-
-
-
 
 
 // Global variables
@@ -26,13 +15,10 @@ int status_YellowMilliseconds = 1000;
 bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
 unsigned long time_of_last_command_recieve = millis();
-
 unsigned long t0;
-dataPacket data = initialData(); // initial data
+dataPacket data{}; // initial data
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
-
-
 
 
 // Receive data callback: runs whenever board B sends data to board A (when a velocity command appears)
@@ -43,9 +29,9 @@ bool is_connected = false;
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
   memcpy(&data, incomingData, sizeof(data));
-  //printAllData(&data);
-  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
+  float x = 0.1;
+  Serial.write((byte*)(&x), sizeof(float));
+  Serial.write((byte*)(&x), sizeof(float));
 }
 
 
@@ -53,17 +39,9 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 // Ensures board B received the data. Handles retry and is_connected logic.
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-  if (status != ESP_NOW_SEND_SUCCESS)
-  {
-    is_connected = false;
-  }
-  else
-  {
-    is_connected = true;
-  }
+  if (status != ESP_NOW_SEND_SUCCESS) is_connected = false;
+  else is_connected = true;
 }
-
-
 
 
 // Reads the first character from serial data and executes the command associated with that character.
@@ -75,9 +53,7 @@ void doCommand()
 {
 
   if (!Serial.available()) return;
-
   time_of_last_command_recieve = millis();
-
   char chr = Serial.read();
   switch(chr) {
 
@@ -106,14 +82,9 @@ void doCommand()
     default:
       break;
   }
-
-
 }
 
 
-// Setup function: runs once on board A power-on
-// Initializes the serial port and registers board B as a peer.
-// Note that board B does not need to be on for this function to run successfully.
 void setup() 
 {  
   delay(100);
@@ -134,16 +105,10 @@ void setup()
 }
 
 
-
-
-// Main loop function: runs over and over again forever
-// just calls doCommand over and over again.
-// TODO: do something when is_connected = false
 void loop() 
 {
   // Digital Write to pins 25-Green 26-Yellow
-  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) 
-  {
+  if ((millis() - status_YellowLastSwitched) > status_YellowMilliseconds) {
     status_YellowLightOn = !status_YellowLightOn;
     digitalWrite(status_yellowPin, (status_YellowLightOn ? HIGH : LOW));
     status_YellowLastSwitched = millis();
@@ -151,12 +116,6 @@ void loop()
   
   doCommand();
 
-  if (millis() - time_of_last_command_recieve > 500)
-  {
-    digitalWrite(status_greenPin, LOW);
-  }
-  else
-  {
-    digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
-  }
+  if (millis() - time_of_last_command_recieve > 500) digitalWrite(status_greenPin, LOW);
+  else digitalWrite(status_greenPin, (is_connected ? HIGH : LOW));
 }
