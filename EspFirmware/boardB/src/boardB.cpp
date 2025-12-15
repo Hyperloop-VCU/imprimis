@@ -116,7 +116,7 @@ void loop()
       //Serial.print(leftEncoderCount);
       //Serial.print(" ");
       //Serial.println(rightEncoderCount);
-      if (!inactive) Serial.println("Inactive - robot stopped.");
+      Serial.println("Inactive - robot stopped.");
     }
     leftController.setSpeed(0.0);
     rightController.setSpeed(0.0);
