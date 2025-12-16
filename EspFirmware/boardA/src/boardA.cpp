@@ -6,7 +6,7 @@
 #include <WiFi.h>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
-#include <IBusBM.h>
+#include <FlyskyIBUS.h>
 
 
 // Global variables
@@ -18,7 +18,7 @@ dataPacket data{};
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
 bool manual_mode = true;
-IBusBM IBus;
+FlyskyIBUS IBUS(Serial2, RC_IBUS_RX, 17);
 
 
 // Receive data callback: runs whenever B sends data to A
@@ -28,7 +28,6 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
   Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
 }
-
 
 // Send data callback: runs whenever A sends data to B
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
@@ -78,14 +77,14 @@ void doCommand()
 
 bool is_autonomous()
 {
-  return IBus.readChannel(4) == 2000; // SWA on controller
+  return IBUS.getChannel(4) == 2000; // SWA on controller
 }
 
 // reads from the appropriate channels on the RC reciever and sends the right data to board B.
 void handle_manual_input()
 {
-  float x_normalized = (IBus.readChannel(0) - 1500.0) / 500.0;
-  float y_normalized = (IBus.readChannel(1) - 1500.0) / 500.0;
+  float x_normalized = (IBUS.getChannel(0) - 1500.0) / 500.0;
+  float y_normalized = (IBUS.getChannel(1) - 1500.0) / 500.0;
   data.setLeftAngvel = y_normalized;
   data.setRightAngvel = y_normalized;
   data.setLeftAngvel += x_normalized;
@@ -98,7 +97,7 @@ void setup()
 {  
   // setup serial port and radio reciever data
   Serial.begin(SERIAL_BAUD_RATE_A);
-  IBus.begin(Serial2, 1, RC_IBUS_RX, -1);
+  IBUS.begin();
 
   // setup ESP-now and callbacks
   WiFi.mode(WIFI_STA);
