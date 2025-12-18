@@ -92,6 +92,7 @@ private:
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
+  bool curr_manual;
 };
 
 }  // namespace imprimis_hardware_platform

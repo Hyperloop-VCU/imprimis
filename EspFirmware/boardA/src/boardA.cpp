@@ -4,6 +4,7 @@
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
+#include <atomic>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
 #include <FlyskyIBUS.h>
@@ -12,24 +13,34 @@
 // Global variables
 bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
-unsigned long time_of_last_command_recieve = millis();
-unsigned long t0;
-dataPacket data{};
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
-bool manual_mode = true;
 FlyskyIBUS IBUS(Serial2, RC_IBUS_RX, 17);
+std::atomic<float> leftAngvel{0.0};
+std::atomic<float> rightAngvel{0.0};
+std::atomic<unsigned long> time_of_last_data_receive{millis()};
 
 
-// Receive data callback: runs whenever B sends data to A
+// Receive data callback: runs whenever B sends wheel angvels to A
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
-  memcpy(&data, incomingData, sizeof(data));
-  Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-  Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
+  time_of_last_data_receive = millis();
+
+  // copy recieved bytes into the struct so we can access/modify the data
+  struct BtoAPacket received_data;
+  if (len != sizeof(BtoAPacket)) return;
+  memcpy(&received_data, incomingData, sizeof(BtoAPacket));
+
+  // Clamp and update data
+  if (received_data.currLeftAngvel > 99.99) received_data.currLeftAngvel = 99.99;
+  else if (received_data.currLeftAngvel < -99.99) received_data.currLeftAngvel = -99.99;
+  if (received_data.currRightAngvel > 99.99) received_data.currRightAngvel = 99.99;
+  else if (received_data.currRightAngvel < -99.99) received_data.currRightAngvel = -99.99;
+  leftAngvel = received_data.currLeftAngvel;
+  rightAngvel = received_data.currRightAngvel;
 }
 
-// Send data callback: runs whenever A sends data to B
+// Send data callback: runs whenever A sends commands/setpoints to B
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   if (status != ESP_NOW_SEND_SUCCESS) is_connected = false;
@@ -37,59 +48,63 @@ void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 }
 
 
-// Reads the first character from serial data and executes the command associated with that character.
-// Does nothing if there is no serial data to read
-// command RESET_ENCODERS: Set data.reset to true, does not send to board B right away
-// command ANGVEL_SETPOINT: Send new angular velocity setpoints to board B
-// command SET_PID: Send new PID gains to board B
-void doCommand() 
+// Updates the data packet for autonomous mode and prints the latest wheel data to serial.
+// Does nothing if there is no command, or the command is invalid.
+void handle_ROS_command(struct AtoBPacket& data_to_send) 
 {
-
   if (!Serial.available()) return;
-  time_of_last_command_recieve = millis();
   char chr = Serial.read();
   switch(chr) {
 
     case RESET_ENCODERS:
-      data.reset = 1;
+      data_to_send.reset = true;
       break;
 
     case ANGVEL_SETPOINT: {
-      serialReadFloat(data.setLeftAngvel);
-      serialReadFloat(data.setRightAngvel);
-      esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+      serialReadFloat(data_to_send.setLeftAngvel);
+      serialReadFloat(data_to_send.setRightAngvel);
       break;
     }
 
     case SET_PID: {
-      serialReadFloat(data.newKp);
-      serialReadFloat(data.newKi);
-      serialReadFloat(data.newKd);
-      serialReadInt(data.gainChange);
-      esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+      serialReadFloat(data_to_send.newKp);
+      serialReadFloat(data_to_send.newKi);
+      serialReadFloat(data_to_send.newKd);
+      serialReadInt(data_to_send.gainChange);
       break;
     }
-
     default:
-      break;
+      return;
+  }
+
+  // print latest wheel data and mode if we still have connection to board B
+  struct BtoAPacket received_data;
+  if (millis() - time_of_last_data_receive < 500) {
+    float left = leftAngvel;
+    float right = rightAngvel;
+    Serial.printf("%+06.2f %+06.2f %d\n", left, right, data_to_send.openLoop);
+  }
+  // lost connection
+  else {
+    leftAngvel = 0.0;
+    rightAngvel = 0.0;
   }
 }
 
-bool is_autonomous()
+// Updates the data packet for manual mode.
+void handle_manual_commands(struct AtoBPacket& data_to_send)
 {
-  return IBUS.getChannel(4) == 2000; // SWA on controller
-}
-
-// reads from the appropriate channels on the RC reciever and sends the right data to board B.
-void handle_manual_input()
-{
+  // get left and right efforts
   float x_normalized = (IBUS.getChannel(0) - 1500.0) / 500.0;
   float y_normalized = (IBUS.getChannel(1) - 1500.0) / 500.0;
-  data.setLeftAngvel = y_normalized;
-  data.setRightAngvel = y_normalized;
-  data.setLeftAngvel += x_normalized;
-  data.setRightAngvel -= x_normalized;
-  esp_now_send(B_MAC, (uint8_t *)&data, sizeof(data));
+  data_to_send.setLeftAngvel = y_normalized;
+  data_to_send.setRightAngvel = y_normalized;
+  data_to_send.setLeftAngvel += x_normalized;
+  data_to_send.setRightAngvel -= x_normalized;
+
+  // prevent ROS from doing anything
+  data_to_send.gainChange = 0;
+  data_to_send.reset = false;
 }
 
 
@@ -118,7 +133,7 @@ void setup()
 
 void loop() 
 {
-  bool autonomous = is_autonomous();
+  bool autonomous = (IBUS.getChannel(4) == 2000); // SWA on controller
 
   // handle yellow light
   if (!autonomous) {
@@ -131,15 +146,17 @@ void loop()
     status_YellowLastSwitched = millis();
   }
   
-  // handle motor control
-  if (autonomous) {
-    data.openLoop = false;
-    doCommand();
+  // handle motor control, ROS, and send data to board B
+  struct AtoBPacket data_to_send{};
+  data_to_send.openLoop = !autonomous;
+  handle_ROS_command(data_to_send);
+  if (data_to_send.openLoop) {
+    handle_manual_commands(data_to_send);
+    delay(10);
   }
-  else {
-    data.openLoop = true;
-    handle_manual_input();
-  }
+  esp_now_send(B_MAC, (uint8_t*)&data_to_send, sizeof(data_to_send));
+
+  
 
   // handle green light
   digitalWrite(GREEN_LIGHT, (is_connected ? HIGH : LOW));

@@ -32,11 +32,8 @@ public:
     // initializes the link with the given port name.
     Status initialize_link(const char* port_name);
 
-    // read two floats (left, right) written by the ESP32 as raw bytes
-    // The esp32 writes like this: 
-    // Serial.write((byte*)(&data.currLeftAngvel), sizeof(float));
-    // Serial.write((byte*)(&data.currRightAngvel), sizeof(float));
-    Status read_current_angvels(float& leftAngVel, float& rightAngVel);
+    // read two floats and one bool (left, right, manual_mode) written by the ESP32 as ASCII text
+    Status read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode);
 
     // send: s [leftAngvel] [rightAngvel]\n
     // example: "s 0.31 0.52\n"

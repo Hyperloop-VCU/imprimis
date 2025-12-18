@@ -14,8 +14,6 @@ namespace
 }
 
 
-
-
 SerialLink::SerialLink(unsigned int baud, float timeout_s)
     : connected_(false), timeout_s_(timeout_s), baud_(baud) {}
 
@@ -26,8 +24,6 @@ SerialLink::~SerialLink()
     }
     connected_ = false;
 }
-
-
 
 
 SerialLink::Status SerialLink::initialize_link(const char* port_name) 
@@ -54,21 +50,17 @@ SerialLink::Status SerialLink::initialize_link(const char* port_name)
 }
 
 
-
-
-SerialLink::Status SerialLink::read_current_angvels(float& leftAngVel, float& rightAngVel) 
+SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode) 
 {
     if (!is_connected()) return Status::NotConnected;
 
     try 
     {
-        const size_t need = sizeof(float) * 2; // 8 bytes
-        std::string bytes = g_ser->read(need); // timeout is already applied
+        const size_t need = 16; // +03.92 -10.31 0\n
+        std::string bytes = g_ser->read(need);
         if (bytes.size() != need) return Status::ReadTimeout;
-        
-        std::memcpy(&leftAngVel,  bytes.data(), sizeof(float)); // assuming left, right
-        std::memcpy(&rightAngVel, bytes.data()+sizeof(float), sizeof(float));
-        if (std::isnan(leftAngVel) || std::isnan(rightAngVel)) return Status::ReadFailed;
+        std::istringstream iss(bytes);
+        iss >> leftAngVel >> rightAngVel >> manual_mode;
         return Status::Ok;
     } 
     catch (...) 
@@ -76,8 +68,6 @@ SerialLink::Status SerialLink::read_current_angvels(float& leftAngVel, float& ri
         return Status::ReadFailed;
     }
 }
-
-
 
 
 SerialLink::Status SerialLink::write_angvel_commands(float leftAngvel, float rightAngvel) 
@@ -97,8 +87,6 @@ SerialLink::Status SerialLink::write_angvel_commands(float leftAngvel, float rig
 }
 
 
-
-
 SerialLink::Status SerialLink::write_reset_encoders() 
 {
     if (!is_connected()) return Status::NotConnected;
@@ -111,8 +99,6 @@ SerialLink::Status SerialLink::write_reset_encoders()
         return Status::WriteFailed;
     }
 }
-
-
 
 
 SerialLink::Status SerialLink::write_PID(float p, float i, float d, bool right) 
@@ -134,8 +120,6 @@ SerialLink::Status SerialLink::write_PID(float p, float i, float d, bool right)
         return Status::WriteFailed;
     }
 }
-
-
 
 
 bool SerialLink::is_connected() const 

@@ -32,95 +32,27 @@
 
 namespace imprimis_hardware_platform {
 
-
-
-
-// Initialization: runs once on startup.
-// The command and state interfaces are defined in the ros2 control XACRO.
-hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(
-  const hardware_interface::HardwareInfo & info)
+// Initialization: runs once on startup. The command and state interfaces are defined in the ros2 control XACRO.
+hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware_interface::HardwareInfo & info)
 {
 
   // initialize child class - SystemInterface
-  if (
-    hardware_interface::SystemInterface::on_init(info) !=
-    hardware_interface::CallbackReturn::SUCCESS)
-  {
+  if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
   }
 
   // setup logger and clock
-  logger_ = std::make_shared<rclcpp::Logger>(
-    rclcpp::get_logger("controller_manager.resource_manager.hardware_component.system.DiffBot"));
+  logger_ = std::make_shared<rclcpp::Logger>(rclcpp::get_logger("controller_manager.resource_manager.hardware_component.system.DiffBot"));
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock());
-
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  //hw_start_sec_ =
-    //hardware_interface::stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  //hw_stop_sec_ =
-    //hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   // Allocates memory for the state/command buffers and initializes each to NAN.
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  curr_manual = false;
 
-
-  // Ensures that the state/command interface definitionsline up with what it expects.
-  // These state/command interfaces are defined in the ros2 control XACRO.
-  // This is probably removable, but don't want to take any chances
-  for (const hardware_interface::ComponentInfo & joint : info_.joints)
-  {
-    // DiffBotSystem has exactly two states and one command interface on each joint
-    if (joint.command_interfaces.size() != 1)
-    {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
-        joint.name.c_str(), joint.command_interfaces.size());
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
-    {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' have %s command interfaces found. '%s' expected.",
-        joint.name.c_str(), joint.command_interfaces[0].name.c_str(),
-        hardware_interface::HW_IF_VELOCITY);
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    if (joint.state_interfaces.size() != 2)
-    {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
-        joint.state_interfaces.size());
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' have '%s' as first state interface. '%s' expected.",
-        joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
-        hardware_interface::HW_IF_POSITION);
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-
-    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
-      RCLCPP_FATAL(
-        get_logger(), "Joint '%s' have '%s' as second state interface. '%s' expected.",
-        joint.name.c_str(), joint.state_interfaces[1].name.c_str(),
-        hardware_interface::HW_IF_VELOCITY);
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-  }
   return hardware_interface::CallbackReturn::SUCCESS;
 }
-
-
-
 
 
 // Runs once on startup. Defines all the state interfaces (wheel velocities, estop, etc) for ros2 control.
@@ -141,10 +73,6 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
 }
 
 
-
-
-
-
 // Runs once on startup. Defines all the command interfaces (movable wheels) for ros2 control.
 std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_command_interfaces()
 {
@@ -160,13 +88,8 @@ std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_
 }
 
 
-
-
-
-
 // Runs once when the hardware interface is activated.
-// Tries to initialize serial comms with board A on three different ports.
-// Fatal error if it can't.
+// Tries to initialize serial comms with board A on three different ports; fatal error if it can't.
 hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
@@ -204,10 +127,8 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   }
 
   // default zeros for command and state interfaces
-  for (auto i = 0u; i < hw_positions_.size(); i++)
-  {
-    if (std::isnan(hw_positions_[i]))
-    {
+  for (auto i = 0u; i < hw_positions_.size(); i++) {
+    if (std::isnan(hw_positions_[i])) {
       hw_positions_[i] = 0;
       hw_velocities_[i] = 0;
       hw_commands_[i] = 0;
@@ -218,21 +139,11 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
 }
 
 
-
-
-
-// Runs once when the hardware interface is deactivated.
-// SerialLink is automatically closed in the destructor.
-hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+// Runs once when the hardware interface is deactivated. SerialLink is automatically closed in the destructor.
+hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
 {
-
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
-
-
-
 
 
 // Runs continuously. This is called by ros2 control to read state information from the ESP board.
@@ -243,52 +154,44 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(
 // the first parameter is unused, it's just the overall ROS time.
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
-
-
-  // read velocity
+  // read state
   float leftAngvel, rightAngvel;
-  auto read_status = esp32->read_current_angvels(leftAngvel, rightAngvel);
-  if (read_status == SerialLink::Status::Ok)
-  {
-    // read succeeded
+  bool manual_mode;
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, manual_mode);
+
+  // read succeeded
+  if (read_status == SerialLink::Status::Ok) {
     hw_velocities_[0] = static_cast<float>(leftAngvel);
     hw_velocities_[1] = static_cast<float>(rightAngvel);
-    // integrate velocity to get position
-    hw_positions_[0] += period.seconds() * hw_velocities_[0];
+    hw_positions_[0] += period.seconds() * hw_velocities_[0]; // integrate velocity to get position
     hw_positions_[1] += period.seconds() * hw_velocities_[1];
-  }
-  else
-  {
-    // read failed
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from microcontroller.");
-    // velocity kept to what it was previously
+    if (manual_mode != curr_manual) {
+      RCLCPP_INFO(get_logger(), "Switched to %s mode", (manual_mode ? "manual" : "autonomous"));
+      curr_manual = manual_mode;
+    }
   }
 
+  // read failed; velocity kept to what it was previously
+  else {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from microcontroller.");
+  }
 
   // print the newly-read states if debugging
-  if (PRINT_READ_STATES && read_status == SerialLink::Status::Ok)
-  {
+  if (PRINT_READ_STATES && read_status == SerialLink::Status::Ok) {
     std::stringstream ss;
     ss << "Reading states:";
-
-    // left wheel
     ss << std::fixed << std::setprecision(2) << std::endl
         << "\t"
           "position "
         << hw_positions_[0] << " and velocity " << hw_velocities_[0] << " for '"
         << info_.joints[0].name.c_str() << "'!";
-
-    // right wheel
     ss << std::fixed << std::setprecision(2) << std::endl
         << "\t"
           "position "
         << hw_positions_[1] << " and velocity " << hw_velocities_[1] << " for '"
         << info_.joints[1].name.c_str() << "'!";
-
-    
     RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   }
-
   return hardware_interface::return_type::OK;
 }
 
@@ -307,8 +210,7 @@ hardware_interface::return_type imprimis_hardware_platform::DiffBotSystemHardwar
 {
 
   // print commands written if debugging
-  if (PRINT_COMMANDS)
-  {
+  if (PRINT_COMMANDS) {
     std::stringstream ss;
     ss << "Writing commands:";
     ss << std::fixed << std::setprecision(2) << std::endl
@@ -319,8 +221,7 @@ hardware_interface::return_type imprimis_hardware_platform::DiffBotSystemHardwar
   }
 
   // write commands
-  if (esp32->write_angvel_commands(hw_commands_[0], hw_commands_[1]) != SerialLink::Status::Ok)
-  {
+  if (esp32->write_angvel_commands(hw_commands_[0], hw_commands_[1]) != SerialLink::Status::Ok) {
     // Handle failed serial writing. We don't need to do anything here - If board A didn't get the data,
     // it will not send data back, read() will fail, and we will handle a bad/lost connection in there.
   }
