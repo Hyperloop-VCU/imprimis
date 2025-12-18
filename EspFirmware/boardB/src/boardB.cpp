@@ -7,6 +7,7 @@
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
+#include <atomic>
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
 #include "MotorController.cpp"
@@ -21,49 +22,29 @@ volatile int leftEncoderCount = 0;
 volatile int rightEncoderCount = 0;
 MotorController leftController(2.3, 6.2, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
 MotorController rightController(2.3, 6.2, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
-dataPacket data{};
 esp_now_peer_info_t peerInfo;
-volatile unsigned long time_of_last_data_receive = millis();
+std::atomic<unsigned long> time_of_last_data_receive{millis()};
 unsigned long time_of_last_controller_update = millis();
-bool inactive = true;
-bool openLoop = true;
+unsigned long time_of_last_data_send = millis();
+std::atomic<bool> openLoop{true};
 
 
 // On-data-received callback, runs when board A sends data to board B.
 void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len) 
 { 
   time_of_last_data_receive = millis();
-  memcpy(&data, incomingData, sizeof(data));
 
-  // reset if we're commanded to, we're activating, or we're switching modes
-  if (inactive || data.reset || (openLoop != data.openLoop)) {
+  struct AtoBPacket received_data{};
+  memcpy(&received_data, incomingData, sizeof(received_data));
+  if (received_data.reset || (openLoop != received_data.openLoop)) {
     leftController.reset();
     rightController.reset();
-    leftEncoderCount = 0;
-    rightEncoderCount = 0;
-    data.reset = false;
   }
-  
-  // update controller PID gains if necessary
-  if (data.gainChange == 1)  {
-    leftController.setPID(data.newKp, data.newKi, data.newKd);
-    data.gainChange = 0;
-  }
-  else if (data.gainChange == 2)  {
-    rightController.setPID(data.newKp, data.newKi, data.newKd);
-    data.gainChange = 0;
-  }
-
-  // update controller setpoints and get angular velocities
-  leftController.newSetpoint(data.setLeftAngvel);
-  rightController.newSetpoint(data.setRightAngvel);
-  data.currLeftAngvel = leftController.getAngvel();
-  data.currRightAngvel = rightController.getAngvel();
-
-  // send processed data back to board A
-  esp_err_t result = esp_now_send(A_MAC, (uint8_t *)&data, sizeof(data));
-  inactive = false;
-  openLoop = data.openLoop;
+  openLoop = received_data.openLoop;
+  if (received_data.gainChange == 1) leftController.setPID(received_data.newKp, received_data.newKi, received_data.newKd);
+  else if (received_data.gainChange == 2) rightController.setPID(received_data.newKp, received_data.newKi, received_data.newKd);
+  leftController.newSetpoint(received_data.setLeftAngvel);
+  rightController.newSetpoint(received_data.setRightAngvel);
 }
 
 
@@ -113,32 +94,37 @@ void setup()
 void loop() 
 {
   // Stop the robot if we haven't received data for a while
-  if (millis() - time_of_last_data_receive > timeout_ms) {
-    if (debugB) {
-      //Serial.print(leftEncoderCount);
-      //Serial.print(" ");
-      //Serial.println(rightEncoderCount);
-      Serial.println("Inactive - robot stopped.");
-    }
+  if (millis() - time_of_last_data_receive > TIMEOUT_MS) {
+    if (debugB) Serial.println("Inactive - robot stopped.");
+    leftController.reset();
+    rightController.reset();
     leftController.setSpeed(0.0);
     rightController.setSpeed(0.0);
-    inactive = true;
     delay(10);
     return;
   }
 
-  // Update controllers at a fixed rate, regardless of open/closed loop
+  // Update controllers at a fixed rate
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
     if (openLoop) {
-      leftController.update_openloop(leftEncoderCount, millis());
-      rightController.update_openloop(rightEncoderCount, millis());
+      leftController.update_openloop(leftEncoderCount);
+      rightController.update_openloop(rightEncoderCount);
     }
     else {
-      leftController.update(leftEncoderCount, millis());
-      rightController.update(rightEncoderCount, millis());
+      leftController.update(leftEncoderCount);
+      rightController.update(rightEncoderCount);
     }
     leftEncoderCount = 0;
     rightEncoderCount = 0;
     time_of_last_controller_update = millis();
+  }
+
+  // Send data to board A at a fixed rate
+  if (millis() - time_of_last_data_send > DATA_SEND_RATE_MS) {
+    struct BtoAPacket data_to_send{};
+    data_to_send.currLeftAngvel = 2.0;//leftController.getAngvel();
+    data_to_send.currRightAngvel = -2.0; //rightController.getAngvel();
+    (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
+    time_of_last_data_send = millis();
   }
 }

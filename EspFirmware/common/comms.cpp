@@ -1,4 +1,4 @@
-// This file defines the format of the data packet shared between the two boards
+// This file defines the format of the data packets shared between the two boards
 // and utility functions to read data from the serial port.
 #ifndef COMMS_CPP
 #define COMMS_CPP

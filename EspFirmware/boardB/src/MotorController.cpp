@@ -11,41 +11,38 @@
 
 class MotorController 
 {
-
   private:
   std::atomic<float> KP, KI, KD, setpointAngvel, currAngvel;
   std::atomic<int> prevError;
   std::atomic<unsigned long> time_of_last_update;
-  bool first_update;
+  std::atomic<bool> first_update;
+  std::atomic<bool> updating;
   float integral;
   const int countsPerRev;
   const bool debugB, right;
 
+
   public:
   MotorController(float kp, float ki, float kd, bool right, int countsPerRev, bool debugB) 
-  :  KP(kp)
-  ,  KI(ki)
-  ,  KD(kd)
-  ,  countsPerRev(countsPerRev)
-  ,  right(right)
-  ,  debugB(debugB)
-    {
-      reset();
-    }
+  :  KP(kp), KI(ki), KD(kd), countsPerRev(countsPerRev), right(right), debugB(debugB), 
+     integral(0.0), setpointAngvel(0.0), prevError(0), time_of_last_update(millis()), currAngvel(0.0)
+  {
+    reset();
+  }
 
 
-  // Updates the PID controller and PID output and the wheel angular velocity. Nominal PID output ranges from -63.0 to 63.0
+  // Updates the motor speed using the PID controller and calculates the wheel angular velocity with encoder feedback. 
   // count : encoder counts since the last call to update.
-  // current_time : current time as read from the millis() function.
-  void update(int count, unsigned long current_time) 
+  void update(int count) 
   {
     // calculate DT, CPL, error, and wheel angvel
+    updating = true;
     float DT_seconds;
     if (first_update) DT_seconds = 1 / (PID_UPDATE_PERIOD_MS / 1000.0);
-    else DT_seconds = (current_time - time_of_last_update) / 1000.0;
+    else DT_seconds = (millis() - time_of_last_update) / 1000.0;
     int setpointCPL = round(setpointAngvel * countsPerRev * DT_seconds / (2*M_PI));
     int currError = setpointCPL - count;
-    float wheel_angvel = count * ((2 * M_PI) / (countsPerRev * DT_seconds));
+    currAngvel = count * ((2 * M_PI) / (countsPerRev * DT_seconds));
 
     // do PID output
     integral += currError * DT_seconds;
@@ -58,84 +55,80 @@ class MotorController
     time_of_last_update = millis();
     first_update = false;
 
-    // make the motor move
-    if (debugB) Serial.printf("%5s: CL %+2.2f\n", (right ? "RIGHT" : "LEFT"), pidOutput);
+    // print if needed, make the motor move
+    if (debugB) {
+      float vel = currAngvel;
+      Serial.printf("%5s: CL %+.2f Vel: %+.3f\n", (right ? "RIGHT" : "LEFT"), pidOutput, vel);
+    }
     setSpeed(pidOutput);
-    currAngvel = wheel_angvel;
+    updating = false;
   }
 
-  // Performs an open-loop update; does not use PID controller. Updates the current wheel angvel as well.
-  // The input is the internal setpoint, which should range from -1.0 to 1.0. -1.0 is full reverse, 0.0 is stop, and 1.0 is full forward.
-  void update_openloop(int count, unsigned long current_time)
+  // Updates the motor speed based on the setpoint alone; does not use the PID controller. Also calculates the wheel angular velocity with encoder feedback.
+  // When this function is called, setpointAngvel should be in [-1.0, 1.0]. -1.0 is full reverse, 0.0 is stop, and 1.0 is full forward.
+  void update_openloop(int count)
   {
-    // calculate DT and angvel
+    // calculate DT and wheel angvel
+    updating = true;
     float DT_seconds;
     if (first_update) DT_seconds = 1 / (PID_UPDATE_PERIOD_MS / 1000.0);
-    else DT_seconds = (current_time - time_of_last_update) / 1000.0;
+    else DT_seconds = (millis() - time_of_last_update) / 1000.0;
     currAngvel = count * ((2 * M_PI) / (countsPerRev * DT_seconds));
-
-    // print if needed
-    if (debugB) {
-      float set = setpointAngvel;
-      Serial.printf("%5s: OL %+2.2f\n", (right ? "RIGHT" : "LEFT"), set);
-    }
-
-    // make the motor move
-    setSpeed(setpointAngvel * 63.0);
 
     // set previous values
     time_of_last_update = millis();
     first_update = false;
+
+    // print if needed, make the motor move
+    if (debugB) {
+      float set = setpointAngvel;
+      float vel = currAngvel;
+      Serial.printf("%5s: OL %+.2f Vel: %+.3f\n", (right ? "RIGHT" : "LEFT"), set, vel);
+    }
+    setSpeed(setpointAngvel * 63.0);
+    updating = false;
   }
 
 
-    // Sets the speed of the motor given a value between -63 and +63 by converting it into the appropriate single-byte serial simplified command and writing it.
+    // Sets the speed of the motor from a float value by converting it into the appropriate single-byte serial simplified command and writing it.
     // Bit 7 controls which motor to write to, bit 6 controls the direction, bits 0-5 control speed.
     void setSpeed(float pidOutput)
     {
-      // get channel, direction, and speed sections of the data byte
-      uint8_t channel = right ? (1 << 7) : 0;      // bit 7
+      uint8_t channel = right ? (1 << 7) : 0;            // bit 7
       uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;  // bit 6
       uint8_t speed = abs(pidOutput);                    // bits 0-5
-
-      // ensure right motor is spinning properly and clamp speed
       if (right) direction ^= (1 << 6);
       if (speed > 63) speed = 63;
-
-      // actually make the motor move
       uint8_t data = speed | direction | channel;
       Serial2.write(data);
     }
 
-    // should be called before calling update again after not using that method for a while.
+    // should be called before calling update or update_openloop for the first time in a while.
     void reset()
     {
-      this->integral = 0.0;
-      this->prevError = 0;
-      this->setpointAngvel = 0.0;
-      this->currAngvel = 0.0;
-      this->time_of_last_update = millis();
-      this->first_update = true;
+      while (updating);
+      first_update = true;
+      integral = 0;
     }
 
 
     void newSetpoint(float newAngvelSetpoint)
     {
-      this->setpointAngvel = newAngvelSetpoint;
+      setpointAngvel = newAngvelSetpoint;
     }
 
 
     float getAngvel()
     {
-      return this->currAngvel;
+      return currAngvel;
     }
 
 
     void setPID(float p, float i, float d) 
     {
-      this->KP = p;
-      this->KI = i;
-      this->KD = d;
+      KP = p;
+      KI = i;
+      KD = d;
     }
 
 };
