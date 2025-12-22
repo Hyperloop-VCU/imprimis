@@ -85,7 +85,9 @@ void setup()
   esp_now_init();
   memcpy(peerInfo.peer_addr, A_MAC, 6);
   peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
+  peerInfo.encrypt = true;
+  esp_now_set_pmk((uint8_t*)PMK);
+  for (uint8_t i = 0; i < 16; i++) peerInfo.lmk[i] = LMK[i];
   esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
 }
