@@ -103,7 +103,9 @@ void setup()
   esp_now_init();
   memcpy(peerInfo.peer_addr, B_MAC, 6);
   peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
+  peerInfo.encrypt = true;
+  esp_now_set_pmk((uint8_t *)PMK);
+  for (uint8_t i = 0; i < 16; i++) peerInfo.lmk[i] = LMK[i];
   esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
   esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
@@ -133,7 +135,10 @@ void loop()
   // handle green light
   digitalWrite(GREEN_LIGHT, (is_connected ? HIGH : LOW));
 
-  // forward PC->A data to B if needed, print B->A data to serial if needed
+  // Main board A logic
+  // If a ROS command was received, send data back to ROS, regardless of mode
+  // If manual mode, send manual setpoints to board A regardless of ROS command received/not received
+  // If autonomous mode, send autonomous commands ONLY if a ROS command was received
   struct AtoBPacket data_to_send{};
   data_to_send.openLoop = !autonomous;
   bool command_received = handle_ROS_command(data_to_send);
@@ -144,6 +149,4 @@ void loop()
     handle_manual_commands(data_to_send);
     esp_now_send(B_MAC, (uint8_t*)&data_to_send, sizeof(AtoBPacket));
   }
-
-  
 }
