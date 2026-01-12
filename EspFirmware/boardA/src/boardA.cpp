@@ -87,8 +87,8 @@ void handle_manual_commands(struct AtoBPacket& data_to_send)
   float y_normalized = (IBUS.getChannel(1) - 1500.0) / 500.0;
   data_to_send.setLeftAngvel = y_normalized;
   data_to_send.setRightAngvel = y_normalized;
-  data_to_send.setLeftAngvel += x_normalized;
-  data_to_send.setRightAngvel -= x_normalized;
+  data_to_send.setLeftAngvel -= x_normalized;
+  data_to_send.setRightAngvel += x_normalized;
 }
 
 
