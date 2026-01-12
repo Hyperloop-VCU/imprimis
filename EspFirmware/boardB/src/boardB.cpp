@@ -14,7 +14,7 @@
 
 
 // true to initialize the USB-C serial and print info to it
-bool debugB = true;
+bool debugB = false;
 
 
 // global variables
@@ -124,8 +124,8 @@ void loop()
   // Send data to board A at a fixed rate
   if (millis() - time_of_last_data_send > DATA_SEND_RATE_MS) {
     struct BtoAPacket data_to_send{};
-    data_to_send.currLeftAngvel = 2.0;//leftController.getAngvel();
-    data_to_send.currRightAngvel = -2.0; //rightController.getAngvel();
+    data_to_send.currLeftAngvel = leftController.getAngvel();
+    data_to_send.currRightAngvel = rightController.getAngvel();
     (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
     time_of_last_data_send = millis();
   }
