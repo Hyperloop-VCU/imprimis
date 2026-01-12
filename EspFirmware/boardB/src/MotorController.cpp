@@ -17,6 +17,7 @@ class MotorController
   std::atomic<unsigned long> time_of_last_update;
   std::atomic<bool> first_update;
   std::atomic<bool> updating;
+  std::atomic<bool> enabled;
   float integral;
   const int countsPerRev;
   const bool debugB, right;
@@ -25,7 +26,7 @@ class MotorController
   public:
   MotorController(float kp, float ki, float kd, bool right, int countsPerRev, bool debugB) 
   :  KP(kp), KI(ki), KD(kd), countsPerRev(countsPerRev), right(right), debugB(debugB), 
-     integral(0.0), setpointAngvel(0.0), prevError(0), time_of_last_update(millis()), currAngvel(0.0)
+     integral(0.0), setpointAngvel(0.0), prevError(0), enabled(true), time_of_last_update(millis()), currAngvel(0.0)
   {
     reset();
   }
@@ -46,10 +47,11 @@ class MotorController
 
     // do PID output
     integral += currError * DT_seconds;
-    if (integral >= MAX_INTEGRAL) integral = MAX_INTEGRAL;
-    else if (integral <= -MAX_INTEGRAL) integral = -MAX_INTEGRAL;
+    if (first_update) integral = 0;
+    else if (integral < -MAX_INTEGRAL) integral = -MAX_INTEGRAL;
+    else if (integral > MAX_INTEGRAL) integral = MAX_INTEGRAL;
     float pidOutput = (KP * currError) + (KI * integral); //+ (KD * (currError - prevError) / DT_seconds);
-
+    
     // set previous values
     prevError = currError;
     time_of_last_update = millis();
@@ -58,7 +60,7 @@ class MotorController
     // print if needed, make the motor move
     if (debugB) {
       float vel = currAngvel;
-      Serial.printf("%5s: CL %+.2f Vel: %+.3f\n", (right ? "RIGHT" : "LEFT"), pidOutput, vel);
+      Serial.printf("%5s: CL %+.2f Int: %+.2f\n", (right ? "RIGHT" : "LEFT"), pidOutput, integral);
     }
     setSpeed(pidOutput);
     updating = false;
@@ -94,6 +96,7 @@ class MotorController
     // Bit 7 controls which motor to write to, bit 6 controls the direction, bits 0-5 control speed.
     void setSpeed(float pidOutput)
     {
+      if (!enabled) return;
       uint8_t channel = right ? (1 << 7) : 0;            // bit 7
       uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;  // bit 6
       uint8_t speed = abs(pidOutput);                    // bits 0-5
@@ -108,21 +111,7 @@ class MotorController
     {
       while (updating);
       first_update = true;
-      integral = 0;
     }
-
-
-    void newSetpoint(float newAngvelSetpoint)
-    {
-      setpointAngvel = newAngvelSetpoint;
-    }
-
-
-    float getAngvel()
-    {
-      return currAngvel;
-    }
-
 
     void setPID(float p, float i, float d) 
     {
@@ -130,5 +119,9 @@ class MotorController
       KI = i;
       KD = d;
     }
+
+    void newSetpoint(float newAngvelSetpoint) {setpointAngvel = newAngvelSetpoint;}
+
+    float getAngvel() {return currAngvel;}
 
 };

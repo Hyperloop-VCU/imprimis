@@ -27,6 +27,7 @@ std::atomic<unsigned long> time_of_last_data_receive{millis()};
 unsigned long time_of_last_controller_update = millis();
 unsigned long time_of_last_data_send = millis();
 std::atomic<bool> openLoop{true};
+std::atomic<bool> pauseUpdates{false};
 
 
 // On-data-received callback, runs when board A sends data to board B.
@@ -37,6 +38,7 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   struct AtoBPacket received_data{};
   memcpy(&received_data, incomingData, sizeof(received_data));
   if (received_data.reset || (openLoop != received_data.openLoop)) {
+    pauseUpdates = true;
     leftController.reset();
     rightController.reset();
   }
@@ -45,6 +47,7 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   else if (received_data.gainChange == 2) rightController.setPID(received_data.newKp, received_data.newKi, received_data.newKd);
   leftController.newSetpoint(received_data.setLeftAngvel);
   rightController.newSetpoint(received_data.setRightAngvel);
+  pauseUpdates = false;
 }
 
 
@@ -108,16 +111,19 @@ void loop()
 
   // Update controllers at a fixed rate
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
-    if (openLoop) {
-      leftController.update_openloop(leftEncoderCount);
-      rightController.update_openloop(rightEncoderCount);
+    if (!pauseUpdates)
+    {
+      if (openLoop) {
+        leftController.update_openloop(leftEncoderCount);
+        rightController.update_openloop(rightEncoderCount);
+      }
+      else {
+        leftController.update(leftEncoderCount);
+        rightController.update(rightEncoderCount);
+      }
+      leftEncoderCount = 0;
+      rightEncoderCount = 0;
     }
-    else {
-      leftController.update(leftEncoderCount);
-      rightController.update(rightEncoderCount);
-    }
-    leftEncoderCount = 0;
-    rightEncoderCount = 0;
     time_of_last_controller_update = millis();
   }
 
