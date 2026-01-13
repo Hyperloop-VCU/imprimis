@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20251215-0227-Experimental"
+	Name="hyperlabs-cbpc"
+	Generator="ctest-3.22.1"
+	CompilerName="/usr/bin/g++"
+	CompilerVersion="11.4.0"
+	OSName="Linux"
+	Hostname="hyperlabs-cbpc"
+	OSRelease="6.8.0-87-generic"
+	OSVersion="#88~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Oct 14 14:03:14 UTC 2"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="AuthenticAMD"
+	VendorID="Advanced Micro Devices"
+	FamilyID="25"
+	ModelID="68"
+	ProcessorCacheSize="512"
+	NumberOfLogicalCPU="16"
+	NumberOfPhysicalCPU="8"
+	TotalVirtualMemory="2047"
+	TotalPhysicalMemory="29818"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="4715.59"
+	>
+	<Testing>
+		<StartDateTime>Dec 14 21:27 EST</StartDateTime>
+		<StartTestTime>1765765622</StartTestTime>
+		<TestList/>
+		<EndDateTime>Dec 14 21:27 EST</EndDateTime>
+		<EndTestTime>1765765622</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>
