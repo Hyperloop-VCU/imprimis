@@ -4,3 +4,9 @@ __pycache__/
 imprimis_ws/build/
 imprimis_ws/install/
 imprimis_ws/log/
+build/
+install/
+log/
+imprimis_ws/src/build/
+imprimis_ws/src/install/
+imprimis_ws/src/log/
