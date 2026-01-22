@@ -8,7 +8,7 @@
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
 #include <FlyskyIBUS.h>
-#include <BNO055_support.h>
+#include <BNO055ESP32.h>
 
 
 // Global variables
@@ -16,9 +16,12 @@ bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
 esp_now_peer_info_t peerInfo;
 bool is_connected = false;
-FlyskyIBUS IBUS(Serial2, RC_IBUS_RX, 17);
+FlyskyIBUS IBUS(Serial2, RC_IBUS_RX, 15);
+struct bno055_t imu;
 std::atomic<float> leftAngvel{0.0};
 std::atomic<float> rightAngvel{0.0};
+std::atomic<float> heading{0.0};
+
 
 
 // Receive data callback: runs whenever B sends wheel angvels to A
@@ -77,8 +80,20 @@ bool handle_ROS_command(struct AtoBPacket& data_to_send)
   struct BtoAPacket received_data{};
   float left = leftAngvel;
   float right = rightAngvel;
-  Serial.printf("%+06.2f %+06.2f %d\n", left, right, data_to_send.openLoop);
+  float h = heading;
+  Serial.printf("%+06.2f %+06.2f %+06.2f %d\n", left, right, h, data_to_send.openLoop);
   return true;
+}
+
+// Reads the heading (in degrees) from the bno055.
+void read_imu_heading(void *pvParameter)
+{
+  while (1) {
+    BNO055_S16 h;
+    bno055_read_euler_h(&h);
+    heading = (float)h / 16.00;
+    vTaskDelay(pdMS_TO_TICKS(IMU_READ_PERIOD_MS));
+  }
 }
 
 // Updates the data packet for manual mode.
@@ -98,6 +113,12 @@ void setup()
   // setup serial port and radio reciever data
   Serial.begin(SERIAL_BAUD_RATE_A);
   IBUS.begin();
+
+  // setup IMU and heading reader task
+  Wire.begin(); // 21 is SDA, 22 is SCL
+  BNO_Init(&imu);
+  bno055_set_operation_mode(OPERATION_MODE_NDOF);
+  xTaskCreate(read_imu_heading, "imu_task", configMINIMAL_STACK_SIZE, NULL, 1, NULL)
 
   // setup ESP-now and callbacks
   WiFi.mode(WIFI_STA);
