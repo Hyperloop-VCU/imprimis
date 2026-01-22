@@ -99,9 +99,7 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   // try ports
   const char* ports[] =
   {
-    "/dev/ttyUSB0",
-    "/dev/ttyUSB1",
-    "/dev/ttyUSB2"
+    "/dev/ttyUSB0"
   };
 
   bool serial_init_success = false;

@@ -8,6 +8,7 @@
 #include "../../common/config.h"
 #include "../../common/comms.cpp"
 #include <FlyskyIBUS.h>
+#include <BNO055_support.h>
 
 
 // Global variables
