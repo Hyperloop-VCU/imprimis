@@ -19,7 +19,7 @@ class SimGpsFromOdom(Node):
         self.declare_parameter('datum_lat', 37.5407000)
         self.declare_parameter('datum_lon', -77.4360000)
         self.declare_parameter('fix_topic', '/gps/fix')
-        self.declare_parameter('odom_topic', '/odometry/filtered')
+        self.declare_parameter('odom_topic', '/odometry/filtered/local')
         self.declare_parameter('hz', 10.0)
         
 

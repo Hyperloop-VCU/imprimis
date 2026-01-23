@@ -6,6 +6,7 @@ navsat_transform:
     yaw_offset: 0.0
     zero_altitude: true
     broadcast_utm_transform: true
+    publish_filtered_gps: true
     use_odometry_yaw: true
 
     # Frames (match your robot)
@@ -14,5 +15,5 @@ navsat_transform:
     base_link_frame: base_link
 
     # Topics
-    gps_topic: /gps/fix # input
-    odometry_topic: /odometry/gps # output
+    gps_topic: /gps/fix
+    odometry_topic: /odometry/filtered

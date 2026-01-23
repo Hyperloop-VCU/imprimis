@@ -49,7 +49,7 @@ def generate_launch_description():
         launch_arguments={
                 'hardware_type': hardware_type,
                 'use_controller': use_controller,
-                'publish_odom_tf': 'false',
+                'publish_odom_tf': 'false'
                 }.items(),
         )
     
@@ -64,7 +64,9 @@ def generate_launch_description():
     local_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
+        name="ekf_local",
         parameters=[local_ekf_params_file],
+        remappings=[('/odometry/filtered', '/odometry/filtered/local')]
     )
 
     # t265
@@ -96,7 +98,8 @@ def generate_launch_description():
     navsat_transform_node = Node(
         package="robot_localization",
         executable="navsat_transform_node",
-        parameters=[navsat_transform_params_file]
+        parameters=[navsat_transform_params_file],
+        remappings=[('/imu', '/bno055/imu'), ('/odometry/filtered', '/odometry/filtered/local')]
     )
 
     # global EKF
@@ -110,7 +113,9 @@ def generate_launch_description():
     global_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
+        name="ekf_global",
         parameters=[global_ekf_params_file],
+        remappings=[('/odometry/filtered', '/odometry/filtered/global')]
     )
 
     # IMU
@@ -133,7 +138,7 @@ def generate_launch_description():
         t265_driver_node,
         real_gps_node,
         fake_gps_node,
-        #global_ekf_node,
+        global_ekf_node,
         navsat_transform_node,
         bno055_node
     ])

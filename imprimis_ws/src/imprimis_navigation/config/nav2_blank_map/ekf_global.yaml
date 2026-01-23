@@ -13,7 +13,7 @@ ekf_global:
     publish_acceleration: false
 
     # Fuse local filtered odom (position + yaw + velocities)
-    odom0: /odometry/filtered/local
+    odom0: /odometry/filtered
     odom0_config: [true,  true,  false,
                    false, false, true,
                    true,  true,  false,
