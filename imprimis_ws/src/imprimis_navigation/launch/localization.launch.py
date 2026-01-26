@@ -30,7 +30,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "use_fake_gps",
             default_value="false",
-            description="Whether or not to use a fake gps, simulated from /odometry/filtered."
+            description="Whether or not to use a fake gps, simulated from /odometry/filtered/local."
         )
     )
     hardware_type = LaunchConfiguration("hardware_type")
@@ -75,15 +75,57 @@ def generate_launch_description():
         executable="main"
     )
 
-    # GPS (real or fake, only one of these two is ever launched)
+    # gps param files
+    gps_nav_bridge_sim_params = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "gps_nav_bridge",
+            "gps_nav_bridge_sim.yaml",
+        ]
+    )
+
+    gps_nav_bridge_real_params = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "gps_nav_bridge",
+            "gps_nav_bridge_serial_auto.yaml",
+        ]
+    )
+
+    sim_gps_params_file = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "sim_gps_from_odom.yaml",
+        ]
+    )
+
+    # fake gps
     fake_gps_node = Node(
         package="sim_gps_from_odom",
         executable="sim_gps_from_odom",
+        name="sim_gps_from_odom",
+        parameters=[sim_gps_params_file],
         condition=IfCondition(use_fake_gps),
     )
-    real_gps_node = Node(
+
+    # gps_nav_bridge for sim gps
+    gps_nav_bridge_sim_node = Node(
         package="gps_nav_bridge",
         executable="gps_nav_bridge",
+        name="gps_nav_bridge",
+        parameters=[gps_nav_bridge_sim_params],
+        condition=IfCondition(use_fake_gps),
+    )
+
+    # gps_nav_bridge for real gps
+    gps_nav_bridge_real_node = Node(
+        package="gps_nav_bridge",
+        executable="gps_nav_bridge",
+        name="gps_nav_bridge",
+        parameters=[gps_nav_bridge_real_params],
         condition=UnlessCondition(use_fake_gps),
     )
     
@@ -132,13 +174,30 @@ def generate_launch_description():
         parameters=[bno055_params_file]
     )
 
+    # cmd_vel twist to twist stamped
+    twist_to_stamped_params_file = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "twist_to_stamped.yaml",
+        ]
+    )
+    twist_to_stamped_node = Node(
+        package="twist_to_stamped",
+        executable="twist_to_stamped",
+        name="twist_to_stamped",
+        parameters=[twist_to_stamped_params_file],
+    )
+
     return LaunchDescription(declared_arguments + [
         imprimis_hardware_launch_include,
         local_ekf_node,
         t265_driver_node,
-        real_gps_node,
+        gps_nav_bridge_sim_node,
+        gps_nav_bridge_real_node,
         fake_gps_node,
         global_ekf_node,
         navsat_transform_node,
-        bno055_node
+        bno055_node,
+        twist_to_stamped_node,
     ])

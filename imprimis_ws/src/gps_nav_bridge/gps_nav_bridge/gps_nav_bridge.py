@@ -1,5 +1,3 @@
-# ~/ros2_ws/src/gps_nav_bridge/gps_nav_bridge/gps_nav_bridge.py
-
 import json
 import math
 import threading
@@ -9,12 +7,14 @@ from typing import Optional, Tuple
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.qos import qos_profile_sensor_data
+from rclpy.parameter import Parameter
 
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from geometry_msgs.msg import PoseStamped, Quaternion
 from nav2_msgs.action import NavigateToPose
 
-# Serial is optional (sim mode uses use_serial:=False)
+# for sim gps
 import serial
 
 from geographiclib.geodesic import Geodesic
@@ -37,6 +37,11 @@ class GpsNavBridge(Node):
       - use_serial:=False -> do NOT open serial; only handle /gps/goal -> Nav2 goals
                              (expects /gps/fix to be provided by another node)
 
+    Auto datum:
+      - auto_set_datum:=True -> subscribe to /gps/fix and set datum_lat/datum_lon from the first valid fix
+      - auto_set_datum_if_unset:=True -> only set datum if datum_lat/datum_lon are unset (0,0)
+      - auto_set_datum_once:=True -> set only once (PLEASE IT WILL BREAK -y)
+
     GPS goal handling:
       - Subscribe /gps/goal (NavSatFix with target latitude/longitude)
       - Convert lat/lon -> local ENU meters from datum -> rotate into map frame
@@ -45,59 +50,64 @@ class GpsNavBridge(Node):
     """
 
     def __init__(self):
-        super().__init__('gps_nav_bridge')
+        super().__init__("gps_nav_bridge")
 
-        # ---------------- Params ----------------
-        self.use_serial = bool(self.declare_parameter('use_serial', True).value)
+        self.use_serial = bool(self.declare_parameter("use_serial", True).value)
 
-        self.port = self.declare_parameter('port', '/dev/ttyACM0').value
-        self.baud = int(self.declare_parameter('baud', 115200).value)
+        self.port = self.declare_parameter("port", "/dev/ttyACM0").value
+        self.baud = int(self.declare_parameter("baud", 115200).value)
 
-        # Map datum (map origin in GPS)
-        self.datum_lat = float(self.declare_parameter('datum_lat', 0.0).value)
-        self.datum_lon = float(self.declare_parameter('datum_lon', 0.0).value)
-        self.datum_alt = float(self.declare_parameter('datum_alt', 0.0).value)
+        self.datum_lat = float(self.declare_parameter("datum_lat", 0.0).value)
+        self.datum_lon = float(self.declare_parameter("datum_lon", 0.0).value)
+        self.datum_alt = float(self.declare_parameter("datum_alt", 0.0).value)
 
-        # If your map axes aren't aligned ENU, rotate here (degrees).
+        self.auto_set_datum = bool(self.declare_parameter("auto_set_datum", True).value)
+        self.auto_set_datum_if_unset = bool(self.declare_parameter("auto_set_datum_if_unset", True).value)
+        self.auto_set_datum_once = bool(self.declare_parameter("auto_set_datum_once", True).value)
+
         # 0 => x=east, y=north
-        self.map_yaw_offset_deg = float(self.declare_parameter('map_yaw_offset_deg', 0.0).value)
+        self.map_yaw_offset_deg = float(self.declare_parameter("map_yaw_offset_deg", 0.0).value)
         self.map_yaw_offset = math.radians(self.map_yaw_offset_deg)
 
-        # Frames / topics
-        self.gps_frame_id = self.declare_parameter('gps_frame_id', 'gps_link').value
-        self.map_frame = self.declare_parameter('map_frame', 'map').value
+        self.gps_frame_id = self.declare_parameter("gps_frame_id", "gps_link").value
+        self.map_frame = self.declare_parameter("map_frame", "map").value
 
-        self.fix_topic = self.declare_parameter('fix_topic', '/gps/fix').value
-        self.goal_topic = self.declare_parameter('goal_topic', '/gps/goal').value
-        self.goal_pose_topic = self.declare_parameter('goal_pose_topic', '/gps/goal_pose').value
+        self.fix_topic = self.declare_parameter("fix_topic", "/gps/fix").value
+        self.goal_topic = self.declare_parameter("goal_topic", "/gps/goal").value
+        self.goal_pose_topic = self.declare_parameter("goal_pose_topic", "/gps/goal_pose").value
 
         # Nav2 action server name (BT Navigator)
-        self.nav2_action_name = self.declare_parameter('nav2_action_name', '/navigate_to_pose').value
+        self.nav2_action_name = self.declare_parameter("nav2_action_name", "/navigate_to_pose").value
 
-        # Serial read throttling
-        self.max_read_hz = float(self.declare_parameter('max_read_hz', 10.0).value)
+        self.max_read_hz = float(self.declare_parameter("max_read_hz", 10.0).value)
 
-        # Optional: if you want to set a default covariance (m^2) on NavSatFix
-        # -1 => unknown
         self.default_position_covariance_m2 = float(
-            self.declare_parameter('default_position_covariance_m2', -1.0).value
+            self.declare_parameter("default_position_covariance_m2", -1.0).value
         )
-        # ----------------------------------------
 
-        if self.datum_lat == 0.0 and self.datum_lon == 0.0:
+
+        self._datum_lock = threading.Lock()
+        self._datum_initialized = not (self.datum_lat == 0.0 and self.datum_lon == 0.0)
+
+        if not self._datum_initialized:
             self.get_logger().warn(
-                "datum_lat/datum_lon are 0.0. Set them to your map origin for meaningful lat/lon->map conversion."
+                "datum_lat/datum_lon are not set yet. "
+                "Will auto-set from /gps/fix if auto_set_datum:=True."
             )
 
-        # ---------------- ROS pubs/subs ----------------
         self.fix_pub = self.create_publisher(NavSatFix, self.fix_topic, 10)
         self.goal_pose_pub = self.create_publisher(PoseStamped, self.goal_pose_topic, 10)
         self.goal_sub = self.create_subscription(NavSatFix, self.goal_topic, self.on_goal_gps, 10)
 
-        self.nav_client = ActionClient(self, NavigateToPose, self.nav2_action_name)
-        # ------------------------------------------------
+        self.fix_sub = self.create_subscription(
+            NavSatFix,
+            self.fix_topic,
+            self.on_fix_for_datum,
+            qos_profile_sensor_data,
+        )
 
-        # ---------------- Serial thread ----------------
+        self.nav_client = ActionClient(self, NavigateToPose, self.nav2_action_name)
+
         self._serial: Optional[serial.Serial] = None
         self._stop = False
         self._thread = threading.Thread(target=self.serial_worker, daemon=True)
@@ -107,19 +117,56 @@ class GpsNavBridge(Node):
             self._thread.start()
         else:
             self.get_logger().info("use_serial:=False -> NOT opening serial. Expecting /gps/fix from another node.")
-        # ------------------------------------------------
 
         self.get_logger().info(
             f"gps_nav_bridge running. use_serial={self.use_serial}. "
             f"fix_topic={self.fix_topic}, goal_topic={self.goal_topic}, goal_pose_topic={self.goal_pose_topic}. "
-            f"Nav2 action={self.nav2_action_name}, map_frame={self.map_frame}."
+            f"Nav2 action={self.nav2_action_name}, map_frame={self.map_frame}. "
+            f"auto_set_datum={self.auto_set_datum}, datum_initialized={self._datum_initialized}."
         )
 
-    # ---------------- Serial I/O ----------------
+    # auto-datum
+    def on_fix_for_datum(self, msg: NavSatFix) -> None:
+        if not self.auto_set_datum:
+            return
+
+        if msg.status.status < NavSatStatus.STATUS_FIX:
+            return
+
+        lat = float(msg.latitude)
+        lon = float(msg.longitude)
+
+        if abs(lat) < 1e-9 and abs(lon) < 1e-9:
+            return
+
+        with self._datum_lock:
+            if self.auto_set_datum_if_unset and self._datum_initialized:
+                return
+
+            if self.auto_set_datum_once and self._datum_initialized:
+                return
+
+            self.datum_lat = lat
+            self.datum_lon = lon
+            self._datum_initialized = True
+
+            try:
+                self.set_parameters(
+                    [
+                        Parameter("datum_lat", Parameter.Type.DOUBLE, lat),
+                        Parameter("datum_lon", Parameter.Type.DOUBLE, lon),
+                    ]
+                )
+            except Exception:
+                pass
+
+        self.get_logger().info(
+            f"Auto-set datum from {self.fix_topic}: datum_lat={lat:.7f}, datum_lon={lon:.7f}"
+        )
+
     def open_serial(self) -> None:
         try:
             self._serial = serial.Serial(self.port, self.baud, timeout=0.2)
-            # USB serial open often resets Uno; give it a second
             time.sleep(1.5)
             self.get_logger().info(f"Opened serial {self.port} @ {self.baud}")
         except Exception as e:
@@ -137,7 +184,7 @@ class GpsNavBridge(Node):
                 continue
 
             try:
-                line = self._serial.readline().decode('utf-8', errors='ignore').strip()
+                line = self._serial.readline().decode("utf-8", errors="ignore").strip()
             except Exception as e:
                 self.get_logger().error(f"Serial read error: {e}")
                 time.sleep(0.5)
@@ -146,12 +193,9 @@ class GpsNavBridge(Node):
             if not line:
                 continue
 
-            # Throttle to max_read_hz if Arduino floods
             now_wall = time.time()
             if (now_wall - last_pub) < min_dt:
                 continue
-
-            # Parse JSON
             try:
                 d = json.loads(line)
             except Exception:
@@ -184,14 +228,12 @@ class GpsNavBridge(Node):
             msg.longitude = float(lon)
             msg.altitude = float(alt)
 
-            # Covariance handling
             if self.default_position_covariance_m2 > 0.0:
                 msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
                 msg.position_covariance[0] = self.default_position_covariance_m2
                 msg.position_covariance[4] = self.default_position_covariance_m2
                 msg.position_covariance[8] = self.default_position_covariance_m2 * 2.0
             elif hdop is not None:
-                # rough estimate: sigma_h ~ hdop * 5m
                 try:
                     hd = float(hdop)
                     if hd > 0.01:
@@ -209,17 +251,19 @@ class GpsNavBridge(Node):
 
             self.fix_pub.publish(msg)
             last_pub = now_wall
-    # -------------------------------------------
 
-    # ---------------- Lat/Lon -> Map XY ----------------
     def latlon_to_local_enu(self, lat: float, lon: float) -> Tuple[float, float]:
         """
         Convert (lat, lon) to local ENU meters relative to datum using WGS84 geodesic.
         Returns: (east_m, north_m)
         """
-        geod = Geodesic.WGS84.Inverse(self.datum_lat, self.datum_lon, lat, lon)
-        s12 = geod['s12']      # meters
-        azi1 = geod['azi1']    # degrees from north, clockwise
+        with self._datum_lock:
+            lat0 = self.datum_lat
+            lon0 = self.datum_lon
+
+        geod = Geodesic.WGS84.Inverse(lat0, lon0, lat, lon)
+        s12 = geod["s12"] 
+        azi1 = geod["azi1"] 
 
         az = math.radians(azi1)
         east = s12 * math.sin(az)
@@ -235,16 +279,16 @@ class GpsNavBridge(Node):
         x_map = c * east - s * north
         y_map = s * east + c * north
         return x_map, y_map
-    # -----------------------------------------------
 
-    # ---------------- Goal handling ----------------
     def on_goal_gps(self, msg: NavSatFix) -> None:
         """
         Receives target lat/lon (NavSatFix) on /gps/goal, converts to map (x,y),
         publishes /gps/goal_pose, and sends NavigateToPose goal to Nav2.
         """
-        if self.datum_lat == 0.0 and self.datum_lon == 0.0:
-            self.get_logger().error("Refusing goal: datum_lat/datum_lon are not set.")
+        if not self._datum_initialized:
+            self.get_logger().error(
+                "Refusing goal: datum not initialized yet. Wait for /gps/fix or set datum_lat/datum_lon."
+            )
             return
 
         lat = float(msg.latitude)
@@ -260,16 +304,14 @@ class GpsNavBridge(Node):
         goal_pose.pose.position.x = float(x_map)
         goal_pose.pose.position.y = float(y_map)
         goal_pose.pose.position.z = 0.0
-        goal_pose.pose.orientation = yaw_to_quat(0.0)  # position-only goal
+        goal_pose.pose.orientation = yaw_to_quat(0.0) 
 
-        # Publish for RViz debugging
         self.goal_pose_pub.publish(goal_pose)
 
         self.get_logger().info(
             f"GPS goal lat/lon=({lat:.7f},{lon:.7f}) -> map x/y=({x_map:.2f},{y_map:.2f})"
         )
 
-        # Send to Nav2
         self.send_nav2_goal(goal_pose)
 
     def send_nav2_goal(self, pose: PoseStamped) -> None:
@@ -299,7 +341,6 @@ class GpsNavBridge(Node):
             self.get_logger().info(f"Nav2 result: {result}")
         except Exception as e:
             self.get_logger().error(f"Failed to get Nav2 result: {e}")
-    # -----------------------------------------------
 
     def destroy_node(self):
         self._stop = True
@@ -320,3 +361,7 @@ def main():
         pass
     node.destroy_node()
     rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

@@ -9,7 +9,6 @@ from rclpy.qos import qos_profile_sensor_data
 # Simple local tangent plane approximation:
 # lat = lat0 + (north_m / R)
 # lon = lon0 + (east_m / (R*cos(lat0)))
-# Good for small areas (your sim world is tiny).
 EARTH_R = 6378137.0  # meters (WGS84)
 
 class SimGpsFromOdom(Node):
@@ -19,7 +18,7 @@ class SimGpsFromOdom(Node):
         self.declare_parameter('datum_lat', 37.5407000)
         self.declare_parameter('datum_lon', -77.4360000)
         self.declare_parameter('fix_topic', '/gps/fix')
-        self.declare_parameter('odom_topic', '/odometry/filtered/local')
+        self.declare_parameter('odom_topic', '/odometry/filtered')
         self.declare_parameter('hz', 10.0)
         
 
@@ -46,9 +45,6 @@ class SimGpsFromOdom(Node):
     def odom_cb(self, msg: Odometry):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
-        # ROS base convention in TB3 sim: x forward, y left in odom frame,
-        # but for a flat world we just treat:
-        # East = x, North = y (it’s arbitrary as long as consistent).
         self.latest_xy = (x, y)
 
     def publish_fix(self):
@@ -85,7 +81,3 @@ def main():
         pass
     node.destroy_node()
     rclpy.shutdown()
-
-if __name__ == "__main__":
-    main()
-

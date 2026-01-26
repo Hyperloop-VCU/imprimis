@@ -1,0 +1,18 @@
+gps_nav_bridge:
+  ros__parameters:
+    use_serial: true
+    port: /dev/ttyACM0
+    baud: 115200
+    auto_set_datum: false
+    datum_lat: 37.5407000
+    datum_lon: -77.4360000
+    datum_alt: 0.0
+    gps_frame_id: gps_link
+    map_frame: map
+    fix_topic: /gps/fix
+    goal_topic: /gps/goal
+    goal_pose_topic: /gps/goal_pose
+    map_yaw_offset_deg: 0.0
+    nav2_action_name: /navigate_to_pose
+    max_read_hz: 5.0
+    default_position_covariance_m2: 9.0 

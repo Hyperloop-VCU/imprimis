@@ -1,0 +1,5 @@
+twist_to_stamped:
+  ros_parameters:
+    in_topic: /cmd_vel
+    out_topic: /diffbot_base_controller/cmd_vel
+    frame_id: base_link
