@@ -6,7 +6,7 @@ navsat_transform:
     yaw_offset: 0.0
     zero_altitude: true
     broadcast_utm_transform: true
-    use_odometry_yaw: false
+    use_odometry_yaw: true
 
     # future config
     magnetic_declination_radians: 0.0
