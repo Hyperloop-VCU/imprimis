@@ -5,7 +5,7 @@ static const uint32_t USB_BAUD = 115200;
 static const int GPS_RX_PIN = 4;
 static const int GPS_TX_PIN = 2;
 static const uint32_t GPS_BAUD = 9600;
-static const int GPS_OUTPUT_HZ = 5;
+static const int GPS_OUTPUT_HZ = 10;
 
 #define PMTK_SET_NMEA_OUTPUT_RMCGGA "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"
 #define PMTK_SET_NMEA_UPDATE_5HZ  "$PMTK220,200*2C"
