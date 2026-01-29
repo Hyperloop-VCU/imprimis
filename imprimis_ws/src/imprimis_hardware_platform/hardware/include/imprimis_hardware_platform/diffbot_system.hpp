@@ -30,6 +30,8 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include "imprimis_hardware_platform/serial_comms.hpp"
 
@@ -42,6 +44,12 @@ public:
 
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
+
+  hardware_interface::CallbackReturn on_init(
+    const hardware_interface::HardwareComponentParams& params) override;
+
+  hardware_interface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -93,6 +101,8 @@ private:
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
   bool curr_manual;
+  std::vector<double> hw_gpio_in_;
+  std::vector<double> hw_gpio_out_;
 };
 
 }  // namespace imprimis_hardware_platform

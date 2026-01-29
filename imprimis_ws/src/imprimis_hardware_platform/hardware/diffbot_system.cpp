@@ -54,6 +54,11 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+// Configure: runs once on startup. Sets up the GPS and IMU publishers.
+hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) {
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
 
 // Runs once on startup. Defines all the state interfaces (wheel velocities, estop, etc) for ros2 control.
 std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_state_interfaces()
