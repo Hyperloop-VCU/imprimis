@@ -16,3 +16,4 @@ gps_nav_bridge:
     nav2_action_name: /navigate_to_pose
     max_read_hz: 10.0
     default_position_covariance_m2: -1.0
+  
