@@ -49,13 +49,8 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  curr_manual = false;
+  mode = 0.0;
 
-  return hardware_interface::CallbackReturn::SUCCESS;
-}
-
-// Configure: runs once on startup. Sets up the GPS and IMU publishers.
-hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) {
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -64,8 +59,7 @@ hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & 
 std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (auto i = 0u; i < info_.joints.size(); i++)
-  {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]));
@@ -73,6 +67,10 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
       hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]));
   }
+
+  auto gpio = info_.gpios[0];
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "imu_heading", &imu_heading));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manual_mode", &mode));
 
   return state_interfaces;
 }
@@ -88,6 +86,8 @@ std::vector<hardware_interface::CommandInterface> DiffBotSystemHardware::export_
       hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
   }
+  auto gpio = info_.gpios[0];
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(gpio.name, "dummy_gpio_cmd", &dummy_gpio_cmd));
 
   return command_interfaces;
 }
@@ -159,8 +159,8 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
 {
   // read state
   float leftAngvel, rightAngvel;
-  bool manual_mode;
-  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, manual_mode);
+  bool read_mode;
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode);
 
   // read succeeded
   if (read_status == SerialLink::Status::Ok) {
@@ -168,9 +168,9 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
     hw_velocities_[1] = static_cast<float>(rightAngvel);
     hw_positions_[0] += period.seconds() * hw_velocities_[0]; // integrate velocity to get position
     hw_positions_[1] += period.seconds() * hw_velocities_[1];
-    if (manual_mode != curr_manual) {
-      RCLCPP_INFO(get_logger(), "Switched to %s mode", (manual_mode ? "manual" : "autonomous"));
-      curr_manual = manual_mode;
+    if (read_mode != mode) {
+      RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
+      mode = static_cast<double>(read_mode);
     }
   }
 

@@ -45,11 +45,13 @@ public:
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 
-  hardware_interface::CallbackReturn on_init(
-    const hardware_interface::HardwareComponentParams& params) override;
-
   hardware_interface::CallbackReturn on_configure(
-    const rclcpp_lifecycle::State & previous_state) override;
+    const rclcpp_lifecycle::State & previous_state) override {
+      auto x = previous_state; // prevent compile warnings
+      return hardware_interface::CallbackReturn::SUCCESS;
+    }
+
+  
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
@@ -100,9 +102,9 @@ private:
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
-  bool curr_manual;
-  std::vector<double> hw_gpio_in_;
-  std::vector<double> hw_gpio_out_;
+  double imu_heading;
+  double mode;
+  double dummy_gpio_cmd;
 };
 
 }  // namespace imprimis_hardware_platform

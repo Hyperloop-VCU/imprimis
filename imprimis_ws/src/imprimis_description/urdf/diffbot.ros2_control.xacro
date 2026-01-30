@@ -5,7 +5,7 @@
 
     <ros2_control name="${name}" type="system">
 
-    <!-- Real hardware -->
+      <!-- Real hardware -->
       <xacro:if value="${hardware_type == 'real'}">
         <hardware>
           <plugin>imprimis_hardware_platform/DiffBotSystemHardware</plugin>
@@ -14,7 +14,7 @@
         </hardware>
       </xacro:if>
 
-    <!-- Fake hardware-->
+      <!-- Fake hardware-->
       <xacro:if value="${hardware_type == 'fake'}">
         <hardware>
           <plugin>mock_components/GenericSystem</plugin>
@@ -23,14 +23,14 @@
       </xacro:if>
 
     
-    <!-- Gazebo-simulated Hardware -->
+      <!-- Gazebo-simulated Hardware -->
       <xacro:if value="${hardware_type == 'simulated'}">
         <hardware>
           <plugin>gazebo_ros2_control/GazeboSystem</plugin>
         </hardware>
       </xacro:if>
 
-    <!-- Joint definitions -->
+      <!-- Joint definitions -->
       <joint name="left_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>
@@ -41,6 +41,13 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
       </joint>
+
+      <!-- Arbitrary state interfaces (GPIOs)-->
+      <gpio name="imprimis_data">
+        <command_interface name="dummy_gpio_cmd"/>
+        <state_interface name="imu_heading"/>
+        <state_interface name="manual_mode"/>
+      </gpio>
     </ros2_control>
 
   </xacro:macro>

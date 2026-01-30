@@ -69,9 +69,9 @@ def generate_launch_description():
 
 
     # controller manager, if we are not using simulated hardware
-    controller_config_filename = PythonExpression([
-    "'diffbot_controllers.yaml' if '", publish_odom_tf, "' == 'true' else 'diffbot_controllers_no_odom_tf.yaml'"
-])
+    controller_config_filename = "diffbot_controllers.yaml"#PythonExpression([
+        #"'diffbot_controllers.yaml' if '", publish_odom_tf, "' == 'true' else 'diffbot_controllers_no_odom_tf.yaml'"
+    #])
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_hardware_platform"),
@@ -82,7 +82,7 @@ def generate_launch_description():
     controller_manager_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[robot_controllers, {"enable_odom_tf": publish_odom_tf}],
         output="both",
         remappings=[
             ("~/robot_description", "/robot_description"),
@@ -128,6 +128,13 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
+    )
+
+    # GPIO controller (Arbitrary state interface exposure)
+    gpio_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
     )
 
     # Actual velodyne LIDAR driver, if we are using real hardware
@@ -196,6 +203,7 @@ def generate_launch_description():
         controller_manager_node,         # not in sim
         robot_state_pub_node,
         robot_controller_spawner,
+        gpio_controller_spawner,
         rviz_node,
         joint_state_broadcaster_spawner, # not in sim
         gazebo_launch_include,           # sim only
