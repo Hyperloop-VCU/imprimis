@@ -142,7 +142,7 @@ def generate_launch_description():
         executable="navsat_transform_node",
         parameters=[navsat_transform_params_file],
         remappings=[('/imu', '/bno055/imu'), ('/odometry/filtered', '/odometry/filtered/local')],
-        arguments=["--ros-args", "-log-level", "warn"],
+        arguments=["--ros-args", "-log-level", "error"],
     )
 
     # global EKF
