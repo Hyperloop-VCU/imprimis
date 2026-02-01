@@ -7,6 +7,7 @@
 
 struct AtoBPacket
 {
+  bool ignorePacket;
   float setLeftAngvel;         // Angular velocity setpoint for the left PID controller, or open-loop effort if openLoop=true
   float setRightAngvel;        // Angular velocity setpoint for the right PID controller, or open-loop effort if openLoop=true
   bool reset;                  // If board A sets this to true, B will reset the motor controllers and encoder counts

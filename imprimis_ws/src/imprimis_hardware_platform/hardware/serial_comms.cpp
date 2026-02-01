@@ -50,17 +50,18 @@ SerialLink::Status SerialLink::initialize_link(const char* port_name)
 }
 
 
-SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode) 
+SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, float& imuHeading, bool& manual_mode, bool& boardBConnected,
+                                                    bool& gpsFix, float& gpsLat, float& gpsLong, float& gpsAlt, float& gpsHdop)
 {
     if (!is_connected()) return Status::NotConnected;
 
     try 
     {
-        const size_t need = 16; // +03.92 -10.31 0\n
-        std::string bytes = g_ser->read(need);
-        if (bytes.size() != need) return Status::ReadTimeout;
+        std::string bytes;
+        g_ser->readline(bytes, 512);
         std::istringstream iss(bytes);
-        iss >> leftAngVel >> rightAngVel >> manual_mode;
+        iss >> leftAngVel >> rightAngVel >> imuHeading >> manual_mode >> boardBConnected \
+        >> gpsFix >> gpsLat >> gpsLong >> gpsAlt >> gpsHdop;
         return Status::Ok;
     } 
     catch (...) 

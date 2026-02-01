@@ -4,4 +4,4 @@ sim_gps_from_odom:
     datum_lon: -77.4360000
     fix_topic: /gps/fix
     odom_topic: /odometry/filtered/local
-    hz: 5.0
+    hz: 10.0

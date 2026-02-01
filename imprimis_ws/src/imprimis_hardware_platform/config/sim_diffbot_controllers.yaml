@@ -69,5 +69,11 @@ gpio_controller:
     state_interfaces:
       imprimis_data:
         - interfaces:
-          - imu_heading
-          - manual_mode
+          - imuHeading
+          - manualMode
+          - boardBConnected
+          - gpsFix
+          - gpsLat
+          - gpsLong
+          - gpsAlt
+          - gpsHdop

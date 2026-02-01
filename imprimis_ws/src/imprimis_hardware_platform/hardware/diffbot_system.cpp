@@ -49,7 +49,9 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  mode = 0.0;
+  mode_gpio = 0.0;
+  imuHeading_gpio = 0.0;
+  boardBConnected_gpio = 0.0;
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -69,8 +71,14 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
   }
 
   auto gpio = info_.gpios[0];
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "imu_heading", &imu_heading));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manual_mode", &mode));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "imuHeading", &imuHeading_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manualMode", &mode_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "boardBConnected", &boardBConnected_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsFix", &gpsFix_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsLat", &gpsLat_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsLong", &gpsLong_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsAlt", &gpsAlt_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsHdop", &gpsHdop_gpio));
 
   return state_interfaces;
 }
@@ -99,7 +107,7 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // setup serial connection
-  esp32 = std::make_shared<SerialLink>(115200, 0.01);
+  esp32 = std::make_shared<SerialLink>(921600, 0.01);
 
   // try ports
   const char* ports[] =
@@ -158,25 +166,36 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(const rc
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
   // read state
-  float leftAngvel, rightAngvel;
-  bool read_mode;
-  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode);
+  float leftAngvel, rightAngvel, imuHeading;
+  bool read_mode, boardBConnected, gpsFix;
+  float gpsLat, gpsLong, gpsAlt, gpsHdop;
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, imuHeading, read_mode, boardBConnected, gpsFix, gpsLat, gpsLong, gpsAlt, gpsHdop);
 
   // read succeeded
   if (read_status == SerialLink::Status::Ok) {
-    hw_velocities_[0] = static_cast<float>(leftAngvel);
-    hw_velocities_[1] = static_cast<float>(rightAngvel);
+    hw_velocities_[0] = leftAngvel;
+    hw_velocities_[1] = rightAngvel;
     hw_positions_[0] += period.seconds() * hw_velocities_[0]; // integrate velocity to get position
     hw_positions_[1] += period.seconds() * hw_velocities_[1];
-    if (read_mode != mode) {
+    if (read_mode != mode_gpio) {
       RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
-      mode = static_cast<double>(read_mode);
     }
+    if (!boardBConnected) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Lost connection to board B and the motors. Are they on?");
+    }
+    mode_gpio = static_cast<double>(read_mode);
+    boardBConnected_gpio = static_cast<double>(boardBConnected);
+    imuHeading_gpio = static_cast<double>(imuHeading);
+    gpsFix_gpio = static_cast<double>(gpsFix);
+    gpsLat_gpio = static_cast<double>(gpsLat);
+    gpsLong_gpio = static_cast<double>(gpsLong);
+    gpsAlt_gpio = static_cast<double>(gpsAlt);
+    gpsHdop_gpio = static_cast<double>(gpsHdop);
   }
 
   // read failed; velocity kept to what it was previously
   else {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from microcontroller.");
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from board A.");
   }
 
   // print the newly-read states if debugging

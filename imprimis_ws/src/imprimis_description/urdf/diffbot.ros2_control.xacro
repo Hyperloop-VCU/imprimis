@@ -45,8 +45,14 @@
       <!-- Arbitrary state interfaces (GPIOs)-->
       <gpio name="imprimis_data">
         <command_interface name="dummy_gpio_cmd"/>
-        <state_interface name="imu_heading"/>
-        <state_interface name="manual_mode"/>
+        <state_interface name="imuHeading"/>
+        <state_interface name="manualMode"/>
+        <state_interface name="boardBConnected"/>
+        <state_interface name="gpsFix"/>
+        <state_interface name="gpsLat"/>
+        <state_interface name="gpsLong"/>
+        <state_interface name="gpsAlt"/>
+        <state_interface name="gpsHdop"/>
       </gpio>
     </ros2_control>
 

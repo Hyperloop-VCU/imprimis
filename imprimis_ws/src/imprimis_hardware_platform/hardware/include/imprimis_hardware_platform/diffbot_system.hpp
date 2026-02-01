@@ -102,9 +102,15 @@ private:
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
-  double imu_heading;
-  double mode;
+  double imuHeading_gpio;
+  double mode_gpio;
+  double boardBConnected_gpio;
   double dummy_gpio_cmd;
+  double gpsFix_gpio;
+  double gpsLat_gpio;
+  double gpsLong_gpio;
+  double gpsAlt_gpio;
+  double gpsHdop_gpio;
 };
 
 }  // namespace imprimis_hardware_platform
