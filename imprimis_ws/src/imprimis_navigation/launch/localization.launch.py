@@ -47,14 +47,18 @@ def generate_launch_description():
     use_gpio = LaunchConfiguration("use_gpio")
 
     # when use_fake_gps = false, choose between gpio vs serial
-    use_gpio_condition = IfCondition(PythonExpression([
-        "(", use_fake_gps, " == 'false') and (", use_gpio, " == 'true')"
-        ])
-    )
-    use_serial_condition = IfCondition(PythonExpression([
-        "(", use_fake_gps, " == 'false') and (", use_gpio, " == 'false')"
-        ])
-    )
+    use_gpio_condition = IfCondition(
+    PythonExpression([
+        "'", use_fake_gps, "' == 'false' and '", use_gpio, "' == 'true'"
+    ])
+)
+
+    use_serial_condition = IfCondition(
+    PythonExpression([
+        "'", use_fake_gps, "' == 'false' and '", use_gpio, "' == 'false'"
+    ])
+)
+
 
     # hardware (real or fake)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
