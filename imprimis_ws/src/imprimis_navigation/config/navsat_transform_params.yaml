@@ -16,8 +16,3 @@ navsat_transform_node:
     map_frame: map
     odom_frame: odom
     base_link_frame: base_link
-
-    # Topics
-    gps_topic: /gps/fix # gps input
-    odometry_topic: /odometry/filtered/local # odom input
-    imu_topic: /bno055/imu # imu input
