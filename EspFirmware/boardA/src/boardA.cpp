@@ -6,25 +6,56 @@
 #include <WiFi.h>
 #include <atomic>
 #include "../../common/config.h"
-#include "../../common/comms.cpp"
 #include <FlyskyIBUS.h>
+#include <BNO055_support.h>
+#include <Wire.h>
+#include <Adafruit_GPS.h>
 
 
-// Global variables
+// Local to loop()
 bool status_YellowLightOn = false;
 unsigned long status_YellowLastSwitched = 0;
 esp_now_peer_info_t peerInfo;
-bool is_connected = false;
-FlyskyIBUS IBUS(Serial2, RC_IBUS_RX, 15);
-std::atomic<float> leftAngvel{0.0};
-std::atomic<float> rightAngvel{0.0};
 
+// Shared between tasks
+std::atomic<bool> boardBConnected{};
+std::atomic<bool> manualEnabled{};
+std::atomic<float> imuHeading{};
+std::atomic<float> leftAngvel{};
+std::atomic<float> rightAngvel{};
+std::atomic<bool> gpsFix{};
+std::atomic<float> gpsLong{};
+std::atomic<float> gpsLat{};
+std::atomic<float> gpsAlt{};
+std::atomic<float> gpsHdop{};
 
+SemaphoreHandle_t sendDataMutex;
+
+// Sensors
+FlyskyIBUS IBUS(Serial2, RX_RC_IBUS, TX_RC_IBUS); // 15 is the unused TX pin
+Adafruit_GPS GPS(&Serial1);
+struct bno055_t IMU;
+
+// Utilities
+inline void serialReadFloat(float& f)
+{
+  while (!Serial.available());
+  f = Serial.parseFloat();
+}
+inline void serialReadInt(int& i)
+{
+  while (!Serial.available());
+  i = Serial.parseInt();
+}
+inline void send_pmtk(const char* cmd) {
+  GPS.sendCommand(cmd);
+  delay(100);
+}
 
 // Receive data callback: runs whenever B sends wheel angvels to A
 void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
-  is_connected = true; // assume we will always be able to send data if we can receive it
+  boardBConnected = true; // assume we will always be able to send data if we can receive it
   // copy recieved bytes into the struct so we can access/modify the data
   struct BtoAPacket received_data;
   if (len != sizeof(BtoAPacket)) return;
@@ -42,64 +73,123 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
 // Send data callback: runs whenever A sends commands/setpoints to B
 void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-  if (status != ESP_NOW_SEND_SUCCESS) is_connected = false;
-  else is_connected = true;
+  if (status != ESP_NOW_SEND_SUCCESS) boardBConnected = false;
+  else boardBConnected = true;
 }
 
 
 // Updates the data to send based on the command sent and prints data to serial.
-// Does nothing if there is no command, or the command is invalid. Does not print to serial if we've lost connection with board B.
+// Does nothing if there is an invalid command or no command.
 // Returns true if a valid command was received, false otherwise.
-bool handle_ROS_command(struct AtoBPacket& data_to_send) 
+bool handle_ROS_command(struct AtoBPacket& dataToSend) 
 {
   if (!Serial.available()) return false;
 
   char chr = Serial.read();
   switch(chr) {
     case RESET_ENCODERS:
-      data_to_send.reset = true;
+      dataToSend.reset = true;
       break;
     case ANGVEL_SETPOINT:
-      serialReadFloat(data_to_send.setLeftAngvel);
-      serialReadFloat(data_to_send.setRightAngvel);
+      serialReadFloat(dataToSend.setLeftAngvel);
+      serialReadFloat(dataToSend.setRightAngvel);
       break;
     case SET_PID:
-      serialReadFloat(data_to_send.newKp);
-      serialReadFloat(data_to_send.newKi);
-      serialReadFloat(data_to_send.newKd);
-      serialReadInt(data_to_send.gainChange);
+      serialReadFloat(dataToSend.newKp);
+      serialReadFloat(dataToSend.newKi);
+      serialReadFloat(dataToSend.newKd);
+      serialReadInt(dataToSend.gainChange);
       break;
     default:
       return false;
   }
 
-  if (!is_connected) return true;
-  struct BtoAPacket received_data{};
-  float left = leftAngvel;
-  float right = rightAngvel;
-  Serial.printf("%+06.2f %+06.2f %d\n", left, right, data_to_send.openLoop);
+  float leftAngvel_tmp = leftAngvel;
+  float rightAngvel_tmp = rightAngvel;
+  bool boardBConnected_tmp = boardBConnected;
+  float imuHeading_tmp = imuHeading;
+  bool gpsFix_tmp = gpsFix;
+  float gpsLat_tmp = gpsLat;
+  float gpsLong_tmp = gpsLong;
+  float gpsAlt_tmp = gpsAlt;
+  float gpsHdop_tmp = gpsHdop;
+  
+  Serial.printf(
+    "%+06.2f %+06.2f %+07.2f %d %d %d %+011.7f %+011.7f %+06.2f %+06.2f\n", 
+    leftAngvel_tmp, 
+    rightAngvel_tmp, 
+    imuHeading_tmp, 
+    dataToSend.openLoop, 
+    boardBConnected_tmp, 
+    gpsFix_tmp, 
+    gpsLat_tmp, 
+    gpsLong_tmp, 
+    gpsAlt_tmp, 
+    gpsHdop_tmp
+  );
   return true;
 }
 
-// Updates the data packet for manual mode.
-void handle_manual_commands(struct AtoBPacket& data_to_send)
+
+void readIMU(void* pvParameters)
 {
-  float x_normalized = (IBUS.getChannel(0) - 1500.0) / 500.0;
-  float y_normalized = (IBUS.getChannel(1) - 1500.0) / 500.0;
-  data_to_send.setLeftAngvel = y_normalized;
-  data_to_send.setRightAngvel = y_normalized;
-  data_to_send.setLeftAngvel -= x_normalized;
-  data_to_send.setRightAngvel += x_normalized;
+  while (1) {
+    BNO055_S16 readIMUHeading;
+    bno055_read_euler_h(&readIMUHeading);
+    imuHeading = static_cast<float>(readIMUHeading) / 16.00;
+    vTaskDelay(pdMS_TO_TICKS(IMU_READ_PERIOD_MS));
+  }
+}
+
+
+void readGPS(void* pvParameters)
+{
+  while (1) {
+    (void)GPS.read();
+    if (GPS.newNMEAreceived() && GPS.parse(GPS.lastNMEA())) {
+      gpsFix = GPS.fix;
+      gpsLat = GPS.latitudeDegrees;
+      gpsLong = GPS.longitudeDegrees;
+      gpsAlt = GPS.altitude;   
+      gpsHdop = GPS.HDOP;
+    }
+    vTaskDelay(pdMS_TO_TICKS(GPS_READ_PERIOD_MS));
+  }
+}
+
+void confirmConnection(void* pvParameters) 
+{
+  while (1) {
+    struct AtoBPacket testPacket{};
+    testPacket.ignorePacket = true;
+    (void)xSemaphoreTake(sendDataMutex, portMAX_DELAY);
+    esp_now_send(B_MAC, (uint8_t*)&testPacket, 1);
+    xSemaphoreGive(sendDataMutex);
+    vTaskDelay(pdMS_TO_TICKS(CONNECTION_CHECK_PERIOD_MS));
+  }
 }
 
 
 void setup() 
 {  
-  // setup serial port and radio reciever data
-  Serial.begin(SERIAL_BAUD_RATE_A);
-  IBUS.begin();
+  sendDataMutex = xSemaphoreCreateMutex(); // Mutex for sending data to board B
+  Serial.begin(SERIAL_BAUD_RATE_A); // PC connection
+  IBUS.begin(); // RC receiver connection
 
-  // setup ESP-now and callbacks
+  // GPS
+  Serial1.setPins(RX_GPS, TX_GPS);
+  GPS.begin(SERIAL_BAUD_RATE_GPS);
+  send_pmtk(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  send_pmtk(PMTK_SET_NMEA_UPDATE_10HZ);
+  send_pmtk(PMTK_SET_FIX_CTL_10HZ);
+  GPS.sendCommand(PGCMD_NOANTENNA); // TODO use antenna
+
+  // IMU
+  Wire.begin();
+  BNO_Init(&IMU);
+  bno055_set_operation_mode(OPERATION_MODE_NDOF);
+
+  // ESP-NOW
   WiFi.mode(WIFI_STA);
   esp_now_init();
   memcpy(peerInfo.peer_addr, B_MAC, 6);
@@ -111,19 +201,45 @@ void setup()
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
   esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
 
-  // setup status lights
+  // Status lights
   pinMode(GREEN_LIGHT, OUTPUT);
   pinMode(YELLOW_LIGHT, OUTPUT);
   status_YellowLastSwitched = millis();
+
+  xTaskCreate(
+    readIMU, // function
+    "readIMU_task", // task name
+    8192, // stack size
+    NULL, // params
+    0, // priority
+    NULL // task handle
+  );
+  xTaskCreate(
+    readGPS,
+    "readGPS_task",
+    16384,
+    NULL,
+    0,
+    NULL
+  );
+  xTaskCreate(
+    confirmConnection,
+    "confirmConnection_task",
+    8192,
+    NULL,
+    0,
+    NULL
+  );
 }
 
 
 void loop() 
 {
-  bool autonomous = (IBUS.getChannel(4) == 2000); // SWA on controller
+  bool controllerConnected = true; // TODO
+  manualEnabled = controllerConnected ? (IBUS.getChannel(4) != 2000) : true; // SWA on controller
 
-  // handle yellow light
-  if (!autonomous) {
+  // handle status lights
+  if (manualEnabled) {
     digitalWrite(YELLOW_LIGHT, HIGH);
     status_YellowLightOn = true;
   }
@@ -132,22 +248,28 @@ void loop()
     digitalWrite(YELLOW_LIGHT, (status_YellowLightOn ? HIGH : LOW));
     status_YellowLastSwitched = millis();
   }
-
-  // handle green light
-  digitalWrite(GREEN_LIGHT, (is_connected ? HIGH : LOW));
+  digitalWrite(GREEN_LIGHT, (boardBConnected ? HIGH : LOW));
 
   // Main board A logic
   // If a ROS command was received, send data back to ROS, regardless of mode
-  // If manual mode, send manual setpoints to board A regardless of ROS command received/not received
-  // If autonomous mode, send autonomous commands ONLY if a ROS command was received
-  struct AtoBPacket data_to_send{};
-  data_to_send.openLoop = !autonomous;
-  bool command_received = handle_ROS_command(data_to_send);
-  if (autonomous && command_received) {
-    esp_now_send(B_MAC, (uint8_t*)&data_to_send, sizeof(AtoBPacket));
+  // If manual, send manual commands to board B regardless of ROS command
+  // If autonomous, send ROS command to board B only if it was received
+  struct AtoBPacket dataToSend{};
+  dataToSend.openLoop = manualEnabled;
+  bool command_received = handle_ROS_command(dataToSend);
+  if (!manualEnabled && command_received) {
+    (void)xSemaphoreTake(sendDataMutex, portMAX_DELAY);
+    esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
+    xSemaphoreGive(sendDataMutex);
   }
-  else if (!autonomous) {
-    handle_manual_commands(data_to_send);
-    esp_now_send(B_MAC, (uint8_t*)&data_to_send, sizeof(AtoBPacket));
+  else if (manualEnabled) {
+    float manualXInput = (IBUS.getChannel(0) - 1500.0) / 500.0;
+    float manualYInput = (IBUS.getChannel(1) - 1500.0) / 500.0;
+    dataToSend.setLeftAngvel = manualYInput - manualXInput;
+    dataToSend.setRightAngvel = manualYInput + manualXInput;
+    (void)xSemaphoreTake(sendDataMutex, portMAX_DELAY);
+    esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
+    xSemaphoreGive(sendDataMutex);
   }
+  vTaskDelay(pdMS_TO_TICKS(1));
 }

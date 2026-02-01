@@ -9,7 +9,6 @@
 #include <WiFi.h>
 #include <atomic>
 #include "../../common/config.h"
-#include "../../common/comms.cpp"
 #include "MotorController.cpp"
 
 
@@ -33,10 +32,11 @@ std::atomic<bool> pauseUpdates{false};
 // On-data-received callback, runs when board A sends data to board B.
 void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len) 
 { 
-  time_of_last_data_receive = millis();
-
   struct AtoBPacket received_data{};
   memcpy(&received_data, incomingData, sizeof(received_data));
+  if (received_data.ignorePacket) return;
+  time_of_last_data_receive = millis();
+  
   if (received_data.reset || (openLoop != received_data.openLoop)) {
     pauseUpdates = true;
     leftController.reset();
@@ -111,8 +111,7 @@ void loop()
 
   // Update controllers at a fixed rate
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
-    if (!pauseUpdates)
-    {
+    if (!pauseUpdates) {
       if (openLoop) {
         leftController.update_openloop(leftEncoderCount);
         rightController.update_openloop(rightEncoderCount);

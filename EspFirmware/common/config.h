@@ -11,16 +11,51 @@ const uint8_t B_MAC[] = {0x80, 0xf3, 0xda, 0x62, 0xfc, 0xa4};
 const char PMK[] = "testtesttesttest";
 const char LMK[] = "testtesttesttest";
 
+// data packets
+struct AtoBPacket
+{
+  bool ignorePacket;           // If this is true, board B will pretend like it didn't receive the message. Used for probing connection status.
+  float setLeftAngvel;         // Angular velocity setpoint for the left PID controller, or open-loop effort if openLoop=true
+  float setRightAngvel;        // Angular velocity setpoint for the right PID controller, or open-loop effort if openLoop=true
+  bool reset;                  // If board A sets this to true, B will reset the motor controllers and encoder counts
+  int gainChange;              // 1 to set the left controller's gains to newKp, newKi, newKd. 2 to set the right controller's gains, 0 to not change any of them
+  float newKp;                 // Proportional gain of PID controller
+  float newKi;                 // Integral gain of PID controller
+  float newKd;                 // Derivative gain of PID controller
+  bool openLoop;               // If true, board B will treat the setLeftAngvel and setRightAngvel as open-loop efforts instead of closed-loop setpoints (1.0 for max forward effort, 0.0 for no effort, -1.0 for max reverse effort)
+};
+
+struct BtoAPacket
+{
+  float currLeftAngvel;
+  float currRightAngvel;
+};
+
 
 // BOARD A //
 #define GREEN_LIGHT 25
 #define YELLOW_LIGHT 26
-#define RC_IBUS_RX 27
+#define RX_RC_IBUS 27 // RX on this board
+#define TX_RC_IBUS 15 // TX on this board (unused)
+#define IMU_SCL 22
+#define IMU_SDA 21
+#define RX_GPS 16 // RX on board A, TX on GPS
+#define TX_GPS 17 // TX on board A, RX on GPS
 
-#define YELLOW_SWITCH_PERIOD_MS 1000
-#define IMU_READ_PERIOD_MS 100
+// GPS config
+#define PMTK_SET_NMEA_OUTPUT_RMCGGA "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"
+#define PMTK_SET_NMEA_UPDATE_5HZ  "$PMTK220,200*2C"
+#define PMTK_SET_NMEA_UPDATE_10HZ "$PMTK220,100*2F"
+#define PMTK_SET_FIX_CTL_5HZ  "$PMTK300,200,0,0,0,0*2F"
+#define PMTK_SET_FIX_CTL_10HZ "$PMTK300,100,0,0,0,0*2C"
 
-#define SERIAL_BAUD_RATE_A 115200 // A to the PC
+#define YELLOW_SWITCH_PERIOD_MS 800
+#define IMU_READ_PERIOD_MS 50
+#define GPS_READ_PERIOD_MS 100
+#define CONNECTION_CHECK_PERIOD_MS 500
+
+#define SERIAL_BAUD_RATE_A 921600
+#define SERIAL_BAUD_RATE_GPS 9600
 
 #define ANGVEL_SETPOINT 's'
 #define RESET_ENCODERS 'r'
@@ -38,7 +73,7 @@ const char LMK[] = "testtesttesttest";
 #define DEBUG_BAUD_RATE_B 115200  // B to the (usually not connected) PC
 
 #define PID_UPDATE_PERIOD_MS 5 // PID loop rate - changing this requires changing the PID gains
-#define TIMEOUT_MS 500 // If B doesn't receive data for this long, stop the robot
+#define TIMEOUT_MS 300 // If B doesn't receive data for this long, stop the robot
 #define DATA_SEND_RATE_MS 10 // How often to send wheel angvels from B to A
 
 #define LEFT_COUNTS_PER_REV 4661 // Encoder counts per wheel revolution for each wheel
