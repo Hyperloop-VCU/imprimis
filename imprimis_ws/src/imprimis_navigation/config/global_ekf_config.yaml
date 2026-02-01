@@ -31,3 +31,7 @@ ekf_global:
                    false, false, false]
     odom1_differential: false
     odom1_relative: false
+    odom1_pose_rejection_threshold: 5.0
+    odom1_twist_rejection_threshold: 1.0
+    odom1_qos_overrides:
+      reliability: reliable

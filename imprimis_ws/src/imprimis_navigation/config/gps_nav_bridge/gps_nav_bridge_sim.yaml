@@ -1,6 +1,7 @@
 gps_nav_bridge:
   ros__parameters:
     use_serial: false
+    
     auto_set_datum: true
     auto_set_datum_if_unset: true
     auto_set_datum_once: true
@@ -15,5 +16,5 @@ gps_nav_bridge:
     map_yaw_offset_deg: 0.0  # 0° means ENU aligned with map
     nav2_action_name: /navigate_to_pose
     max_read_hz: 10.0
-    default_position_covariance_m2: -1.0
+    default_position_covariance_m2: 2.25
   
