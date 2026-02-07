@@ -1,10 +1,11 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import PathJoinSubstitution, LaunchConfiguration, PythonExpression
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PythonExpression
 
 
 def generate_launch_description():
@@ -24,6 +25,13 @@ def generate_launch_description():
             "use_controller",
             default_value="false",
             description="Whether or not to start up the logitech controller input node.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_gpio",
+            default_value="true",
+            description="Whether or not to get GPS data from Board A or Serial",
         )
     )
     declared_arguments.append(
@@ -100,7 +108,7 @@ def generate_launch_description():
         ]
     )
 
-    gps_nav_bridge_real_params = PathJoinSubstitution(
+    gps_nav_bridge_serial_params = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_navigation"),
             "config",
@@ -114,6 +122,14 @@ def generate_launch_description():
             FindPackageShare("imprimis_navigation"),
             "config",
             "sim_gps_from_odom.yaml",
+        ]
+    )
+    gps_nav_bridge_gpio_params = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "gps_nav_bridge",
+            "gps_nav_bridge_gpio_auto.yaml",
         ]
     )
 
@@ -136,12 +152,21 @@ def generate_launch_description():
     )
 
     # gps_nav_bridge for real gps
-    gps_nav_bridge_real_node = Node(
+    gps_nav_bridge_serial_node = Node(
         package="gps_nav_bridge",
         executable="gps_nav_bridge",
         name="gps_nav_bridge",
-        parameters=[gps_nav_bridge_real_params],
-        condition=UnlessCondition(use_fake_gps),
+        parameters=[gps_nav_bridge_serial_params],
+        condition=use_serial_condition,
+    )
+
+    # gps_nav_bridge for gps data from board a (gpio)
+    gps_nav_bridge_gpio_node = Node(
+        package="gps_nav_bridge",
+        executable="gps_nav_bridge_gpio",
+        name="gps_nav_bridge_gpio",
+        parameters=[gps_nav_bridge_gpio_params],
+        condition=use_gpio_condition,
     )
     
     # navsat transform node
@@ -156,7 +181,7 @@ def generate_launch_description():
         package="robot_localization",
         executable="navsat_transform_node",
         parameters=[navsat_transform_params_file],
-        remappings=[('imu/data', '/bno055/imu'), ('odometry/filtered', '/odometry/filtered/local'), ('gps/fix', '/gps/fix')],
+        remappings=[('/imu', '/bno055/imu'), ('/odometry/filtered', '/odometry/filtered/local'), ('/gps/fix', '/gps/fix')],
         arguments=["--ros-args", "--log-level", "warn"],
     )
 
@@ -189,8 +214,13 @@ def generate_launch_description():
         executable="bno055",
         parameters=[bno055_params_file]
     )
-
-    # cmd_vel twist to twist stamped
+    
+    """
+    I'm keeping this here because Nav2 isnt launched here.
+    Nav2 usually handles the conversion so this will be ommitted
+    in the basic_nav launch file. 
+    """
+    # cmd_vel twist to twist stamped 
     twist_to_stamped_params_file = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_navigation"),
@@ -209,11 +239,12 @@ def generate_launch_description():
         imprimis_hardware_launch_include,
         local_ekf_node,
         t265_driver_node,
-        #gps_nav_bridge_sim_node,
-        #gps_nav_bridge_real_node,
-        #fake_gps_node,
-        #global_ekf_node,
-        #navsat_transform_node,
-        #bno055_node,
-        #twist_to_stamped_node,
+        gps_nav_bridge_sim_node,
+        gps_nav_bridge_serial_node,
+        gps_nav_bridge_gpio_node,
+        fake_gps_node,
+        global_ekf_node,
+        navsat_transform_node,
+        bno055_node,
+        twist_to_stamped_node,
     ])
