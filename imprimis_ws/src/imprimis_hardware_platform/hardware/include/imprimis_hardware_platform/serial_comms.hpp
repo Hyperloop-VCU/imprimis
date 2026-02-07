@@ -20,7 +20,9 @@ public:
         InvalidArg,
         WriteFailed,
         ReadFailed,
-        ReadTimeout
+        ReadTimeout,
+        BadData,
+        DisconnectFailed
     };
 
     // Constructor does not connect
@@ -28,6 +30,8 @@ public:
 
     // Destructor disconnects if needed
     ~SerialLink();
+
+    Status close();
 
     // initializes the link with the given port name.
     Status initialize_link(const char* port_name);
@@ -52,6 +56,12 @@ public:
 
     // returns true if the serial connection is up, false if it isn't
     bool is_connected() const;
+    
+    // get num of available characters in the buffer
+    size_t getAvailable() const;
+    
+    // returns status enum as a string
+    char* status_to_string(Status s) const;
 
 private:
     bool connected_;

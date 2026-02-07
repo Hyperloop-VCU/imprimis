@@ -7,6 +7,9 @@
 #include <cstring>
 #include <memory>
 #include <cmath>
+#include <chrono>
+#include <thread>
+using namespace std::chrono_literals;
 
 namespace 
 {
@@ -25,6 +28,17 @@ SerialLink::~SerialLink()
     connected_ = false;
 }
 
+SerialLink::Status SerialLink::close()
+{
+    if (g_ser && g_ser->isOpen()) {
+        try { g_ser->close(); } catch (...) {return Status::DisconnectFailed;}
+    }
+    else {
+        return Status::NotConnected;
+    }
+    connected_ = false;
+    return Status::Ok;
+}
 
 SerialLink::Status SerialLink::initialize_link(const char* port_name) 
 {
@@ -47,6 +61,9 @@ SerialLink::Status SerialLink::initialize_link(const char* port_name)
     {
         return Status::ConfigureFailed;
     }
+
+    // TODO verify that we're connected to board A and not some other device
+
 }
 
 
@@ -60,8 +77,15 @@ SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& righ
         std::string bytes;
         g_ser->readline(bytes, 512);
         std::istringstream iss(bytes);
+        char firstChar;
+        iss >> firstChar;
+        if (firstChar != '@') {
+            g_ser->readline(bytes, 512); // clear bad data
+            return Status::BadData;
+        }
         iss >> leftAngVel >> rightAngVel >> imuHeading >> manual_mode >> boardBConnected \
         >> gpsFix >> gpsLat >> gpsLong >> gpsAlt >> gpsHdop;
+        g_ser->readline(bytes, 512); // clear backlog
         return Status::Ok;
     } 
     catch (...) 
@@ -127,3 +151,29 @@ bool SerialLink::is_connected() const
 {
     return connected_ && g_ser && g_ser->isOpen();
 }
+
+
+size_t SerialLink::getAvailable() const
+{
+    try {return g_ser->available();}
+    catch (...) {return 0;}
+}
+
+char* SerialLink::status_to_string(SerialLink::Status s) const
+{
+    switch (s) {
+    case SerialLink::Status::Ok:                return "Ok";
+    case SerialLink::Status::NotInitialized:    return "NotInitialized";
+    case SerialLink::Status::OpenFailed:        return "OpenFailed";
+    case SerialLink::Status::ConfigureFailed:   return "ConfigureFailed";
+    case SerialLink::Status::NotConnected:      return "NotConnected";
+    case SerialLink::Status::InvalidArg:        return "InvalidArg";
+    case SerialLink::Status::WriteFailed:       return "WriteFailed";
+    case SerialLink::Status::ReadFailed:        return "ReadFailed";
+    case SerialLink::Status::ReadTimeout:       return "ReadTimeout";
+    case SerialLink::Status::BadData:           return "BadData";
+    case SerialLink::Status::DisconnectFailed:  return "DisconnectFailed";
+    default:                                    return "Unknown";
+    }
+}
+

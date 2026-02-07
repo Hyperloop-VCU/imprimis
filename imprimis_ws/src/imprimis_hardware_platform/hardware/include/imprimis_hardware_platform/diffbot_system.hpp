@@ -111,6 +111,7 @@ private:
   double gpsLong_gpio;
   double gpsAlt_gpio;
   double gpsHdop_gpio;
+  double max_state_delta;
 };
 
 }  // namespace imprimis_hardware_platform

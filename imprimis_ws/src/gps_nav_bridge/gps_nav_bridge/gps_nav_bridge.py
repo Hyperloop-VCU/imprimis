@@ -40,7 +40,7 @@ class GpsNavBridge(Node):
     Auto datum:
       - auto_set_datum:=True -> subscribe to /gps/fix and set datum_lat/datum_lon from the first valid fix
       - auto_set_datum_if_unset:=True -> only set datum if datum_lat/datum_lon are unset (0,0)
-      - auto_set_datum_once:=True -> set only once (PLEASE IT WILL BREAK, NO CLUE WHY)
+      - auto_set_datum_once:=True -> set only once (PLEASE IT WILL BREAK -y)
 
     GPS goal handling:
       - Subscribe /gps/goal (NavSatFix with target latitude/longitude)
@@ -76,6 +76,7 @@ class GpsNavBridge(Node):
         self.goal_topic = self.declare_parameter("goal_topic", "/gps/goal").value
         self.goal_pose_topic = self.declare_parameter("goal_pose_topic", "/gps/goal_pose").value
 
+        # Nav2 action server name (BT Navigator)
         self.nav2_action_name = self.declare_parameter("nav2_action_name", "/navigate_to_pose").value
 
         self.max_read_hz = float(self.declare_parameter("max_read_hz", 10.0).value)
@@ -124,6 +125,7 @@ class GpsNavBridge(Node):
             f"auto_set_datum={self.auto_set_datum}, datum_initialized={self._datum_initialized}."
         )
 
+    # auto-datum
     def on_fix_for_datum(self, msg: NavSatFix) -> None:
         if not self.auto_set_datum:
             return
@@ -271,9 +273,6 @@ class GpsNavBridge(Node):
     def enu_to_map(self, east: float, north: float) -> Tuple[float, float]:
         """
         Rotate ENU into map frame by map_yaw_offset.
-        Note: As of version 2.2.1, all heading data
-        is assumed to start with it's zero point
-        facing east. Why? I have no clue (L Steve)
         """
         c = math.cos(self.map_yaw_offset)
         s = math.sin(self.map_yaw_offset)

@@ -23,12 +23,15 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <thread>
 
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "imprimis_hardware_platform/serial_comms.hpp"
+
+using namespace std::chrono_literals;
 
 namespace imprimis_hardware_platform {
 
@@ -107,26 +110,41 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // setup serial connection
-  esp32 = std::make_shared<SerialLink>(921600, 0.01);
+  esp32 = std::make_shared<SerialLink>(921600, 0.0);
 
   // try ports
   const char* ports[] =
   {
+    "/dev/ttyUSB1",
+    "/dev/ttyUSB2",
     "/dev/ttyUSB0"
   };
 
   bool serial_init_success = false;
-  for (size_t i = 0; i < std::size(ports); i++)
-  {
-    if (esp32->initialize_link(ports[i]) != SerialLink::Status::Ok)
-    {
-      RCLCPP_INFO(get_logger(), "Tried and failed to initialize comms with board A on port: %s", ports[i]);
-    }
-    else
-    {
-      RCLCPP_INFO(get_logger(), "\n\n[INFO] Successfully initialized comms with board A on port: %s\n", ports[i]);
-      serial_init_success = true;
-      break;
+  for (size_t i = 0; i < std::size(ports); i++) {   
+
+    auto status = esp32->initialize_link(ports[i]);
+    if (status != SerialLink::Status::Ok)
+      RCLCPP_INFO(get_logger(), "Could not open serial link on port %s (%s)", ports[i], esp32->status_to_string(status));
+
+    else {
+      std::this_thread::sleep_for(100ms);
+      esp32->write_reset_encoders();
+      std::this_thread::sleep_for(100ms);
+      float leftAngvel, rightAngvel, imuHeading;
+      bool read_mode, boardBConnected, gpsFix;
+      float gpsLat, gpsLong, gpsAlt, gpsHdop;
+      status = esp32->read_current_state(leftAngvel, rightAngvel, imuHeading, read_mode, boardBConnected, gpsFix, gpsLat, gpsLong, gpsAlt, gpsHdop);
+
+      if (status != SerialLink::Status::Ok) {
+        RCLCPP_INFO(get_logger(), "Non-boardA device found on port %s (%s)", ports[i], esp32->status_to_string(status));
+        esp32->close();
+      }
+      else {
+        RCLCPP_INFO(get_logger(), "Successfully initialized comms with board A on port %s", ports[i]);
+        serial_init_success = true;
+        break;
+      }
     }
   }
 
@@ -165,11 +183,14 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(const rc
 // the first parameter is unused, it's just the overall ROS time.
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
-  // read state
+  // read states from board A
   float leftAngvel, rightAngvel, imuHeading;
   bool read_mode, boardBConnected, gpsFix;
   float gpsLat, gpsLong, gpsAlt, gpsHdop;
   auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, imuHeading, read_mode, boardBConnected, gpsFix, gpsLat, gpsLong, gpsAlt, gpsHdop);
+  size_t backlog = esp32->getAvailable();
+  if (backlog != 0)
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 100, "Backlog: %zu", backlog);
 
   // read succeeded
   if (read_status == SerialLink::Status::Ok) {
@@ -177,12 +198,12 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
     hw_velocities_[1] = rightAngvel;
     hw_positions_[0] += period.seconds() * hw_velocities_[0]; // integrate velocity to get position
     hw_positions_[1] += period.seconds() * hw_velocities_[1];
-    if (read_mode != mode_gpio) {
+    if (read_mode != mode_gpio)
       RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
-    }
-    if (!boardBConnected) {
-      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000, "Lost connection to board B and the motors. Are they on?");
-    }
+    if (!boardBConnected && boardBConnected_gpio)
+      RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
+    else if (boardBConnected && !boardBConnected_gpio)
+      RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
     mode_gpio = static_cast<double>(read_mode);
     boardBConnected_gpio = static_cast<double>(boardBConnected);
     imuHeading_gpio = static_cast<double>(imuHeading);
@@ -194,9 +215,8 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   }
 
   // read failed; velocity kept to what it was previously
-  else {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from board A.");
-  }
+  else
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from board A (%s)", esp32->status_to_string(read_status));
 
   // print the newly-read states if debugging
   if (PRINT_READ_STATES && read_status == SerialLink::Status::Ok) {

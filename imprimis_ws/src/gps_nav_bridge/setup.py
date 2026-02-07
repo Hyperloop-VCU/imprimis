@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'gps_nav_bridge = gps_nav_bridge.gps_nav_bridge:main',
-            'gps_nav_bridge_gpio = gps_nav_bridge.gps_nav_bridge_gpio:main',
         ],
     },
 )
