@@ -8,6 +8,7 @@
 #include <atomic>
 
 #define MAX_INTEGRAL 32
+#define MAX_PID_OUTPUT 63.0
 
 class MotorController 
 {
@@ -17,7 +18,6 @@ class MotorController
   std::atomic<unsigned long> time_of_last_update;
   std::atomic<bool> first_update;
   std::atomic<bool> updating;
-  std::atomic<bool> enabled;
   float integral;
   const int countsPerRev;
   const bool debugB, right;
@@ -26,7 +26,7 @@ class MotorController
   public:
   MotorController(float kp, float ki, float kd, bool right, int countsPerRev, bool debugB) 
   :  KP(kp), KI(ki), KD(kd), countsPerRev(countsPerRev), right(right), debugB(debugB), 
-     integral(0.0), setpointAngvel(0.0), prevError(0), enabled(true), time_of_last_update(millis()), currAngvel(0.0)
+     integral(0.0), setpointAngvel(0.0), prevError(0), time_of_last_update(millis()), currAngvel(0.0)
   {
     reset();
   }
@@ -60,7 +60,8 @@ class MotorController
     // print if needed, make the motor move
     if (debugB) {
       float vel = currAngvel;
-      Serial.printf("%5s: CL %+.2f Int: %+.2f\n", (right ? "RIGHT" : "LEFT"), pidOutput, integral);
+      float sp = setpointAngvel;
+      Serial.printf("%5s: CL p%+.2f s%+.2f m%+.2f, c%02d, i%+.2f\n", (right ? "RIGHT" : "LEFT"), pidOutput, sp, vel, count, integral);
     }
     setSpeed(pidOutput);
     updating = false;
@@ -85,7 +86,7 @@ class MotorController
     if (debugB) {
       float set = setpointAngvel;
       float vel = currAngvel;
-      Serial.printf("%5s: OL %+.2f Vel: %+.3f\n", (right ? "RIGHT" : "LEFT"), set, vel);
+      Serial.printf("%5s: OL %+.2f m%+.3f c%02d d%.3f\n", (right ? "RIGHT" : "LEFT"), set, vel, count, DT_seconds);
     }
     setSpeed(setpointAngvel * 63.0);
     updating = false;
@@ -96,12 +97,12 @@ class MotorController
     // Bit 7 controls which motor to write to, bit 6 controls the direction, bits 0-5 control speed.
     void setSpeed(float pidOutput)
     {
-      if (!enabled) return;
+      if (pidOutput > MAX_PID_OUTPUT) pidOutput = MAX_PID_OUTPUT;
+      else if (pidOutput < -MAX_PID_OUTPUT) pidOutput = -MAX_PID_OUTPUT;
       uint8_t channel = right ? (1 << 7) : 0;            // bit 7
       uint8_t direction = pidOutput < 0 ? (1 << 6) : 0;  // bit 6
-      uint8_t speed = abs(pidOutput);                    // bits 0-5
+      uint8_t speed = abs(pidOutput);                    // bits 0:5
       if (right) direction ^= (1 << 6);
-      if (speed > 63) speed = 63;
       uint8_t data = speed | direction | channel;
       Serial2.write(data);
     }

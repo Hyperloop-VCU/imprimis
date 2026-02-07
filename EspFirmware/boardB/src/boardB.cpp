@@ -19,8 +19,8 @@ bool debugB = false;
 // global variables
 volatile int leftEncoderCount = 0;
 volatile int rightEncoderCount = 0;
-MotorController leftController(2.3, 6.2, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(2.3, 6.2, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(2.3 / 3, 6.2 / 3, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(2.3 / 3, 6.2 / 3, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
 esp_now_peer_info_t peerInfo;
 std::atomic<unsigned long> time_of_last_data_receive{millis()};
 unsigned long time_of_last_controller_update = millis();
@@ -49,7 +49,6 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   rightController.newSetpoint(received_data.setRightAngvel);
   pauseUpdates = false;
 }
-
 
 // Interrupt to update the right encoder count.
 void IRAM_ATTR readRightEncoder() 
