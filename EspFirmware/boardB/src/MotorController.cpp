@@ -86,7 +86,7 @@ class MotorController
     if (debugB) {
       float set = setpointAngvel;
       float vel = currAngvel;
-      Serial.printf("%5s: OL %+.2f m%+.3f c%02d d%.3f\n", (right ? "RIGHT" : "LEFT"), set, vel, count, DT_seconds);
+      Serial.printf("%5s: OL s%+.2f c%+.3f e%+03d d%.3f\n", (right ? "RIGHT" : "LEFT"), set, vel, count, DT_seconds);
     }
     setSpeed(setpointAngvel * 63.0);
     updating = false;

@@ -9,6 +9,8 @@
 #include <WiFi.h>
 #include <atomic>
 #include "../../common/config.h"
+#include "driver/pcnt.h"
+#include "hal/pcnt_hal.h"
 #include "MotorController.cpp"
 
 
@@ -16,17 +18,68 @@
 bool debugB = false;
 
 
-// global variables
-volatile int leftEncoderCount = 0;
-volatile int rightEncoderCount = 0;
-MotorController leftController(2.3 / 3, 6.2 / 3, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
-MotorController rightController(2.3 / 3, 6.2 / 3, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
+MotorController leftController(2.3, 6.2, 0.0, false, LEFT_COUNTS_PER_REV, debugB);
+MotorController rightController(2.3, 6.2, 0.0, true, RIGHT_COUNTS_PER_REV, debugB);
+
 esp_now_peer_info_t peerInfo;
+
 std::atomic<unsigned long> time_of_last_data_receive{millis()};
+
 unsigned long time_of_last_controller_update = millis();
 unsigned long time_of_last_data_send = millis();
+
 std::atomic<bool> openLoop{true};
 std::atomic<bool> pauseUpdates{false};
+
+// encoder PCNT configs
+pcnt_config_t left_encoder_config0 {
+  .pulse_gpio_num = LA, // edge
+  .ctrl_gpio_num = LB, // lvl
+  .lctrl_mode = PCNT_MODE_KEEP, // lvl
+  .hctrl_mode = PCNT_MODE_REVERSE,
+  .pos_mode = PCNT_COUNT_DEC, // edge
+  .neg_mode = PCNT_COUNT_INC,
+  .counter_h_lim = INT16_MAX,
+  .counter_l_lim = INT16_MIN,
+  .unit = LEFT_ENCODER_PCNT,
+  .channel = PCNT_CHANNEL_0
+};
+pcnt_config_t left_encoder_config1 {
+  .pulse_gpio_num = LB,
+  .ctrl_gpio_num = LA,
+  .lctrl_mode = PCNT_MODE_REVERSE,
+  .hctrl_mode = PCNT_MODE_KEEP,
+  .pos_mode = PCNT_COUNT_DEC,
+  .neg_mode = PCNT_COUNT_INC,
+  .counter_h_lim = INT16_MAX,
+  .counter_l_lim = INT16_MIN,
+  .unit = LEFT_ENCODER_PCNT,
+  .channel = PCNT_CHANNEL_1
+};
+pcnt_config_t right_encoder_config0 {
+  .pulse_gpio_num = RA,
+  .ctrl_gpio_num = RB,
+  .lctrl_mode = PCNT_MODE_REVERSE,
+  .hctrl_mode = PCNT_MODE_KEEP,
+  .pos_mode = PCNT_COUNT_DEC,
+  .neg_mode = PCNT_COUNT_INC,
+  .counter_h_lim = INT16_MAX,
+  .counter_l_lim = INT16_MIN,
+  .unit = RIGHT_ENCODER_PCNT,
+  .channel = PCNT_CHANNEL_0
+};
+pcnt_config_t right_encoder_config1 {
+  .pulse_gpio_num = RB,
+  .ctrl_gpio_num = RA,
+  .lctrl_mode = PCNT_MODE_KEEP,
+  .hctrl_mode = PCNT_MODE_REVERSE,
+  .pos_mode = PCNT_COUNT_DEC,
+  .neg_mode = PCNT_COUNT_INC,
+  .counter_h_lim = INT16_MAX,
+  .counter_l_lim = INT16_MIN,
+  .unit = RIGHT_ENCODER_PCNT,
+  .channel = PCNT_CHANNEL_1
+};
 
 
 // On-data-received callback, runs when board A sends data to board B.
@@ -50,21 +103,6 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   pauseUpdates = false;
 }
 
-// Interrupt to update the right encoder count.
-void IRAM_ATTR readRightEncoder() 
-{ 
-  if (!digitalRead(RB)) rightEncoderCount--;
-  else rightEncoderCount++;
-}
-
-
-// Interrupt to update the left encoder count. 
-void IRAM_ATTR readLeftEncoder() 
-{ 
-  if(!digitalRead(LB)) leftEncoderCount++;
-  else leftEncoderCount--; // reversed for some reason, I don't know why
-}
-
 
 void setup() 
 {
@@ -72,15 +110,22 @@ void setup()
   Serial2.begin(SERIAL_BAUD_RATE_B, SERIAL_8N1, 16, 17);
   if (debugB) Serial.begin(DEBUG_BAUD_RATE_B);
 
-  // initialize pins, attach interrputs to encoder pins
+  // initialize pins
+  pinMode(LV, OUTPUT);
+  digitalWrite(LV, HIGH);
   pinMode(LA, INPUT_PULLUP);
   pinMode(RA, INPUT_PULLUP);
   pinMode(LB, INPUT_PULLUP);
   pinMode(RB, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(RA), readRightEncoder, FALLING);
-  attachInterrupt(digitalPinToInterrupt(LA), readLeftEncoder, FALLING);
-  pinMode(LV, OUTPUT);
-  digitalWrite(LV, HIGH);
+
+  // initialize encoder PCNT units
+  pcnt_unit_config(&left_encoder_config0); pcnt_unit_config(&right_encoder_config0);
+  pcnt_unit_config(&left_encoder_config1); pcnt_unit_config(&right_encoder_config1);
+  pcnt_set_filter_value(LEFT_ENCODER_PCNT, PCNT_FILTER_VALUE); pcnt_set_filter_value(RIGHT_ENCODER_PCNT, PCNT_FILTER_VALUE);
+  pcnt_filter_enable(LEFT_ENCODER_PCNT); pcnt_filter_enable(RIGHT_ENCODER_PCNT);
+  pcnt_counter_pause(LEFT_ENCODER_PCNT); pcnt_counter_pause(RIGHT_ENCODER_PCNT);
+  pcnt_counter_clear(LEFT_ENCODER_PCNT); pcnt_counter_clear(RIGHT_ENCODER_PCNT);
+  pcnt_counter_resume(LEFT_ENCODER_PCNT); pcnt_counter_resume(RIGHT_ENCODER_PCNT);
 
   // setup ESP-now, register receive callback
   WiFi.mode(WIFI_STA);
@@ -111,6 +156,9 @@ void loop()
   // Update controllers at a fixed rate
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
     if (!pauseUpdates) {
+      int16_t leftEncoderCount, rightEncoderCount;
+      pcnt_get_counter_value(LEFT_ENCODER_PCNT, &leftEncoderCount);
+      pcnt_get_counter_value(RIGHT_ENCODER_PCNT, &rightEncoderCount);
       if (openLoop) {
         leftController.update_openloop(leftEncoderCount);
         rightController.update_openloop(rightEncoderCount);
@@ -119,8 +167,8 @@ void loop()
         leftController.update(leftEncoderCount);
         rightController.update(rightEncoderCount);
       }
-      leftEncoderCount = 0;
-      rightEncoderCount = 0;
+      pcnt_counter_clear(LEFT_ENCODER_PCNT);
+      pcnt_counter_clear(RIGHT_ENCODER_PCNT);
     }
     time_of_last_controller_update = millis();
   }

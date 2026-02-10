@@ -3,6 +3,8 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
+#include "driver/pcnt.h"
+#include "hal/pcnt_hal.h"
 
 
 // MAC addresses and security for ESP NOW
@@ -61,11 +63,11 @@ struct BtoAPacket
 
 
 // BOARD B //
-#define LA 25 // must be interrupt capable
+#define LA 25
 #define LB 34
-#define RA 35 // must be interrupt capable
+#define RA 35
 #define RB 18
-#define LV 13 // goes to "lv" on level shifter, 3.3V output
+#define LV 13 // goes to "lv" on level shifter, 3.3V reference
 
 #define SERIAL_BAUD_RATE_B 9600   // B to the motors
 #define DEBUG_BAUD_RATE_B 115200  // B to the (usually not connected) PC
@@ -74,8 +76,12 @@ struct BtoAPacket
 #define TIMEOUT_MS 300 // If B doesn't receive data for this long, stop the robot
 #define DATA_SEND_RATE_MS 10 // How often to send wheel angvels from B to A
 
-#define LEFT_COUNTS_PER_REV 4661 // Encoder counts per wheel revolution for each wheel
-#define RIGHT_COUNTS_PER_REV 4653
+#define LEFT_COUNTS_PER_REV 18575 // Encoder counts per wheel revolution for each wheel
+#define RIGHT_COUNTS_PER_REV 18575
+
+#define LEFT_ENCODER_PCNT PCNT_UNIT_0
+#define RIGHT_ENCODER_PCNT PCNT_UNIT_1
+#define PCNT_FILTER_VALUE 0
 
 
 #endif
