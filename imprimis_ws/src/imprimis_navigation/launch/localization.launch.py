@@ -92,12 +92,6 @@ def generate_launch_description():
         remappings=[('/odometry/filtered', '/odometry/filtered/local')]
     )
 
-    # t265
-    t265_driver_node = Node(
-        package="t265_ros_driver",
-        executable="main"
-    )
-
     # gps param files
     gps_nav_bridge_sim_params = PathJoinSubstitution(
         [
@@ -107,7 +101,6 @@ def generate_launch_description():
             "gps_nav_bridge_sim.yaml",
         ]
     )
-
     gps_nav_bridge_serial_params = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_navigation"),
@@ -116,7 +109,6 @@ def generate_launch_description():
             "gps_nav_bridge_serial_auto.yaml",
         ]
     )
-
     sim_gps_params_file = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_navigation"),
@@ -151,7 +143,7 @@ def generate_launch_description():
         condition=IfCondition(use_fake_gps),
     )
 
-    # gps_nav_bridge for real gps
+    # gps_nav_bridge for real gps on serial
     gps_nav_bridge_serial_node = Node(
         package="gps_nav_bridge",
         executable="gps_nav_bridge",
@@ -160,7 +152,7 @@ def generate_launch_description():
         condition=use_serial_condition,
     )
 
-    # gps_nav_bridge for gps data from board a (gpio)
+    # gps_nav_bridge for real gps on board A
     gps_nav_bridge_gpio_node = Node(
         package="gps_nav_bridge",
         executable="gps_nav_bridge_gpio",
@@ -181,7 +173,7 @@ def generate_launch_description():
         package="robot_localization",
         executable="navsat_transform_node",
         parameters=[navsat_transform_params_file],
-        remappings=[('/imu', '/bno055/imu'), ('/odometry/filtered', '/odometry/filtered/local'), ('/gps/fix', '/gps/fix')],
+        remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/local'), ('/gps/fix', '/gps/fix')],
         arguments=["--ros-args", "--log-level", "warn"],
     )
 
@@ -202,49 +194,27 @@ def generate_launch_description():
     )
 
     # IMU
-    bno055_params_file = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "bno055_params.yaml",
-        ]
+    imu_node = Node(
+        package="umx_driver",
+        executable="um7_driver",
+        parameters=[{"port": "/dev/ttyUSB1"}]
+
     )
-    bno055_node = Node(
-        package="bno055",
-        executable="bno055",
-        parameters=[bno055_params_file]
-    )
-    
-    """
-    I'm keeping this here because Nav2 isnt launched here.
-    Nav2 usually handles the conversion so this will be ommitted
-    in the basic_nav launch file. 
-    """
-    # cmd_vel twist to twist stamped 
-    twist_to_stamped_params_file = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "twist_to_stamped.yaml",
-        ]
-    )
-    twist_to_stamped_node = Node(
-        package="twist_to_stamped",
-        executable="twist_to_stamped",
-        name="twist_to_stamped",
-        parameters=[twist_to_stamped_params_file],
-    )
+   
 
     return LaunchDescription(declared_arguments + [
+        # always
         imprimis_hardware_launch_include,
         local_ekf_node,
-        t265_driver_node,
+        global_ekf_node,
+        navsat_transform_node,
+        imu_node,
+
+        # only one of these 3
         gps_nav_bridge_sim_node,
         gps_nav_bridge_serial_node,
         gps_nav_bridge_gpio_node,
+
+        # only if fake gps
         fake_gps_node,
-        global_ekf_node,
-        navsat_transform_node,
-        bno055_node,
-        twist_to_stamped_node,
     ])

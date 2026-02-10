@@ -115,7 +115,7 @@ class GpsNavBridge(Node):
             self.gpio_sub = self.create_subscription(
                 DynamicInterfaceGroupValues,
                 self.gpio_states_topic,
-                self.on_gpio_states,
+                self.on_gpio_states,  # TODO minor issue where if we switch to modes or shut off motors, this callback will run
                 qos_profile_sensor_data,
             )
         elif self.use_serial:
@@ -146,15 +146,18 @@ class GpsNavBridge(Node):
             fix_i = 0
 
         if fix_i == 0 or lat is None or lon is None:
+            self.get_logger().info(f"Lost GPS signal. Will not publish to /gps/fix.", throttle_duration_sec=4.0)
             return
 
         try:
             lat_f = float(lat)
             lon_f = float(lon)
         except Exception:
+            self.get_logger().warn(f"Invalid value in GPS latitude or longitude. Will not publish to /gps/fix.", throttle_duration_sec=0.5)
             return
 
-        if abs(lat_f) < 1e-9 and abs(lon_f) < 1e-9:
+        if abs(lat_f) < 1e-9 or abs(lon_f) < 1e-9:
+            self.get_logger().warn(f"Zero value in latitude or longitude. Will not publish to /gps/fix.", throttle_duration_sec=0.5)
             return
 
         msg = NavSatFix()
@@ -268,7 +271,7 @@ class GpsNavBridge(Node):
             if "gpsFix" in m:
                 try:
                     fix = int(m["gpsFix"])
-                except Exception:
+                except Exception: # if nan
                     fix = 0
             if "gpsLat" in m:
                 lat = m["gpsLat"]
@@ -282,6 +285,8 @@ class GpsNavBridge(Node):
             if "gpsHdop" in m:
                 hdop = m["gpsHdop"]
 
+
+        # Will not publish if no fix
         self.publish_fix_from_fields(fix, lat, lon, alt, hdop)
         self._gpio_last_pub = now_wall
 

@@ -44,7 +44,7 @@ inline void serialReadInt(int& i)
 }
 inline void send_pmtk(const char* cmd) {
   GPS.sendCommand(cmd);
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 // Receive data callback: runs whenever B sends wheel angvels to A
@@ -147,7 +147,7 @@ void setup()
   send_pmtk(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   send_pmtk(PMTK_SET_NMEA_UPDATE_10HZ);
   send_pmtk(PMTK_SET_FIX_CTL_10HZ);
-  GPS.sendCommand(PGCMD_NOANTENNA); // TODO use antenna
+  GPS.sendCommand(PGCMD_NOANTENNA); // Don't care about antenna status
 
   // ESP-NOW
   WiFi.mode(WIFI_STA);

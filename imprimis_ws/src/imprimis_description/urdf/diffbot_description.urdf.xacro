@@ -20,7 +20,6 @@
 <xacro:property name="lidar_pole_height" value="0.635"/> <!-- height from the top of chassis to lidar-->
 <xacro:property name="lidar_pole_xoff" value="0.48"/> <!-- length from back of robot to lidar pole-->
 <xacro:property name="lidar_pole_mass" value="2.0"/>
-<xacro:property name="t265_mount_zoff" value="0.421"/> <!-- height from top of chassis to the camera-->
 <xacro:property name="lidar_pole_angle" value="0.033"/> <!-- slight tilt of the lidar pole along the x axis-->
 
 <!-- Constants for simulated caster wheel-->
@@ -195,15 +194,26 @@
   </xacro:inertial_box>
 </link>
 
-<!-- t265 joint-->
-<joint name="t265_joint" type="fixed">
-  <parent link="lidar_pole"/>
-  <child link="t265"/>
-  <origin xyz="0 0 ${t265_mount_zoff}"/>
+<!-- imu joint-->
+<joint name="imu_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="imu_link"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
 </joint>
 
-<!-- t265 link -->
-<link name="t265">
+<!-- imu link -->
+<link name="imu_link">
+</link>
+
+<!-- gps joint-->
+<joint name="gps_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="gps_link"/>
+  <origin xyz="0 0 0"/>
+</joint>
+
+<!-- gps link -->
+<link name="gps_link">
 </link>
 
 

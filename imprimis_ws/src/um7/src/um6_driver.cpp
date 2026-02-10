@@ -193,8 +193,8 @@ void Um6Driver::publish_msgs(um6::Registers & r)
       imu_msg_.linear_acceleration.y = r.accel.get_scaled(1);
       imu_msg_.linear_acceleration.z = r.accel.get_scaled(2);
     }
-
-    imu_pub_->publish(imu_msg_);
+    
+    //imu_pub_->publish(imu_msg_);
   }
 
   // Magnetometer.  transform to ROS axes

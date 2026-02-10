@@ -8,10 +8,6 @@ navsat_transform_node:
     broadcast_utm_transform: true
     use_odometry_yaw: false
 
-    # future config
-    magnetic_declination_radians: 0.0
-    yaw_offset: 0.0
-
     # Frames (match your robot)
     map_frame: map
     odom_frame: odom
