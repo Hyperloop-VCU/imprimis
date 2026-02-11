@@ -7,8 +7,6 @@
 #include <atomic>
 #include "../../common/config.h"
 #include <FlyskyIBUS.h>
-#include <Wire.h>
-#include <Adafruit_GPS.h>
 
 
 // Local to loop()
@@ -21,15 +19,9 @@ std::atomic<bool> boardBConnected{};
 std::atomic<bool> manualEnabled{};
 std::atomic<float> leftAngvel{};
 std::atomic<float> rightAngvel{};
-std::atomic<bool> gpsFix{};
-std::atomic<float> gpsLong{};
-std::atomic<float> gpsLat{};
-std::atomic<float> gpsAlt{};
-std::atomic<float> gpsHdop{};
 
-// Sensors
-FlyskyIBUS IBUS(Serial2, RX_RC_IBUS, TX_RC_IBUS); // 15 is the unused TX pin
-Adafruit_GPS GPS(&Serial1);
+// RC receiver
+FlyskyIBUS IBUS(Serial2, RX_RC_IBUS, TX_RC_IBUS); // TX is unused
 
 // Utilities
 inline void serialReadFloat(float& f)
@@ -41,10 +33,6 @@ inline void serialReadInt(int& i)
 {
   while (!Serial.available());
   i = Serial.parseInt();
-}
-inline void send_pmtk(const char* cmd) {
-  GPS.sendCommand(cmd);
-  vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 // Receive data callback: runs whenever B sends wheel angvels to A
@@ -98,56 +86,28 @@ bool handle_ROS_command(struct AtoBPacket& dataToSend)
   float leftAngvel_tmp = leftAngvel;
   float rightAngvel_tmp = rightAngvel;
   bool boardBConnected_tmp = boardBConnected;
-  bool gpsFix_tmp = gpsFix;
-  float gpsLat_tmp = gpsLat;
-  float gpsLong_tmp = gpsLong;
-  float gpsAlt_tmp = gpsAlt;
-  float gpsHdop_tmp = gpsHdop;
   
   Serial.printf(
     "@%.2f %.2f %d %d %d %d %.7f %.7f %.2f %.2f\n", 
     leftAngvel_tmp, 
     rightAngvel_tmp, 
-    -1, // imu heading, removed
+    0, // imu heading, removed
     dataToSend.openLoop, 
     boardBConnected_tmp, 
-    gpsFix_tmp, 
-    gpsLat_tmp, 
-    gpsLong_tmp, 
-    gpsAlt_tmp, 
-    gpsHdop_tmp
+    0, 
+    0, 
+    0, 
+    0, 
+    0
   );
   return true;
 }
 
 
-void readGPS(void* pvParameters)
-{
-  while (1) {
-    (void)GPS.read();
-    if (GPS.newNMEAreceived() && GPS.parse(GPS.lastNMEA())) {
-      gpsFix = GPS.fix;
-      gpsLat = GPS.latitudeDegrees;
-      gpsLong = GPS.longitudeDegrees;
-      gpsAlt = GPS.altitude;   
-      gpsHdop = GPS.HDOP;
-    }
-    vTaskDelay(pdMS_TO_TICKS(GPS_READ_PERIOD_MS));
-  }
-}
-
 void setup() 
 {  
   Serial.begin(SERIAL_BAUD_RATE_A); // PC connection
   IBUS.begin(); // RC receiver connection
-
-  // GPS
-  Serial1.setPins(RX_GPS, TX_GPS);
-  GPS.begin(SERIAL_BAUD_RATE_GPS);
-  send_pmtk(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  send_pmtk(PMTK_SET_NMEA_UPDATE_10HZ);
-  send_pmtk(PMTK_SET_FIX_CTL_10HZ);
-  GPS.sendCommand(PGCMD_NOANTENNA); // Don't care about antenna status
 
   // ESP-NOW
   WiFi.mode(WIFI_STA);
@@ -165,22 +125,12 @@ void setup()
   pinMode(GREEN_LIGHT, OUTPUT);
   pinMode(YELLOW_LIGHT, OUTPUT);
   status_YellowLastSwitched = millis();
-
-  xTaskCreate(
-    readGPS,
-    "readGPS_task",
-    16384,
-    NULL,
-    0,
-    NULL
-  );
 }
 
 
 void loop() 
 {
-  bool controllerConnected = true; // TODO
-  manualEnabled = controllerConnected ? (IBUS.getChannel(4) != 2000) : true; // SWA on controller
+  manualEnabled = IBUS.getChannel(4) != 2000;
 
   // handle status lights
   if (manualEnabled) {
@@ -212,5 +162,4 @@ void loop()
     dataToSend.setRightAngvel = manualYInput + manualXInput;
     esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
   }
-  vTaskDelay(pdMS_TO_TICKS(1));
 }

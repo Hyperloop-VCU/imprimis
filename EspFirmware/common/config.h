@@ -39,23 +39,10 @@ struct BtoAPacket
 #define YELLOW_LIGHT 26
 #define RX_RC_IBUS 27 // RX on this board
 #define TX_RC_IBUS 15 // TX on this board (unused)
-#define IMU_SCL 22
-#define IMU_SDA 21
-#define RX_GPS 16 // RX on board A, TX on GPS
-#define TX_GPS 17 // TX on board A, RX on GPS
-
-// GPS config
-#define PMTK_SET_NMEA_OUTPUT_RMCGGA "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"
-#define PMTK_SET_NMEA_UPDATE_5HZ  "$PMTK220,200*2C"
-#define PMTK_SET_NMEA_UPDATE_10HZ "$PMTK220,100*2F"
-#define PMTK_SET_FIX_CTL_5HZ  "$PMTK300,200,0,0,0,0*2F"
-#define PMTK_SET_FIX_CTL_10HZ "$PMTK300,100,0,0,0,0*2C"
-#define GPS_READ_PERIOD_MS 100
 
 #define YELLOW_SWITCH_PERIOD_MS 1000
 
 #define SERIAL_BAUD_RATE_A 921600
-#define SERIAL_BAUD_RATE_GPS 9600
 
 #define ANGVEL_SETPOINT 's'
 #define RESET_ENCODERS 'r'

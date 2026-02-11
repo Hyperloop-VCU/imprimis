@@ -30,7 +30,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_gpio",
-            default_value="true",
+            default_value="false",
             description="Whether or not to get GPS data from Board A or Serial",
         )
     )
