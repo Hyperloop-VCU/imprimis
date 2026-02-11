@@ -2,17 +2,35 @@
 This repository contains necessary software for Imprimis, a fully autonomous ground vehicle developed by the HyperRobotics VIP at VCU. The ROS packages inside imprimis_ws run on the robot's main PC to process sensor information, make autonomous decisions, and communicate with the robot's onboard microcontrollers. The microcontroller firmwares in EspFirmware run on the robot's microcontrollers which handle hardware connectivity and control.
 
 # Microcontroller Firmwares in EspFirmware
+* Board A: ESP32 connected to the Main PC, status lights, radio receiver, and wirelessly to board B
+* Board B: ESP32 connected to the robot's motors and wirelessly to board A
+* GPS: Arduino connected to the Main PC and a GPS module
 
-## Board A 
-This is an ESP32 connected to the main PC. It controls the onboard status lights, switches between manual/autonomous operating modes, and wirelessly forwards motor commands to board B. It provides ROS with access to the wheel velocities and other hardware data over the USB port.
+# ROS Packages in imprimis_ws/src
+* imprimis_hardware_platform: Contains all configuration files for ros2 control and implements the hardware interface.
+* imprimis_description: Describes the robot with URDF files for other packages.
+* imprimis_navigation: Contains all configuration files for localization and nav2.
+* gps_nav_bridge: Handles input navigation waypoints and reads GPS data from the Arduino.
+* sim_gps_from_odom: Provides fake GPS data derived from local state estimation.
+* um7: Driver for the um7 IMU.
+* serial-ros2: Serial library for microcontroller communications.
 
-## Board B
-This is an ESP32 connected to the motors. It is wirelessly connected to board A and handles the PID control loop with encoder readings while wirelessly sending wheel velocities back to board A.
+# Install/run instructions for Offboard Computer
+This software usually runs on the robot's main computer, but it is possible to run in a simulated mode on a different machine with the following steps:
 
-## GPS
-This is an Arduino board connected to the main PC. It is connected to a UART-enabled GPS and acts as a parser/bridge, sending the GPS fix data over USB as JSON.
+  1. Ensure you are running Ubuntu 22.04 and [install ROS2 Humble.](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
+  2. Source ROS: ```source /opt/ros/humble/setup.bash``` 
+  3. Clone this repository: ```git clone https://github.com/Hyperloop-VCU/imprimis.git```
+  4. Navigate to workspace root: ```cd imprimis/imprimis_ws```
+  5. Install ROS dependencies: ```rosdep install --from-paths src --ignore-src -r -y```
+  6. Build workspace: ```colcon build```
+  7. Source workspace: ```source install/setup.bash```
+  8. Launch fake hardware: ```ros2 launch imprimis_hardware_platform hardware_type:=fake```
 
-# ROS packages in imprimis_ws/src
-##imprimis_hardware_platform
-Configuration of ros2 control and hardware interface implementation. Has the ```launch_hardware.launch.py``` launch file, which starts up all code necessary for the PC to control the motors.
-##imprimis_description
+You should now see the robot's URDF model appear in rviz, and you can drive it by opening a new terminal and running the following:
+
+  1. ```source /opt/ros/humble/setup.bash```
+  2. ```ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap /cmd_vel:=/diffbot_base_controller/cmd_vel -p stamped:=true```
+
+
+
