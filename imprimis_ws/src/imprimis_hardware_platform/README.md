@@ -3,10 +3,10 @@ This package has the configuration files for ros2 control and implements Imprimi
 
 ## launch
 The launch directory contains the ros2 launch file ```imprimis_hardware.launch.py```. This starts up everything necessary for the robot to drive via commands from its main PC, and the Velodyne Lidar. Launch arguments are below:
-  *gui: If true, starts up Rviz. Defaults to true.
-  *publish_odom_tf: If true, publishes odometry directly from the diff drive controller. This must be false when running ekf nodes, or the unfiltered and filtered odometries will conflict. Defaults to true.
-  *use_controller: If true, launches teleop_twist_joy and maps its output to the controller's cmd_vel. Defaults to false.
-  *hardware_type: real, fake, or simulated. Defaults to real. See below:
+  * gui: If true, starts up Rviz. Defaults to true.
+  * publish_odom_tf: If true, publishes odometry directly from the diff drive controller. This must be false when running ekf nodes, or the unfiltered and filtered odometries will conflict. Defaults to true.
+  * use_controller: If true, launches teleop_twist_joy and maps its output to the controller's cmd_vel. Defaults to false.
+  * hardware_type: real, fake, or simulated. Defaults to real. See below:
 
   #### Real hardware
   Launches imprimis with all real hardware. Connect to board A and the real lidar, and uses the real hardware interface in the hardware directory.
