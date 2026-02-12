@@ -70,6 +70,8 @@ def generate_launch_description():
             " ",
             "hardware_type:=",
             hardware_type,
+            " publish_odom_tf:=",
+            publish_odom_tf
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -174,7 +176,7 @@ def generate_launch_description():
                 'launch',
                 'gz_sim.launch.py'
             ]),
-            launch_arguments={'gz_args': ['-r -v4 ', world_file], "on_exit_shutdown": "true"}.items(),
+            launch_arguments={'gz_args': ['-r ', world_file], "on_exit_shutdown": "true"}.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
 

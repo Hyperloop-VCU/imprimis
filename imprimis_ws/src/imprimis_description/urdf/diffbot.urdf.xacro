@@ -2,6 +2,7 @@
 <!-- Basic differential drive mobile base -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="diffdrive_robot">
   <xacro:arg name="hardware_type" default="real" />
+  <xacro:arg name="publish_odom_tf" default="true" />
 
   <!-- Import and expand core robot description -->
   <xacro:include filename="$(find imprimis_description)/urdf/diffbot_description.urdf.xacro" />
@@ -16,6 +17,6 @@
 
   <!-- Import and expand gazebo information. It's fine to keep it in there even if hardware type isn't simulated. -->
   <xacro:include filename="$(find imprimis_description)/urdf/gazebo_info.xacro"/>
-  <xacro:gzinfo/>
+  <xacro:gzinfo publish_odom_tf="$(arg publish_odom_tf)"/>
 
 </robot>

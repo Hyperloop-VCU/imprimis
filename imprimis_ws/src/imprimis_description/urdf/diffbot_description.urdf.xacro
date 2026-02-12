@@ -238,12 +238,6 @@
       <mesh filename="package://imprimis_description/meshes/VLP16_base_2.dae" />
     </geometry>
   </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0 0 0.03585"/>
-    <geometry>
-      <cylinder radius="0.0516" length="0.0717"/>
-    </geometry>
-  </collision>
 </link>
 
 <!-- Lidar model joint -->
