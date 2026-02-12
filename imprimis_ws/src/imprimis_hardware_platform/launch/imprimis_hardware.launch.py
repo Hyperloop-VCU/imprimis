@@ -7,6 +7,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import SetEnvironmentVariable
+from launch.substitutions import EnvironmentVariable
+from launch_ros.substitutions import FindPackagePrefix
 
 def generate_launch_description():
 
@@ -98,7 +101,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
     )
 
 
@@ -112,6 +115,7 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(gui),
     )
 
@@ -120,7 +124,9 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        
     )
 
 
@@ -128,6 +134,7 @@ def generate_launch_description():
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
     )
 
@@ -135,6 +142,7 @@ def generate_launch_description():
     gpio_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
@@ -206,6 +214,7 @@ def generate_launch_description():
                 'frame': 'base_link',
                 'joy_vel': 'diffbot_base_controller/cmd_vel'
                 }.items(),
+                
         condition=IfCondition(use_controller)
         )
     

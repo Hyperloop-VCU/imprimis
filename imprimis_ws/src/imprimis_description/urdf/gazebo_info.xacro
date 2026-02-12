@@ -26,6 +26,49 @@
     <material>Gazebo/Gray</material>
   </gazebo>
 
+  <!-- Simulated lidar configuration -->
+  <gazebo reference="lidar_scan_link">
+    <sensor name="vlp16" type="gpu_lidar">
+    <gz_frame_id>lidar_scan_link</gz_frame_id>
+    <pose>0 0 0 0 0 0</pose>
+    <topic>lidar</topic>
+    <update_rate>10</update_rate>
+
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>1800</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.141592653589793</min_angle>
+          <max_angle>3.141592653589793</max_angle>
+        </horizontal>
+
+        <vertical>
+          <samples>16</samples>
+          <resolution>1</resolution>
+          <min_angle>-0.2617993877991494</min_angle>  <!-- -15 deg -->
+          <max_angle>0.2617993877991494</max_angle>   <!-- +15 deg -->
+        </vertical>
+      </scan>
+
+      <range>
+        <min>0.3</min>
+        <max>100.0</max>
+        <resolution>0.01</resolution>
+      </range>
+      <!--
+      <noise type="gaussian">
+        <mean>0.0</mean>
+        <stddev>0.01</stddev>
+      </noise>
+      -->
+    </ray>
+
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+  </sensor>    
+  </gazebo>
+
   
   <gazebo>
     <!-- Joint state publisher plugin-->
@@ -40,20 +83,10 @@
     <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
   </plugin>
 
-    <!-- Diff drive controller plugin>
-    <plugin name="gz::sim::systems::DiffDrive" filename="gz-sim-diff-drive-system">
-      <left_joint>left_wheel_joint</left_joint>
-      <right_joint>right_wheel_joint</right_joint>
-      <wheel_separation>1.016</wheel_separation>
-      <wheel_radius>0.165</wheel_radius>
-      <max_linear_acceleration>1.5</max_linear_acceleration>
-      <topic>diffbot_base_controller/cmd_vel</topic>
-      <frame_id>odom</frame_id>
-      <child_frame_id>base_link</child_frame_id>
-      <odom_topic>diffbot_base_controller/odom</odom_topic>
-      <odom_publisher_frequency>30</odom_publisher_frequency>
-      <tf_topic>/tf</tf_topic>
-    </plugin-->
+  <!-- Simulated sensors plugin -->
+  <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
+    <render_engine>ogre</render_engine>
+  </plugin>
 
   </gazebo>
 
