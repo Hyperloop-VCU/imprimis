@@ -35,7 +35,6 @@
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_image</exec_depend>
   <exec_depend>ros_gz_interfaces</exec_depend>
-  <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
   <exec_depend>velodyne_description</exec_depend>

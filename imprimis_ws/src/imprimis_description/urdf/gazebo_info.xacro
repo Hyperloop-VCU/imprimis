@@ -33,7 +33,6 @@
     <pose>0 0 0 0 0 0</pose>
     <topic>lidar</topic>
     <update_rate>10</update_rate>
-
     <ray>
       <scan>
         <horizontal>
@@ -42,7 +41,6 @@
           <min_angle>-3.141592653589793</min_angle>
           <max_angle>3.141592653589793</max_angle>
         </horizontal>
-
         <vertical>
           <samples>16</samples>
           <resolution>1</resolution>
@@ -50,23 +48,30 @@
           <max_angle>0.2617993877991494</max_angle>   <!-- +15 deg -->
         </vertical>
       </scan>
-
       <range>
         <min>0.3</min>
         <max>100.0</max>
         <resolution>0.01</resolution>
       </range>
-      <!--
-      <noise type="gaussian">
+      <!--noise type="gaussian">
         <mean>0.0</mean>
         <stddev>0.01</stddev>
-      </noise>
-      -->
+      </noise-->
     </ray>
-
     <always_on>true</always_on>
     <visualize>true</visualize>
-  </sensor>    
+    </sensor>    
+  </gazebo>
+
+  <!-- Simulated IMU configuration -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+    <pose> 0 0 0 0 0 0 </pose>
+    <topic>imu</topic>
+    <update_rate>50</update_rate>
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+    </sensor>
   </gazebo>
 
   
@@ -83,10 +88,15 @@
     <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
   </plugin>
 
-  <!-- Simulated sensors plugin -->
+  <!-- Simulated sensor manager plugin -->
   <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
     <render_engine>ogre</render_engine>
   </plugin>
+
+  <!-- IMU sensor plugin -->
+  <plugin filename="libignition-gazebo-imu-system.so" name="ignition::gazebo::systems::Imu"/>
+
+  <!-- GPS sensor plugin -->
 
   </gazebo>
 
