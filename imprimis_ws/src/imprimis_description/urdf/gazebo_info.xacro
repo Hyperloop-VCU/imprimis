@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<xacro:macro name="gzinfo">
 
   <!-- Make the wheels black and have lots of friction -->
   <gazebo reference="left_wheel">
@@ -26,21 +27,35 @@
   </gazebo>
 
   
-  <!-- This will publish the joint states of the wheels in the simulation-->
   <gazebo>
-    <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-      <update_rate>50</update_rate>
+    <!-- Joint state publisher plugin-->
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
       <joint_name>left_wheel_joint</joint_name>
       <joint_name>right_wheel_joint</joint_name>
     </plugin>
+
+  <!-- ros2 control plugin -->
+  <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
+    <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
+  </plugin>
+
+    <!-- Diff drive controller plugin>
+    <plugin name="gz::sim::systems::DiffDrive" filename="gz-sim-diff-drive-system">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>1.016</wheel_separation>
+      <wheel_radius>0.165</wheel_radius>
+      <max_linear_acceleration>1.5</max_linear_acceleration>
+      <topic>diffbot_base_controller/cmd_vel</topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+      <odom_topic>diffbot_base_controller/odom</odom_topic>
+      <odom_publisher_frequency>30</odom_publisher_frequency>
+      <tf_topic>/tf</tf_topic>
+    </plugin-->
+
   </gazebo>
 
-  <!-- This is the ros2 control gazebo plugin -->
-  <gazebo>
-    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-      <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
-    </plugin>
-  </gazebo>
-
-
+  </xacro:macro>
 </robot>

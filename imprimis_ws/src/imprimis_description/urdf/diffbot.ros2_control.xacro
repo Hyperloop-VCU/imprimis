@@ -26,7 +26,7 @@
       <!-- Gazebo-simulated Hardware -->
       <xacro:if value="${hardware_type == 'simulated'}">
         <hardware>
-          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
         </hardware>
       </xacro:if>
 

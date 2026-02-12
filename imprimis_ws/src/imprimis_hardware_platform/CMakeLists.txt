@@ -20,7 +20,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 
 # We don't need to link against gazebo, but it does need to be visible
-find_package(gazebo_ros REQUIRED)
+find_package(ros_gz REQUIRED)
 
 
 # find all dependencies
@@ -73,7 +73,7 @@ install(
 )
 
 install(
-  DIRECTORY launch config
+  DIRECTORY launch config worlds
   DESTINATION share/imprimis_hardware_platform
 )
 
