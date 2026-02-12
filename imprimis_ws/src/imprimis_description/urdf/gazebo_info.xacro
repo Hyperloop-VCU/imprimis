@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<xacro:macro name="gzinfo" params="publish_odom_tf">
 
   <!-- Make the wheels black and have lots of friction -->
   <gazebo reference="left_wheel">
@@ -25,22 +26,116 @@
     <material>Gazebo/Gray</material>
   </gazebo>
 
+  <!-- Simulated lidar configuration -->
+  <gazebo reference="lidar_scan_link">
+    <sensor name="vlp16" type="gpu_lidar">
+    <gz_frame_id>lidar_scan_link</gz_frame_id>
+    <pose>0 0 0 0 0 0</pose>
+    <topic>lidar</topic>
+    <update_rate>10</update_rate>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>1800</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.141592653589793</min_angle>
+          <max_angle>3.141592653589793</max_angle>
+        </horizontal>
+        <vertical>
+          <samples>16</samples>
+          <resolution>1</resolution>
+          <min_angle>-0.2617993877991494</min_angle>  <!-- -15 deg -->
+          <max_angle>0.2617993877991494</max_angle>   <!-- +15 deg -->
+        </vertical>
+      </scan>
+      <range>
+        <min>0.3</min>
+        <max>100.0</max>
+        <resolution>0.01</resolution>
+        <!--noise type="gaussian">
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise-->
+      </range>
+    </ray>
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+    </sensor>    
+  </gazebo>
+
+  <!-- Simulated IMU configuration -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+    <pose> 0 0 0 0 0 0 </pose>
+    <topic>imu</topic>
+    <update_rate>50</update_rate>
+    <always_on>true</always_on>
+    <imu>
+      <angular_velocity>
+        <noise type="gaussian">
+          <mean>0</mean>
+          <stddev>0.0002</stddev>
+        </noise>
+      </angular_velocity>
+      <linear_acceleration>
+        <noise type="gaussian">
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </linear_acceleration>
+    </imu>
+    </sensor>
+  </gazebo>
+
+  <!-- Simulated GPS configuration -->
+  <gazebo reference="gps_link">
+    <sensor name="gps_sensor" type="navsat">
+    <pose> 0 0 0 0 0 0 </pose>
+    <topic>gps</topic>
+    <update_rate>5</update_rate>
+    <always_on>true</always_on>
+    <navsat>
+      <position_sensing>
+        <horizontal>
+          <noise type="gaussian">
+            <mean>0</mean>
+            <stddev>1.5</stddev>  <!-- meters -->
+          </noise>
+        </horizontal>
+      </position_sensing>
+    </navsat>
+    </sensor>
+  </gazebo>
+
   
-  <!-- This will publish the joint states of the wheels in the simulation-->
   <gazebo>
-    <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-      <update_rate>50</update_rate>
+    <!-- Joint state publisher plugin-->
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
       <joint_name>left_wheel_joint</joint_name>
       <joint_name>right_wheel_joint</joint_name>
     </plugin>
+
+  <!-- ros2 control plugin -->
+  <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">
+    <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
+    <xacro:unless value="${publish_odom_tf}">
+      <parameters>$(find imprimis_hardware_platform)/config/disable_odom_tf.yaml</parameters>
+    </xacro:unless>
+  </plugin>
+
+  <!-- Simulated sensor manager plugin -->
+  <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
+    <render_engine>ogre</render_engine>
+  </plugin>
+
+  <!-- IMU sensor plugin -->
+  <plugin filename="libignition-gazebo-imu-system.so" name="ignition::gazebo::systems::Imu"/>
+
+  <!-- GPS sensor plugin -->
+  <plugin filename="libignition-gazebo-navsat-system.so" name="ignition::gazebo::systems::NavSat"/>
+
   </gazebo>
 
-  <!-- This is the ros2 control gazebo plugin -->
-  <gazebo>
-    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-      <parameters>$(find imprimis_hardware_platform)/config/sim_diffbot_controllers.yaml</parameters>
-    </plugin>
-  </gazebo>
-
-
+  </xacro:macro>
 </robot>

@@ -203,6 +203,9 @@
 
 <!-- imu link -->
 <link name="imu_link">
+  <xacro:inertial_box mass="0.1" x="0" y="0" z="0">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:inertial_box>
 </link>
 
 <!-- gps joint-->
@@ -216,13 +219,64 @@
 <link name="gps_link">
 </link>
 
+<!-- Lidar model link-->
+<link name="lidar_model_link">
+  <inertial>
+    <mass value="0.83"/>
+    <origin xyz="0 0 0.03585"/>
+    <inertia ixx="${(0.83 * (3.0*0.0516*0.0516 + 0.0717*0.0717)) / 12.0}" ixy="0" ixz="0"
+      iyy="${(0.83 * (3.0*0.0516*0.0516 + 0.0717*0.0717)) / 12.0}" iyz="0"
+      izz="${0.5 * 0.83 * (0.0516*0.0516)}"/>
+  </inertial>
+  <visual>
+    <geometry>
+      <mesh filename="package://imprimis_description/meshes/VLP16_base_1.dae" />
+    </geometry>
+  </visual>
+  <visual>
+    <geometry>
+      <mesh filename="package://imprimis_description/meshes/VLP16_base_2.dae" />
+    </geometry>
+  </visual>
+</link>
+
+<!-- Lidar model joint -->
+<joint name="$lidar_model_joint" type="fixed">
+  <parent link="lidar_pole"/>
+  <child link="lidar_model_link"/>
+  <origin xyz="0 0 ${lidar_pole_height}" rpy="0 ${lidar_pole_angle} 0" />
+</joint>
+
+<!-- Lidar scan point link -->
+<link name="lidar_scan_link">
+  <inertial>
+    <mass value="0.01"/>
+    <origin xyz="0 0 0"/>
+    <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 -0.0377" />
+    <geometry>
+      <mesh filename="package://imprimis_description/meshes/VLP16_scan.dae" />
+    </geometry>
+  </visual>
+</link>
+
+<!-- Lidar scan point joint -->
+<joint name="lidar_scan_joint" type="fixed" >
+  <origin xyz="0 0 0.0377" rpy="0 0 0" />
+  <parent link="lidar_model_link" />
+  <child link="lidar_scan_link"/>
+</joint>
+
+
 
 
 <!-- Lidar joint and link -->
-<xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
-  <xacro:VLP-16 parent="lidar_pole" name="velodyne" topic="/velodyne_points" organize_cloud="false" hz="10" samples="440" gpu="false">
-    <origin xyz="0 0 ${lidar_pole_height}" rpy="0 ${lidar_pole_angle} 0" />
-  </xacro:VLP-16>
+<!--xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+<xacro:VLP-16 parent="lidar_pole" name="velodyne" topic="/velodyne_points" organize_cloud="false" hz="10" samples="440" gpu="false">
+  <origin xyz="0 0 ${lidar_pole_height}" rpy="0 ${lidar_pole_angle} 0" />
+</xacro:VLP-16-->
 
 
 </xacro:macro>

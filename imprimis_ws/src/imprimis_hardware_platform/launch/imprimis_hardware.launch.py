@@ -1,16 +1,15 @@
 from launch import LaunchDescription
-from launch import LaunchContext
 from launch.substitutions import PythonExpression
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, LogInfo, IncludeLaunchDescription, GroupAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from os import path as os_path
-from ament_index_python.packages import get_package_share_directory
 
+from launch.actions import SetEnvironmentVariable
+from launch.substitutions import EnvironmentVariable
+from launch_ros.substitutions import FindPackagePrefix
 
 def generate_launch_description():
 
@@ -46,10 +45,18 @@ def generate_launch_description():
             description="Whether or not to start up the logitech controller input node",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "world_file",
+            default_value= PathJoinSubstitution([FindPackageShare("imprimis_hardware_platform"), "worlds", "empty.world"]),
+            description="World file for gazebo simulation"
+        )
+    )
     gui = LaunchConfiguration("gui")
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
+    world_file = LaunchConfiguration("world_file")
 
 
     # Get URDF via xacro
@@ -63,15 +70,15 @@ def generate_launch_description():
             " ",
             "hardware_type:=",
             hardware_type,
+            " publish_odom_tf:=",
+            publish_odom_tf
         ]
     )
     robot_description = {"robot_description": robot_description_content}
 
 
-    # controller manager, if we are not using simulated hardware
-    controller_config_filename = "diffbot_controllers.yaml"#PythonExpression([
-        #"'diffbot_controllers.yaml' if '", publish_odom_tf, "' == 'true' else 'diffbot_controllers_no_odom_tf.yaml'"
-    #])
+    # controller manager
+    controller_config_filename = "diffbot_controllers.yaml"
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_hardware_platform"),
@@ -96,7 +103,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
     )
 
 
@@ -110,34 +117,40 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(gui),
     )
 
 
-    # joint state broadcaster spawner, if we aren't using simulated hardware
+    # Joint state broadcaster spawner
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        
+    )
+
+
+    # Diff drive controller spawner
+    robot_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
+    )
+
+    # GPIO controller spawner
+    gpio_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
 
 
-    # Imprimis diff drive controller spawner
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
-    )
-
-    # GPIO controller (Arbitrary state interface exposure)
-    gpio_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
-    )
-
-    # Actual velodyne LIDAR driver, if we are using real hardware
+    # Velodyne LIDAR driver and parser
     velodyne_driver_launch_include = IncludeLaunchDescription(
             PathJoinSubstitution([
                 FindPackageShare('velodyne_driver'),
@@ -146,8 +159,6 @@ def generate_launch_description():
             ]),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
         ) 
-    
-    # Convert LIDAR packets to usable data, if we are using real hardware
     velodyne_converter_launch_include = IncludeLaunchDescription(
             PathJoinSubstitution([
                 FindPackageShare('velodyne_pointcloud'),
@@ -158,28 +169,39 @@ def generate_launch_description():
         ) 
 
 
-    # Gazebo, if we're using simulated hardware
+    # Gazebo
     gazebo_launch_include = IncludeLaunchDescription(
             PathJoinSubstitution([
-                FindPackageShare('gazebo_ros'),
+                FindPackageShare('ros_gz_sim'),
                 'launch',
-                'gazebo.launch.py'
+                'gz_sim.launch.py'
             ]),
+            launch_arguments={'gz_args': ['-r ', world_file], "on_exit_shutdown": "true"}.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
-    
 
-    # Spawn imprimis into the gazebo simulation, if we're using simulated hardware
+    # Spawn imprimis into the gazebo simulation
     spawn_imprimis_gazebo = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
-        arguments=['-topic', 'robot_description', '-entity', 'imprimis'],
+        package="ros_gz_sim",
+        executable="create",
+        arguments=['-topic', 'robot_description', '-name', 'imprimis', '-z', '0.1'],
         output="screen",
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
+    )
+
+    # Bridge gazebo and ROS topics
+    gzbridge_config_file = PathJoinSubstitution(
+        [FindPackageShare("imprimis_hardware_platform"), "config", "gz_bridge.yaml"]
+    )
+    gzbridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file]],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
     
 
-    # Controller input, if we specified to use it
+    # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -194,45 +216,37 @@ def generate_launch_description():
                 'frame': 'base_link',
                 'joy_vel': 'diffbot_base_controller/cmd_vel'
                 }.items(),
+                
         condition=IfCondition(use_controller)
         )
     
-    
 
     things_to_launch = [
-        controller_manager_node,         # not in sim
+        
+        # Always
         robot_state_pub_node,
         robot_controller_spawner,
+        joint_state_broadcaster_spawner,
+
+        # If hardware_type == real
+        #velodyne_driver_launch_include,
+        #velodyne_converter_launch_include
+
+        # If hardware type != simulated
+        controller_manager_node,
         gpio_controller_spawner,
+        
+        # If hardware_type == simulated
+        gazebo_launch_include,
+        gzbridge,
+        spawn_imprimis_gazebo,
+
+        # If use_controller == true
+        controller_input_launch_include,
+
+        # If gui == true
         rviz_node,
-        joint_state_broadcaster_spawner, # not in sim
-        gazebo_launch_include,           # sim only
-        spawn_imprimis_gazebo,           # sim only
-        controller_input_launch_include, # if we need it
-        #velodyne_driver_launch_include,   # real hardware only
-        #velodyne_converter_launch_include # real hardware only
 
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
-
-
-
-"""
-Old code for delaying node startup
-# Delay rviz start after `joint_state_broadcaster`
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
-        )
-    )
-    # Delay start of joint_state_broadcaster after `robot_controller`
-    # TODO(anyone): This is a workaround for flaky tests. Remove when fixed.
-    delay_joint_state_broadcaster_after_robot_controller_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=robot_controller_spawner,
-            on_exit=[joint_state_broadcaster_spawner],
-        )
-    )
-"""
