@@ -239,8 +239,8 @@ def generate_launch_description():
         # If hardware_type == real
         imu_driver,
         gps_driver,
-        #velodyne_driver_launch_include,
-        #velodyne_converter_launch_include
+        velodyne_driver_launch_include,
+        velodyne_converter_launch_include,
 
         # If hardware type != simulated
         controller_manager_node,

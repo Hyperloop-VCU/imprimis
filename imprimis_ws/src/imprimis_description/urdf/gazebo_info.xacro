@@ -27,9 +27,9 @@
   </gazebo>
 
   <!-- Simulated lidar configuration -->
-  <gazebo reference="lidar_scan_link">
+  <gazebo reference="velodyne"> <!-- Must match the lidar scan point link in diffbot description -->
     <sensor name="vlp16" type="gpu_lidar">
-    <gz_frame_id>lidar_scan_link</gz_frame_id>
+    <gz_frame_id>velodyne</gz_frame_id> <!-- Must match the lidar scan point link in diffbot description-->
     <pose>0 0 0 0 0 0</pose>
     <topic>lidar</topic>
     <update_rate>10</update_rate>
@@ -64,7 +64,7 @@
   </gazebo>
 
   <!-- Simulated IMU configuration -->
-  <gazebo reference="imu_link">
+  <gazebo reference="imu_link"> <!-- Must match the imu link in diffbot description -->
     <sensor name="imu_sensor" type="imu">
     <pose> 0 0 0 0 0 0 </pose>
     <topic>imu</topic>
@@ -88,7 +88,7 @@
   </gazebo>
 
   <!-- Simulated GPS configuration -->
-  <gazebo reference="gps_link">
+  <gazebo reference="gps_link"> <!-- Must match the gps link in diffbot description -->
     <sensor name="gps_sensor" type="navsat">
     <pose> 0 0 0 0 0 0 </pose>
     <topic>gps</topic>

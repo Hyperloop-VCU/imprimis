@@ -248,7 +248,7 @@
 </joint>
 
 <!-- Lidar scan point link -->
-<link name="lidar_scan_link">
+<link name="velodyne"> <!-- Must match the fixed frame in the VLP16 converter config, which defaults to 'velodyne'-->
   <inertial>
     <mass value="0.01"/>
     <origin xyz="0 0 0"/>
@@ -266,7 +266,7 @@
 <joint name="lidar_scan_joint" type="fixed" >
   <origin xyz="0 0 0.0377" rpy="0 0 0" />
   <parent link="lidar_model_link" />
-  <child link="lidar_scan_link"/>
+  <child link="velodyne"/>
 </joint>
 
 
