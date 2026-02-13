@@ -29,7 +29,7 @@ This software usually runs on the robot's main computer, but it is possible to r
   7. Source workspace: ```source install/setup.bash```
   8. Change permissions for gazebo fixer script: ```chmod 777 ./fix_gazebo.bash```
   9. Run the gazebo fixer script: ```./fix_gazebo.bash```
-  10. Launch fake hardware: ```ros2 launch imprimis_hardware_platform hardware_type:=fake```
+  10. Launch fake hardware: ```ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py hardware_type:=fake```
 
 You should now see the robot's URDF model appear in rviz, and you can drive it by opening a new terminal and running the following:
 
