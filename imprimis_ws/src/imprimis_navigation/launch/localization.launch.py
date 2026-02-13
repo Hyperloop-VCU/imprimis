@@ -16,8 +16,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "hardware_type",
             default_value="real",
-            choices=("real", "fake"),
-            description="Choose between real or fake hardware.",
+            choices=("real", "simulated"),
+            description="Choose between real or simulated hardware.",
         )
     )
     declared_arguments.append(
@@ -37,7 +37,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_fake_gps",
-            default_value="false",
+            default_value="true",
             description="Whether or not to use a fake gps, simulated from /odometry/filtered/local."
         )
     )
@@ -60,7 +60,7 @@ def generate_launch_description():
 )
 
 
-    # hardware (real or fake)
+    # hardware (real or simulated)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -88,7 +88,7 @@ def generate_launch_description():
         package="robot_localization",
         executable="ekf_node",
         name="ekf_local",
-        parameters=[local_ekf_params_file],
+        parameters=[local_ekf_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/local')]
     )
 
@@ -172,7 +172,7 @@ def generate_launch_description():
     navsat_transform_node = Node(
         package="robot_localization",
         executable="navsat_transform_node",
-        parameters=[navsat_transform_params_file],
+        parameters=[navsat_transform_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/local'), ('/gps/fix', '/gps/fix')],
         arguments=["--ros-args", "--log-level", "warn"],
     )
@@ -189,16 +189,8 @@ def generate_launch_description():
         package="robot_localization",
         executable="ekf_node",
         name="ekf_global",
-        parameters=[global_ekf_params_file],
+        parameters=[global_ekf_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/global')]
-    )
-
-    # IMU
-    imu_node = Node(
-        package="umx_driver",
-        executable="um7_driver",
-        parameters=[{"port": "/dev/ttyUSB1"}]
-
     )
    
 
@@ -208,13 +200,5 @@ def generate_launch_description():
         local_ekf_node,
         global_ekf_node,
         navsat_transform_node,
-        imu_node,
-
-        # only one of these 3
         gps_nav_bridge_sim_node,
-        gps_nav_bridge_serial_node,
-        gps_nav_bridge_gpio_node,
-
-        # only if fake gps
-        fake_gps_node,
     ])

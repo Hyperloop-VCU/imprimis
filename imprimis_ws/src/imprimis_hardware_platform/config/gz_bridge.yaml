@@ -40,7 +40,7 @@
   direction: GZ_TO_ROS
 
 # gz topic published by sensors plugin (IMU)
-- ros_topic_name: "imu"
+- ros_topic_name: "imu/data"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "ignition.msgs.IMU"

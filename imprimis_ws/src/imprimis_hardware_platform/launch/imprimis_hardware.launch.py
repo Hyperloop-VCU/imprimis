@@ -59,7 +59,7 @@ def generate_launch_description():
     world_file = LaunchConfiguration("world_file")
 
 
-    # Get URDF via xacro
+    # Get URDF via xacro and pass arguments to it
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -75,7 +75,6 @@ def generate_launch_description():
         ]
     )
     robot_description = {"robot_description": robot_description_content}
-
 
     # controller manager
     controller_config_filename = "diffbot_controllers.yaml"
@@ -97,7 +96,6 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
 
-
     # robot state publisher
     robot_state_pub_node = Node(
         package="robot_state_publisher",
@@ -105,7 +103,6 @@ def generate_launch_description():
         output="both",
         parameters=[robot_description, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
     )
-
 
     # rviz
     rviz_config_file = PathJoinSubstitution(
@@ -131,7 +128,6 @@ def generate_launch_description():
         
     )
 
-
     # Diff drive controller spawner
     robot_controller_spawner = Node(
         package="controller_manager",
@@ -148,7 +144,6 @@ def generate_launch_description():
         arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
-
 
     # Velodyne LIDAR driver and parser
     velodyne_driver_launch_include = IncludeLaunchDescription(
@@ -167,7 +162,21 @@ def generate_launch_description():
             ]),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
         ) 
+    
+    # IMU driver
+    imu_driver = Node(
+        package="umx_driver",
+        executable="um7_driver",
+        parameters=[{"port": "/dev/ttyUSB1"}],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+    )
 
+    # GPS driver
+    gps_driver = Node(
+        package="arduino_gps_driver",
+        executable="arduino_gps_driver",
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+    )
 
     # Gazebo
     gazebo_launch_include = IncludeLaunchDescription(
@@ -222,13 +231,14 @@ def generate_launch_description():
     
 
     things_to_launch = [
-        
         # Always
         robot_state_pub_node,
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
 
         # If hardware_type == real
+        imu_driver,
+        gps_driver,
         #velodyne_driver_launch_include,
         #velodyne_converter_launch_include
 
@@ -246,7 +256,6 @@ def generate_launch_description():
 
         # If gui == true
         rviz_node,
-
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
