@@ -19,10 +19,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 )
 
 
-# We don't need to link against gazebo, but it does need to be visible
-find_package(ros_gz REQUIRED)
-
-
 # find all dependencies
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake REQUIRED)
