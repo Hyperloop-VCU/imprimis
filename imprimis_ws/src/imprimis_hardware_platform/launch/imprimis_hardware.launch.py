@@ -1,15 +1,11 @@
 from launch import LaunchDescription
 from launch.substitutions import PythonExpression
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction
 from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-
-from launch.actions import SetEnvironmentVariable
-from launch.substitutions import EnvironmentVariable
-from launch_ros.substitutions import FindPackagePrefix
 
 def generate_launch_description():
 
@@ -171,6 +167,23 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
     )
 
+    # Calibrate IMU after 2 seconds
+    imu_calibrator = TimerAction(
+        period=2.0,
+        actions=[
+            ExecuteProcess(
+                    cmd=[
+                        'ros2', 'service', 'call',
+                        '/imu/reset',
+                        'umx_driver/srv/Um7Reset',
+                        '{zero_gyros: true, reset_ekf: true, set_mag_ref: true}'
+                    ],
+                    output='screen'
+                )
+        ],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+    )
+
     # GPS driver
     gps_driver = Node(
         package="arduino_gps_driver",
@@ -228,6 +241,8 @@ def generate_launch_description():
                 
         condition=IfCondition(use_controller)
         )
+
+
     
 
     things_to_launch = [
@@ -238,6 +253,7 @@ def generate_launch_description():
 
         # If hardware_type == real
         imu_driver,
+        imu_calibrator,
         gps_driver,
         velodyne_driver_launch_include,
         velodyne_converter_launch_include,

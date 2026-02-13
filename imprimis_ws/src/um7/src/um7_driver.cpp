@@ -161,6 +161,7 @@ bool Um7Driver::handle_reset_service(
     RCLCPP_ERROR_STREAM(this->get_logger(), e.what());
   }
   RCLCPP_INFO(this->get_logger(), "Reset service completed");
+  imuCalibrated = true;
   return true;
 }
 
@@ -169,7 +170,11 @@ bool Um7Driver::handle_reset_service(
  * the ROS messages which are output.
  */
 void Um7Driver::publish_msgs(um7::Registers & r)
-{
+{ 
+  if (!imuCalibrated) {
+    RCLCPP_INFO(rclcpp::get_logger("um7_driver"), "um7 driver waiting for reset service to be called before publishing IMU data.");
+    return;
+  }
   RCLCPP_DEBUG(rclcpp::get_logger("um7_driver"), "Publishing ROS 2 messages");
   imu_msg_.header.stamp = this->now();
 
@@ -318,7 +323,8 @@ void Um7Driver::publish_msgs(um7::Registers & r)
 
 Um7Driver::Um7Driver()
 : rclcpp::Node("um7_driver"),
-  axes_(OutputAxisOptions::DEFAULT)
+  axes_(OutputAxisOptions::DEFAULT),
+  imuCalibrated(false)
 {
   // Load parameters
   std::string port = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");

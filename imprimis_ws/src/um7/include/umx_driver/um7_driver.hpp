@@ -99,6 +99,9 @@ private:
   std::shared_ptr<um7::Comms> sensor_;
   sensor_msgs::msg::Imu imu_msg_;
   std::mutex mutex_;
+
+  // prevent publishing until reset service is called
+  bool imuCalibrated;
 };
 }  // namespace um7
 
