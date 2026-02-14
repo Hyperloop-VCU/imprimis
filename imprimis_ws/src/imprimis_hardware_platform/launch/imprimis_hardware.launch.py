@@ -219,6 +219,7 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file]],
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
     
