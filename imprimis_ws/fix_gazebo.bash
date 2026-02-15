@@ -13,7 +13,7 @@ LINE1="source $SCRIPT_DIR/install/setup.bash"
 
 # Add imprimis meshes to gazebo's path
 LINE2='export GZ_SIM_RESOURCE_PATH=${GZ_SIM_RESOURCE_PATH:+$GZ_SIM_RESOURCE_PATH:}$(ros2 pkg prefix imprimis_description)/share' # harmonic (jazzy)
-LINE3='export IGN_GAZEBO_RESOURCE_PATH=${IGN_GAZEBO_RESOURCE_PATH:+$IGN_GAZEBO_RESOURCE_PATH:}$(ros2 pkg prefix imprimis_description/share' # fortress (humble)
+LINE3='export IGN_GAZEBO_RESOURCE_PATH=${IGN_GAZEBO_RESOURCE_PATH:+$IGN_GAZEBO_RESOURCE_PATH:}$(ros2 pkg prefix imprimis_description)/share' # fortress (humble)
 
 # Delete any modifications this script made in the previous run, if any
 sed -i '/imprimis/d' ~/.bashrc
