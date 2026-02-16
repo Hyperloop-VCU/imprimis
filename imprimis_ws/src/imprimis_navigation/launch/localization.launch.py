@@ -27,38 +27,8 @@ def generate_launch_description():
             description="Whether or not to start up the logitech controller input node.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_gpio",
-            default_value="false",
-            description="Whether or not to get GPS data from Board A or Serial",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_fake_gps",
-            default_value="true",
-            description="Whether or not to use a fake gps, simulated from /odometry/filtered/local."
-        )
-    )
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
-    use_fake_gps = LaunchConfiguration("use_fake_gps")
-    use_gpio = LaunchConfiguration("use_gpio")
-
-    # when use_fake_gps = false, choose between gpio vs serial
-    use_gpio_condition = IfCondition(
-    PythonExpression([
-        "'", use_fake_gps, "' == 'false' and '", use_gpio, "' == 'true'"
-    ])
-)
-
-    use_serial_condition = IfCondition(
-    PythonExpression([
-        "'", use_fake_gps, "' == 'false' and '", use_gpio, "' == 'false'"
-    ])
-)
-
 
     # hardware (real or simulated)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
@@ -90,75 +60,6 @@ def generate_launch_description():
         name="ekf_local",
         parameters=[local_ekf_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/local')]
-    )
-
-    # gps param files
-    gps_nav_bridge_sim_params = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "gps_nav_bridge",
-            "gps_nav_bridge_sim.yaml",
-        ]
-    )
-    gps_nav_bridge_serial_params = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "gps_nav_bridge",
-            "gps_nav_bridge_serial_auto.yaml",
-        ]
-    )
-    sim_gps_params_file = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "sim_gps_from_odom.yaml",
-        ]
-    )
-    gps_nav_bridge_gpio_params = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "gps_nav_bridge",
-            "gps_nav_bridge_gpio_auto.yaml",
-        ]
-    )
-
-    # fake gps
-    fake_gps_node = Node(
-        package="sim_gps_from_odom",
-        executable="sim_gps_from_odom",
-        name="sim_gps_from_odom",
-        parameters=[sim_gps_params_file],
-        condition=IfCondition(use_fake_gps),
-    )
-
-    # gps_nav_bridge for sim gps
-    gps_nav_bridge_sim_node = Node(
-        package="gps_nav_bridge",
-        executable="gps_nav_bridge",
-        name="gps_nav_bridge",
-        parameters=[gps_nav_bridge_sim_params],
-        condition=IfCondition(use_fake_gps),
-    )
-
-    # gps_nav_bridge for real gps on serial
-    gps_nav_bridge_serial_node = Node(
-        package="gps_nav_bridge",
-        executable="gps_nav_bridge",
-        name="gps_nav_bridge",
-        parameters=[gps_nav_bridge_serial_params],
-        condition=use_serial_condition,
-    )
-
-    # gps_nav_bridge for real gps on board A
-    gps_nav_bridge_gpio_node = Node(
-        package="gps_nav_bridge",
-        executable="gps_nav_bridge_gpio",
-        name="gps_nav_bridge_gpio",
-        parameters=[gps_nav_bridge_gpio_params],
-        condition=use_gpio_condition,
     )
     
     # navsat transform node
@@ -200,5 +101,4 @@ def generate_launch_description():
         local_ekf_node,
         global_ekf_node,
         navsat_transform_node,
-        gps_nav_bridge_sim_node,
     ])

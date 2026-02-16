@@ -5,7 +5,7 @@ navsat_transform_node:
     magnetic_declination_radians: 0.0
     yaw_offset: 0.0
     zero_altitude: true
-    broadcast_utm_transform: true
+    broadcast_utm_transform: false
     use_odometry_yaw: false
 
     # Frames (match your robot)

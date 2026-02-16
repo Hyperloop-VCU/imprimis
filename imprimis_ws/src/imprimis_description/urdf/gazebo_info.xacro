@@ -66,6 +66,7 @@
   <!-- Simulated IMU configuration -->
   <gazebo reference="imu_link"> <!-- Must match the imu link in diffbot description -->
     <sensor name="imu_sensor" type="imu">
+    <gz_frame_id>imu_link</gz_frame_id>
     <pose> 0 0 0 0 0 0 </pose>
     <topic>imu</topic>
     <update_rate>50</update_rate>
@@ -74,13 +75,13 @@
       <angular_velocity>
         <noise type="gaussian">
           <mean>0</mean>
-          <stddev>0.0002</stddev>
+          <stddev>0</stddev> <!-- 0.0002-->
         </noise>
       </angular_velocity>
       <linear_acceleration>
         <noise type="gaussian">
           <mean>0</mean>
-          <stddev>0.01</stddev>
+          <stddev>0</stddev> <!-- 0.01-->
         </noise>
       </linear_acceleration>
     </imu>
@@ -90,6 +91,7 @@
   <!-- Simulated GPS configuration -->
   <gazebo reference="gps_link"> <!-- Must match the gps link in diffbot description -->
     <sensor name="gps_sensor" type="navsat">
+    <gz_frame_id>gps_link</gz_frame_id>
     <pose> 0 0 0 0 0 0 </pose>
     <topic>gps</topic>
     <update_rate>5</update_rate>
@@ -99,7 +101,7 @@
         <horizontal>
           <noise type="gaussian">
             <mean>0</mean>
-            <stddev>1.5</stddev>  <!-- meters -->
+            <stddev>1.5e-6</stddev>
           </noise>
         </horizontal>
       </position_sensing>

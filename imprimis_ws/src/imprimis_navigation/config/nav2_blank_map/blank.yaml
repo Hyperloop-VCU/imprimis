@@ -1,4 +1,4 @@
-image: /home/hyperlabs/nav2_blank_map/blank.pgm
+image: "blank.pgm"
 mode: trinary
 resolution: 0.5
 origin: [-5.0, -5.0, 0.0]
