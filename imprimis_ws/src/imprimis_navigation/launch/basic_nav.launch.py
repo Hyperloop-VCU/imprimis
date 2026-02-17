@@ -59,7 +59,7 @@ def generate_launch_description():
     map_yaml = LaunchConfiguration("map_yaml")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
 
-    # hardware (real or simulated)
+    # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([

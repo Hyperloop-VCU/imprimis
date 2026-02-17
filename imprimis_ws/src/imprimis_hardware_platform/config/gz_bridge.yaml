@@ -47,7 +47,7 @@
   direction: GZ_TO_ROS
 
 # gz topic published by sensors plugin (GPS)
-- ros_topic_name: "gps/fix"
+- ros_topic_name: "gps/fix_no_cov"
   gz_topic_name: "gps"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "ignition.msgs.NavSat"

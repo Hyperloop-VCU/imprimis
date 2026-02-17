@@ -94,7 +94,7 @@
     <gz_frame_id>gps_link</gz_frame_id>
     <pose> 0 0 0 0 0 0 </pose>
     <topic>gps</topic>
-    <update_rate>5</update_rate>
+    <update_rate>10</update_rate>
     <always_on>true</always_on>
     <navsat>
       <position_sensing>

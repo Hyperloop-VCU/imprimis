@@ -46,52 +46,46 @@ def generate_launch_description():
                 }.items(),
         )
     
-    # local EKF
-    local_ekf_params_file = PathJoinSubstitution(
+    # All robot localization nodes config
+    roboloco_config = PathJoinSubstitution(
         [
             FindPackageShare("imprimis_navigation"),
             "config",
-            "local_ekf_config.yaml",
+            "localization_nodes_config.yaml",
         ]
     )
+
     local_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_local",
-        parameters=[local_ekf_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/local')]
     )
     
-    # navsat transform node
-    navsat_transform_params_file = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "navsat_transform_params.yaml",
-        ]
-    )
     navsat_transform_node = Node(
         package="robot_localization",
         executable="navsat_transform_node",
-        parameters=[navsat_transform_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/local'), ('/gps/fix', '/gps/fix')],
+        name="navsat_transform",
+        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/global')],
         arguments=["--ros-args", "--log-level", "warn"],
     )
 
-    # global EKF
-    global_ekf_params_file = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "global_ekf_config.yaml",
-        ]
-    )
     global_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_global",
-        parameters=[global_ekf_params_file, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/global')]
+    )
+
+    # gps fix republisher for sim - makes position covariance nonzero
+    gps_fix_republisher = Node(
+        package="gps_fix_republisher",
+        executable="gps_fix_republisher",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
    
 
@@ -101,4 +95,7 @@ def generate_launch_description():
         local_ekf_node,
         global_ekf_node,
         navsat_transform_node,
+
+        # if hardware_type == simulated
+        gps_fix_republisher
     ])
