@@ -202,7 +202,7 @@ def generate_launch_description():
                 'gz_sim.launch.py'
             ]),
             launch_arguments={'gz_args': ['-r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
-            #condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
+            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
 
     # Spawn imprimis into the gazebo simulation

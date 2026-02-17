@@ -62,6 +62,14 @@ def generate_launch_description():
         parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/local')]
     )
+
+    lidar_SLAM_launch_include = IncludeLaunchDescription(
+        PathJoinSubstitution([
+            FindPackageShare('lidarslam'),
+            'launch',
+            'lidarslam.launch.py'
+        ]),
+    ) 
     
     navsat_transform_node = Node(
         package="robot_localization",
@@ -93,9 +101,10 @@ def generate_launch_description():
         # always
         imprimis_hardware_launch_include,
         local_ekf_node,
-        global_ekf_node,
-        navsat_transform_node,
+        lidar_SLAM_launch_include
+
+        #navsat_transform_node,
 
         # if hardware_type == simulated
-        gps_fix_republisher
+        #gps_fix_republisher
     ])
