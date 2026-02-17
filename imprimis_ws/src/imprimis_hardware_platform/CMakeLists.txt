@@ -69,7 +69,7 @@ install(
 )
 
 install(
-  DIRECTORY launch config worlds
+  DIRECTORY launch config worlds meshes
   DESTINATION share/imprimis_hardware_platform
 )
 

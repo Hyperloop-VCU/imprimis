@@ -29,6 +29,14 @@ def generate_launch_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
+            "world",
+            default_value="empty.sdf",
+            description="World used for simulation",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "nav2_params_file",
             default_value=PathJoinSubstitution(
                 [FindPackageShare("imprimis_navigation"), "config", "nav2_blank_map", "nav2_blank_params.yaml"]

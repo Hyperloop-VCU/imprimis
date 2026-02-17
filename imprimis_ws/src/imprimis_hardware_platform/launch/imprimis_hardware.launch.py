@@ -1,11 +1,14 @@
 from launch import LaunchDescription
 from launch.substitutions import PythonExpression
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+import os
+
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
@@ -43,16 +46,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "world_file",
-            default_value= PathJoinSubstitution([FindPackageShare("imprimis_hardware_platform"), "worlds", "empty.world"]),
-            description="World file for gazebo simulation"
+            "world",
+            default_value="empty",
+            description="World for gazebo simulation"
         )
     )
     gui = LaunchConfiguration("gui")
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
-    world_file = LaunchConfiguration("world_file")
+    world = LaunchConfiguration("world")
 
 
     # Get URDF via xacro and pass arguments to it
@@ -198,8 +201,8 @@ def generate_launch_description():
                 'launch',
                 'gz_sim.launch.py'
             ]),
-            launch_arguments={'gz_args': ['-r ', world_file], "on_exit_shutdown": "true"}.items(),
-            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
+            launch_arguments={'gz_args': ['-r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
+            #condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
 
     # Spawn imprimis into the gazebo simulation
@@ -222,6 +225,31 @@ def generate_launch_description():
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
+
+    # Directories
+    pkg_imprimis_hardware = get_package_share_directory('imprimis_hardware_platform')
+    pkg_imprimis_description = get_package_share_directory('imprimis_description')
+
+    # Determine all ros packages that are sourced
+    packages_paths = [os.path.join(p, 'share') for p in os.getenv('AMENT_PREFIX_PATH').split(':')]
+
+    # Set gazebo resource path to include all sourced ros packages
+    gz_sim_resource_path = SetEnvironmentVariable(
+        name='GZ_SIM_RESOURCE_PATH',
+        value=[
+            os.path.join(pkg_imprimis_hardware, 'worlds') + ':',
+            os.path.join(pkg_imprimis_hardware, 'meshes') + ':',
+            os.path.join(pkg_imprimis_description, 'meshes') + ':',
+            ':' + ':'.join(packages_paths)])
+    
+    # Do the same for old ignition variable
+    old_sim_resource_path = SetEnvironmentVariable(
+        name='IGN_GAZEBO_RESOURCE_PATH',
+        value=[
+            os.path.join(pkg_imprimis_hardware, 'worlds') + ':',
+            os.path.join(pkg_imprimis_hardware, 'meshes') + ':',
+            os.path.join(pkg_imprimis_description, 'meshes') + ':',
+            ':' + ':'.join(packages_paths)])
     
 
     # Controller input
@@ -264,6 +292,8 @@ def generate_launch_description():
         gpio_controller_spawner,
         
         # If hardware_type == simulated
+        gz_sim_resource_path,
+        old_sim_resource_path,
         gazebo_launch_include,
         gzbridge,
         spawn_imprimis_gazebo,
