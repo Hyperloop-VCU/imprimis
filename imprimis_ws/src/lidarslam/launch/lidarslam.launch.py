@@ -26,7 +26,8 @@ def generate_launch_description():
         executable='scanmatcher_node',
         parameters=[main_param_dir],
         remappings=[('/input_cloud','/velodyne_points_fixed')],
-        output='screen'
+        output='screen',
+        arguments=["--ros-args", "--log-level", "warn"],
         )
 
     tf = launch_ros.actions.Node(
@@ -40,7 +41,8 @@ def generate_launch_description():
         package='graph_based_slam',
         executable='graph_based_slam_node',
         parameters=[main_param_dir],
-        output='screen'
+        output='screen',
+        arguments=["--ros-args", "--log-level", "warn"],
         )
     
     rviz = launch_ros.actions.Node(

@@ -60,7 +60,8 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_local",
         parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[('/odometry/filtered', '/odometry/filtered/local')]
+        remappings=[('/odometry/filtered', '/odometry/filtered/local')],
+        arguments=["--ros-args", "--log-level", "warn"],
     )
 
     lidar_SLAM_launch_include = IncludeLaunchDescription(

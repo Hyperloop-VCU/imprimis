@@ -43,6 +43,7 @@ GraphBasedSlamComponent::GraphBasedSlamComponent(const rclcpp::NodeOptions & opt
   declare_parameter("debug_flag", false);
   get_parameter("debug_flag", debug_flag_);
 
+  /*
   std::cout << "registration_method:" << registration_method << std::endl;
   std::cout << "voxel_leaf_size[m]:" << voxel_leaf_size << std::endl;
   std::cout << "ndt_resolution[m]:" << ndt_resolution << std::endl;
@@ -57,6 +58,7 @@ GraphBasedSlamComponent::GraphBasedSlamComponent(const rclcpp::NodeOptions & opt
   std::cout << "use_save_map_in_loop:" << std::boolalpha << use_save_map_in_loop_ << std::endl;
   std::cout << "debug_flag:" << std::boolalpha << debug_flag_ << std::endl;
   std::cout << "------------------" << std::endl;
+  */
 
   voxelgrid_.setLeafSize(voxel_leaf_size, voxel_leaf_size, voxel_leaf_size);
 

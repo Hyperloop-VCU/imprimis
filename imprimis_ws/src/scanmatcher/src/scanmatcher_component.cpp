@@ -80,6 +80,7 @@ ScanMatcherComponent::ScanMatcherComponent(const rclcpp::NodeOptions & options)
   declare_parameter("debug_flag", false);
   get_parameter("debug_flag", debug_flag_);
 
+  /*
   std::cout << "registration_method:" << registration_method_ << std::endl;
   std::cout << "ndt_resolution[m]:" << ndt_resolution << std::endl;
   std::cout << "ndt_num_threads:" << ndt_num_threads << std::endl;
@@ -99,6 +100,7 @@ ScanMatcherComponent::ScanMatcherComponent(const rclcpp::NodeOptions & options)
   std::cout << "map_publish_period[sec]:" << map_publish_period_ << std::endl;
   std::cout << "num_targeted_cloud:" << num_targeted_cloud_ << std::endl;
   std::cout << "------------------" << std::endl;
+  */
 
   if (registration_method_ == "NDT") {
 

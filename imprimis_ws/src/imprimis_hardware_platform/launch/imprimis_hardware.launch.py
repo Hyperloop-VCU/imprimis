@@ -100,7 +100,8 @@ def generate_launch_description():
         remappings=[
             ("~/robot_description", "/robot_description"),
         ],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"])),
+        arguments=["--ros-args", "--log-level", "warn"]
     )
 
     # robot state publisher
@@ -109,6 +110,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        arguments=["--ros-args", "--log-level", "warn"]
     )
 
     # rviz
@@ -120,7 +122,7 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
+        arguments=["-d", rviz_config_file, "--ros-args", "--log-level", "warn"],
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(gui),
     )
@@ -131,7 +133,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
         
     )
 
@@ -140,7 +142,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager"],
+        arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
     )
 
     # GPIO controller spawner
@@ -148,7 +150,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        arguments=["gpio_controller", "--controller-manager", "/controller_manager"],
+        arguments=["gpio_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
 
@@ -161,7 +163,8 @@ def generate_launch_description():
         executable='velodyne_driver_node',
         output='both',
         parameters=[lidar_config_file, {"rpm": lidar_rpm}],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+        arguments=["--ros-args", "--log-level", "warn"]
     )
     
     velodyne_converter_launch_include = IncludeLaunchDescription(
@@ -186,6 +189,7 @@ def generate_launch_description():
                 package="umx_driver",
                 executable="um7_driver",
                 parameters=[{"port": "/dev/ttyUSB1"}],
+                arguments=["--ros-args", "--log-level", "warn"]
             )
         ],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
@@ -213,6 +217,7 @@ def generate_launch_description():
         package="arduino_gps_driver",
         executable="arduino_gps_driver",
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+        arguments=["--ros-args", "--log-level", "warn"]
     )
     gps_republisher = Node(
         package="republisher",
@@ -228,7 +233,7 @@ def generate_launch_description():
                 'launch',
                 'gz_sim.launch.py'
             ]),
-            launch_arguments={'gz_args': ['-r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
+            launch_arguments={'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
 
@@ -236,7 +241,7 @@ def generate_launch_description():
     spawn_imprimis_gazebo = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=['-topic', 'robot_description', '-name', 'imprimis', '-z', '0.1'],
+        arguments=['-topic', 'robot_description', '-name', 'imprimis', '-z', '0.1', "--ros-args", "--log-level", "warn"],
         output="screen",
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
@@ -248,8 +253,8 @@ def generate_launch_description():
     gzbridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file]],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
+        arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file], "--ros-args", "--log-level", "warn"],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
     )
 
     # Directories

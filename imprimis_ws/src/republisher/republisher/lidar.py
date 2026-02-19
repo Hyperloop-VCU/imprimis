@@ -26,6 +26,8 @@ class VelodyneRepublisher(Node):
 
     def lidar_input_cb(self, msg):
         outputMsg = msg
+        if outputMsg.header.stamp.sec < 1:
+            return
         if outputMsg.header.stamp.nanosec > self.time_offset_ns:
             outputMsg.header.stamp.nanosec -= self.time_offset_ns
         else:

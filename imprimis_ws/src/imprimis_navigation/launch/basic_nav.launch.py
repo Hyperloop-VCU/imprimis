@@ -30,7 +30,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
-            default_value="empty.sdf",
+            default_value="warehouse",
             description="World used for simulation",
         )
     )
