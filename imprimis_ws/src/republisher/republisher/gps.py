@@ -1,12 +1,6 @@
-import json
-import math
-import threading
-import time
-from typing import Optional
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import NavSatFix, NavSatStatus
-import serial
+from sensor_msgs.msg import NavSatFix
 
 class GPSFixRepublisher(Node):
     """
@@ -35,12 +29,6 @@ class GPSFixRepublisher(Node):
     
 
     def destroy_node(self):
-        self._stop = True
-        try:
-            if self._serial and self._serial.is_open:
-                self._serial.close()
-        except Exception:
-            pass
         super().destroy_node()
 
 

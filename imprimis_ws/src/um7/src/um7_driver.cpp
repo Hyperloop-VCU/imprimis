@@ -160,7 +160,7 @@ bool Um7Driver::handle_reset_service(
   } catch (const std::exception & e) {
     RCLCPP_ERROR_STREAM(this->get_logger(), e.what());
   }
-  RCLCPP_INFO(this->get_logger(), "Reset service completed");
+  RCLCPP_INFO(this->get_logger(), "Um7 IMU driver reset service completed. Beginning IMU data stream.");
   imuCalibrated = true;
   return true;
 }
@@ -172,7 +172,7 @@ bool Um7Driver::handle_reset_service(
 void Um7Driver::publish_msgs(um7::Registers & r)
 { 
   if (!imuCalibrated) {
-    RCLCPP_INFO(rclcpp::get_logger("um7_driver"), "um7 driver waiting for reset service to be called before publishing IMU data.");
+    //RCLCPP_INFO(rclcpp::get_logger("um7_driver"), "um7 driver waiting for reset service to be called before publishing IMU data.");
     return;
   }
   RCLCPP_DEBUG(rclcpp::get_logger("um7_driver"), "Publishing ROS 2 messages");

@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'gps_fix_republisher'
+package_name = 'republisher'
 
 setup(
     name=package_name,
@@ -13,7 +13,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ray',
+    maintainer='hyperlabs',
     maintainer_email='rayneralla@icloud.com',
     description='TODO: Package description',
     license='TODO: License declaration',
@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'gps_fix_republisher = gps_fix_republisher.gps_fix_republisher:main'
+            'gps = republisher.gps:main',
+            'lidar = republisher.lidar:main'
         ],
     },
 )

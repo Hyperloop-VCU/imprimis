@@ -42,7 +42,7 @@ def generate_launch_description():
         launch_arguments={
                 'hardware_type': hardware_type,
                 'use_controller': use_controller,
-                'publish_odom_tf': 'false'
+                'publish_odom_tf': 'true'
                 }.items(),
         )
     
@@ -79,32 +79,25 @@ def generate_launch_description():
         remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/global')],
         arguments=["--ros-args", "--log-level", "warn"],
     )
+   
 
-    global_ekf_node = Node(
+    return LaunchDescription(declared_arguments + [
+        # always
+        imprimis_hardware_launch_include,
+        #local_ekf_node,
+        lidar_SLAM_launch_include
+
+        #navsat_transform_node,
+    ])
+
+
+"""
+Old global EKF node
+global_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_global",
         parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/global')]
     )
-
-    # gps fix republisher for sim - makes position covariance nonzero
-    gps_fix_republisher = Node(
-        package="gps_fix_republisher",
-        executable="gps_fix_republisher",
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
-    )
-   
-
-    return LaunchDescription(declared_arguments + [
-        # always
-        imprimis_hardware_launch_include,
-        local_ekf_node,
-        lidar_SLAM_launch_include
-
-        #navsat_transform_node,
-
-        # if hardware_type == simulated
-        #gps_fix_republisher
-    ])
+"""

@@ -47,15 +47,23 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
-            default_value="empty",
+            default_value="warehouse",
             description="World for gazebo simulation"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "lidar_rpm",
+            default_value="600.0",
+            choices=("300.0", "600.0", "1200.0"),
+            description="Velodyne LIDAR RPM."
         )
     )
     gui = LaunchConfiguration("gui")
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
-    world = LaunchConfiguration("world")
+    lidar_rpm = LaunchConfiguration("lidar_rpm")
 
 
     # Get URDF via xacro and pass arguments to it
@@ -144,35 +152,48 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
     )
 
-    # Velodyne LIDAR driver and parser
-    velodyne_driver_launch_include = IncludeLaunchDescription(
-            PathJoinSubstitution([
-                FindPackageShare('velodyne_driver'),
-                'launch',
-                'velodyne_driver_node-VLP16-launch.py'
-            ]),
-            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
-        ) 
+    # Velodyne LIDAR driver, parser, and republisher
+    lidar_config_file = PathJoinSubstitution(
+        [FindPackageShare("imprimis_hardware_platform"), "config", "VLP16-velodyne_driver_node-params.yaml"]
+    )
+    velodyne_driver_node = Node(
+        package='velodyne_driver',
+        executable='velodyne_driver_node',
+        output='both',
+        parameters=[lidar_config_file, {"rpm": lidar_rpm}],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
+    )
+    
     velodyne_converter_launch_include = IncludeLaunchDescription(
             PathJoinSubstitution([
                 FindPackageShare('velodyne_pointcloud'),
                 'launch',
                 'velodyne_transform_node-VLP16-launch.py'
             ]),
-            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
-        ) 
+            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+    ) 
+    velodyne_republisher = Node(
+        package="republisher",
+        executable="lidar",
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+    )
     
-    # IMU driver
-    imu_driver = Node(
-        package="umx_driver",
-        executable="um7_driver",
-        parameters=[{"port": "/dev/ttyUSB1"}],
+    # IMU driver, after a delay
+    imu_driver = TimerAction(
+        period = 2.0,
+        actions = [
+            Node(
+                package="umx_driver",
+                executable="um7_driver",
+                parameters=[{"port": "/dev/ttyUSB1"}],
+            )
+        ],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
     )
 
-    # Calibrate IMU after 2 seconds
+    # Calibrate IMU after a delay
     imu_calibrator = TimerAction(
-        period=2.0,
+        period=3.0,
         actions=[
             ExecuteProcess(
                     cmd=[
@@ -187,11 +208,17 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
     )
 
-    # GPS driver
+    # GPS driver and republisher
     gps_driver = Node(
         package="arduino_gps_driver",
         executable="arduino_gps_driver",
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+    )
+    gps_republisher = Node(
+        package="republisher",
+        executable="gps",
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
     )
 
     # Gazebo
@@ -222,7 +249,6 @@ def generate_launch_description():
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file]],
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
 
@@ -279,12 +305,13 @@ def generate_launch_description():
         robot_state_pub_node,
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
+        velodyne_republisher,
 
         # If hardware_type == real
         imu_driver,
         imu_calibrator,
-        gps_driver,
-        velodyne_driver_launch_include,
+        #gps_driver,
+        velodyne_driver_node,
         velodyne_converter_launch_include,
 
         # If hardware type != simulated
@@ -297,6 +324,7 @@ def generate_launch_description():
         gazebo_launch_include,
         gzbridge,
         spawn_imprimis_gazebo,
+        gps_republisher,
 
         # If use_controller == true
         controller_input_launch_include,
