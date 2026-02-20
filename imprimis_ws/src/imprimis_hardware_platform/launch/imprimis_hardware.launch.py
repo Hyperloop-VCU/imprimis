@@ -212,18 +212,18 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
     )
 
-    # GPS driver and republisher
+    # GPS driver
     gps_driver = Node(
-        package="arduino_gps_driver",
-        executable="arduino_gps_driver",
+        package="nmea_navsat_driver",
+        executable="nmea_serial_driver",
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
-        arguments=["--ros-args", "--log-level", "warn"]
-    )
-    gps_republisher = Node(
-        package="republisher",
-        executable="gps",
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+        arguments=["--ros-args", "--log-level", "warn"],
+        parameters=[{
+            'port': '/dev/ttyACM0',
+            'baud': 9600,
+            'frame_id': 'gps_link'
+        }],
+        namespace="gps"
     )
 
     # Gazebo
@@ -257,14 +257,18 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
     )
 
-    # Directories
-    pkg_imprimis_hardware = get_package_share_directory('imprimis_hardware_platform')
-    pkg_imprimis_description = get_package_share_directory('imprimis_description')
-
-    # Determine all ros packages that are sourced
-    packages_paths = [os.path.join(p, 'share') for p in os.getenv('AMENT_PREFIX_PATH').split(':')]
+    # Add covariance to GPS in simulation
+    gps_republisher = Node(
+        package="republisher",
+        executable="gps",
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+    )
 
     # Set gazebo resource path to include all sourced ros packages
+    pkg_imprimis_hardware = get_package_share_directory('imprimis_hardware_platform')
+    pkg_imprimis_description = get_package_share_directory('imprimis_description')
+    packages_paths = [os.path.join(p, 'share') for p in os.getenv('AMENT_PREFIX_PATH').split(':')]
     gz_sim_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
@@ -307,29 +311,29 @@ def generate_launch_description():
 
     things_to_launch = [
         # Always
-        robot_state_pub_node,
-        robot_controller_spawner,
-        joint_state_broadcaster_spawner,
-        velodyne_republisher,
+        #robot_state_pub_node,
+        #robot_controller_spawner,
+        #joint_state_broadcaster_spawner,
+        #velodyne_republisher,
 
         # If hardware_type == real
-        imu_driver,
-        imu_calibrator,
-        #gps_driver,
-        velodyne_driver_node,
-        velodyne_converter_launch_include,
+        #imu_driver,
+        #imu_calibrator,
+        gps_driver,
+       # velodyne_driver_node,
+        #velodyne_converter_launch_include,
 
         # If hardware type != simulated
-        controller_manager_node,
-        gpio_controller_spawner,
+        #controller_manager_node,
+        #gpio_controller_spawner,
         
         # If hardware_type == simulated
-        gz_sim_resource_path,
-        old_sim_resource_path,
-        gazebo_launch_include,
-        gzbridge,
-        spawn_imprimis_gazebo,
-        gps_republisher,
+       # gz_sim_resource_path,
+       # old_sim_resource_path,
+       # gazebo_launch_include,
+       # gzbridge,
+       # spawn_imprimis_gazebo,
+       # gps_republisher,
 
         # If use_controller == true
         controller_input_launch_include,

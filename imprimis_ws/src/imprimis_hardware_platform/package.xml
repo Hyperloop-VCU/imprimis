@@ -42,6 +42,7 @@
   <exec_depend>velodyne_laserscan</exec_depend>
   <exec_depend>velodyne_msgs</exec_depend>
   <exec_depend>velodyne_pointcloud</exec_depend>
+  <exec_depend>nmea_navsat_driver</exec_depend>
 
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>controller_manager</test_depend>
