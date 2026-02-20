@@ -17,6 +17,8 @@ ScanMatcherComponent::ScanMatcherComponent(const rclcpp::NodeOptions & options)
   int ndt_num_threads;
   double gicp_corr_dist_threshold;
 
+  declare_parameter("tf_broadcast_period", 0.05);
+  get_parameter("tf_broadcast_period", tf_broadcast_period);
   declare_parameter("global_frame_id", "map");
   get_parameter("global_frame_id", global_frame_id_);
   declare_parameter("robot_frame_id", "base_link");
@@ -196,7 +198,7 @@ void ScanMatcherComponent::initializePubSub()
           robot_frame_id_, msg->header.frame_id, time_point);
         tf2::doTransform(*msg, transformed_msg, transform); // TODO:slow now(https://github.com/ros/geometry2/pull/432)
       } catch (tf2::TransformException & e) {
-        RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+        RCLCPP_ERROR(this->get_logger(), "%s yay", e.what());
         return;
       }
 
@@ -259,6 +261,13 @@ void ScanMatcherComponent::initializePubSub()
       rclcpp::KeepLast(
         1)).reliable());
   path_pub_ = create_publisher<nav_msgs::msg::Path>("path", rclcpp::QoS(10));
+
+  // tf
+  std::chrono::milliseconds duration(static_cast<int>(1000*tf_broadcast_period));
+  tf_timer = create_wall_timer(
+    duration,
+    std::bind(&ScanMatcherComponent::broadcastTfTimerCB, this)
+  );
 }
 
 void ScanMatcherComponent::initializeMap(const pcl::PointCloud <pcl::PointXYZI>::Ptr & tmp_ptr, const std_msgs::msg::Header & header)
@@ -337,9 +346,9 @@ void ScanMatcherComponent::receiveCloud(
     try {
       odom_trans = tfbuffer_.lookupTransform(
         odom_frame_id_, robot_frame_id_, tf2_ros::fromMsg(
-          stamp));
+          stamp), tf2::Duration(100000000));
     } catch (tf2::TransformException & e) {
-      RCLCPP_ERROR(this->get_logger(), "%s", e.what());
+      RCLCPP_ERROR(this->get_logger(),"%s\n\n", e.what());
     }
     Eigen::Affine3d odom_affine = tf2::transformToEigen(odom_trans);
     Eigen::Matrix4f odom_mat = odom_affine.matrix().cast<float>();
@@ -356,7 +365,6 @@ void ScanMatcherComponent::receiveCloud(
   rclcpp::Time time_align_end = system_clock.now();
 
   Eigen::Matrix4f final_transformation = registration_->getFinalTransformation();
-
   publishMapAndPose(cloud_ptr, final_transformation, stamp);
 
   if (!debug_flag_) {return;}
@@ -388,6 +396,20 @@ void ScanMatcherComponent::receiveCloud(
   std::cout << "---------------------------------------------------------" << std::endl;
 }
 
+void ScanMatcherComponent::broadcastTfTimerCB()
+{
+  if (use_odom_) {
+    std::lock_guard<std::mutex> lg(tf_mutex);
+    latest_odom_map_msg.header.stamp = now();
+    broadcaster_.sendTransform(latest_odom_map_msg);
+  }
+  else {
+    std::lock_guard<std::mutex> lg(tf_mutex);
+    latest_base_map_msg.header.stamp = now();
+    broadcaster_.sendTransform(latest_base_map_msg);
+  }
+}
+
 void ScanMatcherComponent::publishMapAndPose(
   const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & cloud_ptr,
   const Eigen::Matrix4f final_transformation, const rclcpp::Time stamp)
@@ -412,10 +434,14 @@ void ScanMatcherComponent::publishMapAndPose(
     if(use_odom_){
         geometry_msgs::msg::TransformStamped odom_to_map_msg;
         odom_to_map_msg = calculateMaptoOdomTransform(base_to_map_msg, stamp);
-        broadcaster_.sendTransform(odom_to_map_msg);
+        std::lock_guard<std::mutex> lg(tf_mutex);
+        latest_odom_map_msg = odom_to_map_msg;
+        //broadcaster_.sendTransform(odom_to_map_msg);
     }
     else{
-      broadcaster_.sendTransform(base_to_map_msg);
+      std::lock_guard<std::mutex> lg(tf_mutex);
+      latest_base_map_msg = base_to_map_msg;
+      //broadcaster_.sendTransform(base_to_map_msg);
     }
   }
 
@@ -425,7 +451,6 @@ void ScanMatcherComponent::publishMapAndPose(
   current_pose_stamped_.pose.position.z = position.z();
   current_pose_stamped_.pose.orientation = quat_msg;
   pose_pub_->publish(current_pose_stamped_);
-
   path_.poses.push_back(current_pose_stamped_);
   path_pub_->publish(path_);
 

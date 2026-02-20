@@ -16,7 +16,7 @@ class VelodyneRepublisher(Node):
         # params
         self.lidar_input_topic = self.declare_parameter("lidar_input_topic", "/velodyne_points").value
         self.lidar_output_topic = self.declare_parameter("lidar_output_topic", "/velodyne_points_fixed").value
-        self.time_offset = self.declare_parameter("time_offset", 0.05).value
+        self.time_offset = self.declare_parameter("time_offset", 0.2).value
 
         self.time_offset_ns = int(self.time_offset * (10 ** 9))
 

@@ -114,6 +114,7 @@ private:
     rclcpp::Publisher < nav_msgs::msg::Path > ::SharedPtr path_pub_;
 
     void initializePubSub();
+    void broadcastTfTimerCB();
     void initializeMap(const pcl::PointCloud <pcl::PointXYZI>::Ptr & cloud_ptr, const std_msgs::msg::Header & header);
     void receiveCloud(
       const pcl::PointCloud < pcl::PointXYZI> ::ConstPtr & input_cloud_ptr,
@@ -169,6 +170,13 @@ private:
     double initial_pose_qy_;
     double initial_pose_qz_;
     double initial_pose_qw_;
+
+    // faster tf broadcasting
+    double tf_broadcast_period;
+    std::mutex tf_mutex;
+    geometry_msgs::msg::TransformStamped latest_odom_map_msg;
+    geometry_msgs::msg::TransformStamped latest_base_map_msg;
+    rclcpp::TimerBase::SharedPtr tf_timer;
 
     // odom
     Eigen::Matrix4f previous_odom_mat_ {Eigen::Matrix4f::Identity()};

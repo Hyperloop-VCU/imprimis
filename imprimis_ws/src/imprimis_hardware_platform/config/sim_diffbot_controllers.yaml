@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 30
+    update_rate: 30  # Must be integer
     use_sim_time: true
 
     joint_state_broadcaster:
@@ -21,7 +21,7 @@ diffbot_base_controller:
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
 
-    publish_rate: 30.0  # Output topic update rate (higher-level)
+    publish_rate: 30.0  # Must be double
     odom_frame_id: odom
     base_frame_id: base_link
     pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]

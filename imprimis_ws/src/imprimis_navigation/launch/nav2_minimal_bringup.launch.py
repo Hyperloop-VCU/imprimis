@@ -44,7 +44,7 @@ def generate_launch_description():
         'controller_server',
         'smoother_server',
         'planner_server',
-        'route_server',
+        #'route_server',
         'behavior_server',
         'velocity_smoother',
         #'collision_monitor',
@@ -134,7 +134,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
+                remappings=remappings + [('cmd_vel', 'diffbot_base_controller/cmd_vel')],
             ),
             Node(
                 package='nav2_smoother',
@@ -158,17 +158,17 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings,
             ),
-            Node(
-                package='nav2_route',
-                executable='route_server',
-                name='route_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings,
-            ),
+            #Node(
+            #    package='nav2_route',
+            #    executable='route_server',
+            #    name='route_server',
+            #    output='screen',
+            #    respawn=use_respawn,
+            #    respawn_delay=2.0,
+            #    parameters=[configured_params],
+            #    arguments=['--ros-args', '--log-level', log_level],
+            #    remappings=remappings,
+            #),
             Node(
                 package='nav2_behaviors',
                 executable='behavior_server',
@@ -212,7 +212,7 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings
-                + [('cmd_vel', 'cmd_vel_nav')],
+                + [('cmd_vel', 'cmd_vel_raw'), ('cmd_vel_smoothed', 'diffbot_base_controller/cmd_vel')],
             ),
             #Node(
             #    package='nav2_collision_monitor',
@@ -259,7 +259,7 @@ def generate_launch_description():
                         plugin='nav2_controller::ControllerServer',
                         name='controller_server',
                         parameters=[configured_params],
-                        remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
+                        remappings=remappings + [('cmd_vel', 'cmd_vel_raw')],
                     ),
                     ComposableNode(
                         package='nav2_smoother',
@@ -275,13 +275,13 @@ def generate_launch_description():
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
-                    ComposableNode(
-                        package='nav2_route',
-                        plugin='nav2_route::RouteServer',
-                        name='route_server',
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
+                    #ComposableNode(
+                    #    package='nav2_route',
+                    #    plugin='nav2_route::RouteServer',
+                    #    name='route_server',
+                    #    parameters=[configured_params],
+                    #    remappings=remappings,
+                    #),
                     ComposableNode(
                         package='nav2_behaviors',
                         plugin='behavior_server::BehaviorServer',
@@ -309,7 +309,7 @@ def generate_launch_description():
                         name='velocity_smoother',
                         parameters=[configured_params],
                         remappings=remappings
-                        + [('cmd_vel', 'cmd_vel_nav')],
+                        + [('cmd_vel', 'cmd_vel_raw'), ('cmd_vel_smoothed', 'diffbot_base_controller/cmd_vel')],
                     ),
                     #ComposableNode(
                     #    package='nav2_collision_monitor',

@@ -48,9 +48,16 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "map_yaml",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("imprimis_navigation"), "config", "nav2_blank_map", "blank.yaml"]
+                [FindPackageShare("imprimis_navigation"), "config", "nav2_blank_map", "bigger_blank.yaml"]
             ),
             description="Full path to the map YAML for map_server.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "disable_local_EKF",
+            default_value='false',
+            description="If false, a local EKF node fuses wheel odom with other local odom sources. If true, wheel odom is the sole local odom source.",
         )
     )
     declared_arguments.append(
@@ -66,6 +73,7 @@ def generate_launch_description():
     nav2_params_file = LaunchConfiguration("nav2_params_file")
     map_yaml = LaunchConfiguration("map_yaml")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
+    disable_local_EKF = LaunchConfiguration("disable_local_EKF")
 
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
@@ -79,9 +87,11 @@ def generate_launch_description():
         launch_arguments={
             "hardware_type": hardware_type,
             "use_controller": use_controller,
+            "disable_local_EKF": disable_local_EKF
         }.items(),
     )
 
+    
     # 1) map_server (blank map)
     map_server_node = Node(
         package="nav2_map_server",
@@ -90,7 +100,8 @@ def generate_launch_description():
         output="screen",
         parameters=[{"yaml_filename": map_yaml, "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
     )
-
+    
+    
     # 2) lifecycle manager for map_server
     lifecycle_manager_map = Node(
         package="nav2_lifecycle_manager",
@@ -135,7 +146,7 @@ def generate_launch_description():
     return LaunchDescription(declared_arguments + [
         # your stack
         localization_launch_include,
-        gps_nav_bridge_node,
+        #gps_nav_bridge_node,
 
         # nav2 stack
         map_server_node,
