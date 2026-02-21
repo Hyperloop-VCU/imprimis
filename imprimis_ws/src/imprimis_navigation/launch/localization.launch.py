@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -73,13 +73,18 @@ def generate_launch_description():
         condition=UnlessCondition(disable_local_ekf)
     )
 
-    lidar_SLAM_launch_include = IncludeLaunchDescription(
-        PathJoinSubstitution([
-            FindPackageShare('lidarslam'),
-            'launch',
-            'lidarslam.launch.py'
-        ]),
-    ) 
+    lidar_SLAM_launch_include = TimerAction(
+        period = 8.0,
+        actions = [
+            IncludeLaunchDescription(
+                PathJoinSubstitution([
+                    FindPackageShare('lidarslam'),
+                    'launch',
+                    'lidarslam.launch.py'
+                ]),
+            ) 
+        ],
+    )
     
     navsat_transform_node = Node(
         package="robot_localization",

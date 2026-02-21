@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -55,7 +55,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "disable_local_EKF",
+            "disable_local_ekf",
             default_value='false',
             description="If false, a local EKF node fuses wheel odom with other local odom sources. If true, wheel odom is the sole local odom source.",
         )
@@ -73,7 +73,7 @@ def generate_launch_description():
     nav2_params_file = LaunchConfiguration("nav2_params_file")
     map_yaml = LaunchConfiguration("map_yaml")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
-    disable_local_EKF = LaunchConfiguration("disable_local_EKF")
+    disable_local_EKF = LaunchConfiguration("disable_local_ekf")
 
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
@@ -91,40 +91,55 @@ def generate_launch_description():
         }.items(),
     )
 
-    
-    # 1) map_server (blank map)
-    map_server_node = Node(
-        package="nav2_map_server",
-        executable="map_server",
-        name="map_server",
-        output="screen",
-        parameters=[{"yaml_filename": map_yaml, "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+    # 1) map server
+    map_server_node = TimerAction(
+        period = 10.0,
+        actions = [
+            Node(
+                package="nav2_map_server",
+                executable="map_server",
+                name="map_server",
+                output="screen",
+                parameters=[{"yaml_filename": map_yaml, "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            )
+        ],
     )
+    
     
     
     # 2) lifecycle manager for map_server
-    lifecycle_manager_map = Node(
-        package="nav2_lifecycle_manager",
-        executable="lifecycle_manager",
-        name="lifecycle_manager_map",
-        output="screen",
-        parameters=[{
-            "autostart": True,
-            "node_names": ["map_server"],
-            "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-        }],
+    lifecycle_manager_map = TimerAction(
+        period = 10.0,
+        actions = [
+            Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_map",
+                output="screen",
+                parameters=[{
+                    "autostart": True,
+                    "node_names": ["map_server"],
+                    "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+                }],
+            )
+        ],
     )
 
     # 3) nav2 navigation stack (planner/controller/bt/costmaps)
-    nav2_navigation_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])
-        ),
-        launch_arguments={
-            "params_file": nav2_params_file,
-            "autostart": autostart_nav2,
-            "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-        }.items(),
+    nav2_navigation_launch = TimerAction(
+        period = 10.0,
+        actions = [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])
+                ),
+                launch_arguments={
+                    "params_file": nav2_params_file,
+                    "autostart": autostart_nav2,
+                    "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+                }.items(),
+            )
+        ],
     )
 
     # gps_nav_bridge

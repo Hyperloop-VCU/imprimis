@@ -83,6 +83,7 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
+    
     # controller manager
     controller_config_filename = "diffbot_controllers.yaml"
     robot_controllers = PathJoinSubstitution(
@@ -92,6 +93,7 @@ def generate_launch_description():
             controller_config_filename,
         ]
     )
+
     controller_manager_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -176,7 +178,7 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
     ) 
     velodyne_republisher = Node(
-        package="republisher",
+        package="utils",
         executable="lidar",
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
     )
@@ -259,7 +261,7 @@ def generate_launch_description():
 
     # Add covariance to GPS in simulation
     gps_republisher = Node(
-        package="republisher",
+        package="utils",
         executable="gps",
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"])),
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
@@ -311,29 +313,29 @@ def generate_launch_description():
 
     things_to_launch = [
         # Always
-        #robot_state_pub_node,
-        #robot_controller_spawner,
-        #joint_state_broadcaster_spawner,
-        #velodyne_republisher,
+        robot_state_pub_node,
+        robot_controller_spawner,
+        joint_state_broadcaster_spawner,
+        velodyne_republisher,
 
         # If hardware_type == real
-        #imu_driver,
-        #imu_calibrator,
+        imu_driver,
+        imu_calibrator,
         gps_driver,
-       # velodyne_driver_node,
-        #velodyne_converter_launch_include,
+        velodyne_driver_node,
+        velodyne_converter_launch_include,
 
         # If hardware type != simulated
-        #controller_manager_node,
-        #gpio_controller_spawner,
+        controller_manager_node,
+        gpio_controller_spawner,
         
         # If hardware_type == simulated
-       # gz_sim_resource_path,
-       # old_sim_resource_path,
-       # gazebo_launch_include,
-       # gzbridge,
-       # spawn_imprimis_gazebo,
-       # gps_republisher,
+        gz_sim_resource_path,
+        old_sim_resource_path,
+        gazebo_launch_include,
+        gzbridge,
+        spawn_imprimis_gazebo,
+        gps_republisher,
 
         # If use_controller == true
         controller_input_launch_include,
