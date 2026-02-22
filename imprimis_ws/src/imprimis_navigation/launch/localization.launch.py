@@ -1,12 +1,12 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, RegisterEventHandler
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import UnlessCondition
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PythonExpression
-
+from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
 
@@ -38,6 +38,24 @@ def generate_launch_description():
     use_controller = LaunchConfiguration("use_controller")
     disable_local_ekf = LaunchConfiguration("disable_local_ekf")
 
+    # Get robot localization nodes config file
+    roboloco_config = PathJoinSubstitution(
+        [
+            FindPackageShare("imprimis_navigation"),
+            "config",
+            "localization_nodes_config.yaml",
+        ]
+    )
+
+    # Declare lidar SLAM launch include. This is ran after odom->base_link is available
+    lidar_SLAM_launch_source = IncludeLaunchDescription(
+        PathJoinSubstitution([
+            FindPackageShare('lidarslam'),
+            'launch',
+            'lidarslam.launch.py'
+        ]),
+    ) 
+
     # hardware (real or simulated)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -52,17 +70,9 @@ def generate_launch_description():
                 'use_controller': use_controller,
                 'publish_odom_tf': disable_local_ekf
                 }.items(),
-        )
-    
-    # All robot localization nodes config
-    roboloco_config = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "localization_nodes_config.yaml",
-        ]
     )
-
+    
+    # Local EKF node for local odom fusion from multiple sources
     local_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -73,19 +83,25 @@ def generate_launch_description():
         condition=UnlessCondition(disable_local_ekf)
     )
 
-    lidar_SLAM_launch_include = TimerAction(
-        period = 8.0,
-        actions = [
-            IncludeLaunchDescription(
-                PathJoinSubstitution([
-                    FindPackageShare('lidarslam'),
-                    'launch',
-                    'lidarslam.launch.py'
-                ]),
-            ) 
-        ],
+    # Helper node to wait for odom -> base_link and exit once it's available
+    wait_for_odom_tf = Node(
+        package="utils",
+        executable="wait_for_tf",
+        parameters=[{
+            "source_frame": "odom",
+            "target_frame": "base_link"
+        }]
     )
-    
+
+    # Lidar SLAM, after hardware/EKF has made odom -> base_link available
+    lidar_SLAM_launch = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_for_odom_tf,
+            on_exit=[
+                lidar_SLAM_launch_source
+            ]
+        )
+    )
     navsat_transform_node = Node(
         package="robot_localization",
         executable="navsat_transform_node",
@@ -97,11 +113,10 @@ def generate_launch_description():
    
 
     return LaunchDescription(declared_arguments + [
-        # always
         imprimis_hardware_launch_include,
         local_ekf_node,
-        lidar_SLAM_launch_include
-
+        wait_for_odom_tf,
+        lidar_SLAM_launch
         #navsat_transform_node,
     ])
 

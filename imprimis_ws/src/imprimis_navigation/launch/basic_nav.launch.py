@@ -1,10 +1,11 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, RegisterEventHandler
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.substitutions import FindPackageShare
+from launch.event_handlers import OnProcessExit
 
 
 def generate_launch_description():
@@ -91,55 +92,71 @@ def generate_launch_description():
         }.items(),
     )
 
-    # 1) map server
-    map_server_node = TimerAction(
-        period = 10.0,
-        actions = [
-            Node(
-                package="nav2_map_server",
-                executable="map_server",
-                name="map_server",
-                output="screen",
-                parameters=[{"yaml_filename": map_yaml, "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-            )
-        ],
-    )
-    
-    
-    
-    # 2) lifecycle manager for map_server
-    lifecycle_manager_map = TimerAction(
-        period = 10.0,
-        actions = [
-            Node(
-                package="nav2_lifecycle_manager",
-                executable="lifecycle_manager",
-                name="lifecycle_manager_map",
-                output="screen",
-                parameters=[{
-                    "autostart": True,
-                    "node_names": ["map_server"],
-                    "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-                }],
-            )
-        ],
+    # Helper node to wait for map -> odom tf and exit once it's available
+    wait_for_map_odom_tf = Node(
+        package="utils",
+        executable="wait_for_tf",
+        parameters=[{
+            "source_frame": "map",
+            "target_frame": "odom"
+        }]
     )
 
-    # 3) nav2 navigation stack (planner/controller/bt/costmaps)
-    nav2_navigation_launch = TimerAction(
-        period = 10.0,
-        actions = [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])
-                ),
-                launch_arguments={
-                    "params_file": nav2_params_file,
-                    "autostart": autostart_nav2,
-                    "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-                }.items(),
-            )
-        ],
+    # map server
+    map_server_node = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_for_map_odom_tf,
+            on_exit = [
+                Node(
+                    package="nav2_map_server",
+                    executable="map_server",
+                    name="map_server",
+                    output="screen",
+                    parameters=[{
+                        "yaml_filename": map_yaml, 
+                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+                )
+            ]
+        )
+    )
+
+    # lifecycle manager for map server
+    lifecycle_manager_map = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_for_map_odom_tf,
+            on_exit = [
+                Node(
+                    package="nav2_lifecycle_manager",
+                    executable="lifecycle_manager",
+                    name="lifecycle_manager_map",
+                    output="screen",
+                    parameters=[{
+                        "autostart": True,
+                        "node_names": ["map_server"],
+                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+                    }],
+                )
+            ]
+        )
+    )
+
+    # nav2 navigation stack (planner/controller/bt/costmaps)
+    nav2_navigation_launch = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_for_map_odom_tf,
+            on_exit = [
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])
+                    ),
+                    launch_arguments={
+                        "params_file": nav2_params_file,
+                        "autostart": autostart_nav2,
+                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+                    }.items(),
+                )
+            ]
+        )
     )
 
     # gps_nav_bridge
@@ -159,9 +176,11 @@ def generate_launch_description():
     )
 
     return LaunchDescription(declared_arguments + [
-        # your stack
         localization_launch_include,
         #gps_nav_bridge_node,
+
+        # wait for map -> odom tf before launching nav2 stack
+        wait_for_map_odom_tf,
 
         # nav2 stack
         map_server_node,

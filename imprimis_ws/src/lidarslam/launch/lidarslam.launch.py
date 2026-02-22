@@ -27,7 +27,7 @@ def generate_launch_description():
         parameters=[main_param_dir],
         remappings=[('/input_cloud','/velodyne_points')],
         output='screen',
-        arguments=["--ros-args", "--log-level", "warn"],
+        arguments=["--ros-args", "--log-level", "error"],
         )
 
     tf = launch_ros.actions.Node(

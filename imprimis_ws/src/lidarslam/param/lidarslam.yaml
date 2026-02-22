@@ -27,6 +27,7 @@ scan_matcher:
     use_odom: true
     debug_flag: false
     use_sim_time: true
+    tf_broadcast_period: 0.05
 
 graph_based_slam:
     ros__parameters:
