@@ -114,7 +114,8 @@ def generate_launch_description():
                     output="screen",
                     parameters=[{
                         "yaml_filename": map_yaml, 
-                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+                    }],
                 )
             ]
         )
@@ -177,7 +178,7 @@ def generate_launch_description():
 
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
-        #gps_nav_bridge_node,
+        gps_nav_bridge_node,
 
         # wait for map -> odom tf before launching nav2 stack
         wait_for_map_odom_tf,

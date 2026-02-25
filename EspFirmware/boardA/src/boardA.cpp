@@ -158,8 +158,8 @@ void loop()
   else if (manualEnabled) {
     float manualXInput = (IBUS.getChannel(0) - 1500.0) / 500.0;
     float manualYInput = (IBUS.getChannel(1) - 1500.0) / 500.0;
-    dataToSend.setLeftAngvel = manualYInput - manualXInput;
-    dataToSend.setRightAngvel = manualYInput + manualXInput;
+    dataToSend.setLeftAngvel = manualYInput + manualXInput;
+    dataToSend.setRightAngvel = manualYInput - manualXInput;
     esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
   }
 }

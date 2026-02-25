@@ -263,7 +263,7 @@ void ScanMatcherComponent::initializePubSub()
   path_pub_ = create_publisher<nav_msgs::msg::Path>("path", rclcpp::QoS(10));
 
   // tf
-  std::this_thread::sleep_for(1000ms);
+  std::this_thread::sleep_for(3000ms);
   std::chrono::milliseconds duration(static_cast<int>(1000*tf_broadcast_period));
   tf_timer = create_wall_timer(
     duration,

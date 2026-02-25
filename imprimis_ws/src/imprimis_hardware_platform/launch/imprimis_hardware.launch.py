@@ -7,8 +7,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 import os
-
 from ament_index_python.packages import get_package_share_directory
+import yaml
 
 def generate_launch_description():
 
@@ -103,7 +103,7 @@ def generate_launch_description():
             ("~/robot_description", "/robot_description"),
         ],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"])),
-        arguments=["--ros-args", "--log-level", "warn"]
+        arguments=["--ros-args", "--log-level", "info"]
     )
 
     # robot state publisher
@@ -157,26 +157,32 @@ def generate_launch_description():
     )
 
     # Velodyne LIDAR driver, parser, and republisher
-    lidar_config_file = PathJoinSubstitution(
-        [FindPackageShare("imprimis_hardware_platform"), "config", "VLP16-velodyne_driver_node-params.yaml"]
+    lidar_driver_config_file = PathJoinSubstitution(
+        [FindPackageShare("imprimis_hardware_platform"), "config", "VLP16-driver-params.yaml"]
     )
+
+    share_dir = get_package_share_directory('imprimis_hardware_platform')
+    lidar_transform_config_file = os.path.join(share_dir, 'config', 'VLP16-transform-params.yaml')
+    with open(lidar_transform_config_file, 'r') as f:
+        lidar_transform_config = yaml.safe_load(f)['velodyne_transform_node']['ros__parameters']
+    lidar_transform_config['calibration'] = os.path.join(share_dir, 'config', 'VLP16-transform-calibration.yaml')
+
     velodyne_driver_node = Node(
         package='velodyne_driver',
         executable='velodyne_driver_node',
         output='both',
-        parameters=[lidar_config_file, {"rpm": lidar_rpm}],
+        parameters=[lidar_driver_config_file, {"rpm": lidar_rpm}],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
         arguments=["--ros-args", "--log-level", "warn"]
     )
-    
-    velodyne_converter_launch_include = IncludeLaunchDescription(
-            PathJoinSubstitution([
-                FindPackageShare('velodyne_pointcloud'),
-                'launch',
-                'velodyne_transform_node-VLP16-launch.py'
-            ]),
-            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
-    ) 
+    velodyne_transform_node = Node(
+        package='velodyne_pointcloud',
+        executable='velodyne_transform_node',
+        output='log', # shut up
+        parameters=[lidar_transform_config],
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+        arguments=["--ros-args", "--log-level", "error"]
+    )
     velodyne_republisher = Node(
         package="utils",
         executable="lidar",
@@ -323,7 +329,7 @@ def generate_launch_description():
         imu_calibrator,
         gps_driver,
         velodyne_driver_node,
-        velodyne_converter_launch_include,
+        velodyne_transform_node,
 
         # If hardware type != simulated
         controller_manager_node,

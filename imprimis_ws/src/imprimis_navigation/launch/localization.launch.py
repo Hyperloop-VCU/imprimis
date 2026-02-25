@@ -54,6 +54,9 @@ def generate_launch_description():
             'launch',
             'lidarslam.launch.py'
         ]),
+        launch_arguments={
+            'use_sim_time': PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+        }.items(),
     ) 
 
     # hardware (real or simulated)
@@ -83,20 +86,22 @@ def generate_launch_description():
         condition=UnlessCondition(disable_local_ekf)
     )
 
-    # Helper node to wait for odom -> base_link and exit once it's available
-    wait_for_odom_tf = Node(
+    # Helper node to wait for odom -> base_link and lidar data; exits once both are available
+    wait_for_odom_tf_and_lidar = Node(
         package="utils",
         executable="wait_for_tf",
         parameters=[{
             "source_frame": "odom",
-            "target_frame": "base_link"
+            "target_frame": "base_link",
+            #"use_topic": True,
+            #"topic": "velodyne_points"
         }]
     )
 
     # Lidar SLAM, after hardware/EKF has made odom -> base_link available
     lidar_SLAM_launch = RegisterEventHandler(
         OnProcessExit(
-            target_action=wait_for_odom_tf,
+            target_action=wait_for_odom_tf_and_lidar,
             on_exit=[
                 lidar_SLAM_launch_source
             ]
@@ -115,7 +120,7 @@ def generate_launch_description():
     return LaunchDescription(declared_arguments + [
         imprimis_hardware_launch_include,
         local_ekf_node,
-        wait_for_odom_tf,
+        wait_for_odom_tf_and_lidar,
         lidar_SLAM_launch
         #navsat_transform_node,
     ])

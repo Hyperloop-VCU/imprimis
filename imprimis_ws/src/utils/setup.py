@@ -27,7 +27,6 @@ setup(
             'gps = utils.gps:main',
             'lidar = utils.lidar:main',
             'wait_for_tf = utils.wait_for_tf:main',
-            'wait_for_odom_topic = utils.wait_for_odom_topic:main'
         ],
     },
 )
