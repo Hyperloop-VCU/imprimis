@@ -32,8 +32,8 @@ This software usually runs on the robot's main computer, but it is possible to r
 
 You should see two windows appear - a simulated world with the robot in it (gazebo), and a ROS visualization tool (rviz) which shows the LiDAR data and navigation maps.
 
-![rviz](images/rviz.png)
-![gazebo](images/gazebo.png)
+![rviz](.images/rviz.png)
+![gazebo](.images/gazebo.png)
 
 Be patient - it takes some time for everything to start up. Once you see the navigation maps on the ground, you can give the robot a goal waypoint by using the "2D Goal Pose" tool in the top bar of rviz. The robot will begin navigating to the goal, avoiding obstacles along the way.
 
