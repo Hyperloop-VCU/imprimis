@@ -134,7 +134,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings + [('cmd_vel', 'diffbot_base_controller/cmd_vel')],
+                remappings=remappings + [('cmd_vel', 'cmd_vel_raw')],
             ),
             Node(
                 package='nav2_smoother',
@@ -212,7 +212,7 @@ def generate_launch_description():
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings
-                + [('cmd_vel', 'cmd_vel_raw')]# ('cmd_vel_smoothed', 'diffbot_base_controller/cmd_vel')],
+                + [('cmd_vel', 'cmd_vel_raw'), ('cmd_vel_smoothed', 'diffbot_base_controller/cmd_vel')],
             ),
             #Node(
             #    package='nav2_collision_monitor',

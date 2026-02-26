@@ -320,9 +320,9 @@ def generate_launch_description():
     things_to_launch = [
         # Always
         robot_state_pub_node,
-        #robot_controller_spawner,
+        robot_controller_spawner,
         joint_state_broadcaster_spawner,
-        #velodyne_republisher,
+        velodyne_republisher,
 
         # If hardware_type == real
         imu_driver,
@@ -332,8 +332,8 @@ def generate_launch_description():
         velodyne_transform_node,
 
         # If hardware type != simulated
-        #controller_manager_node,
-        #gpio_controller_spawner,
+        controller_manager_node,
+        gpio_controller_spawner,
         
         # If hardware_type == simulated
         gz_sim_resource_path,
@@ -341,13 +341,13 @@ def generate_launch_description():
         gazebo_launch_include,
         gzbridge,
         spawn_imprimis_gazebo,
-        #gps_republisher,
+        gps_republisher,
 
         # If use_controller == true
-        #controller_input_launch_include,
+        controller_input_launch_include,
 
         # If gui == true
-        #rviz_node,
+        rviz_node,
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
