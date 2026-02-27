@@ -8,6 +8,7 @@
 alias launch_hardware='ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py'
 alias launch_localization='ros2 launch imprimis_navigation localization.launch.py'
 alias launch_nav='ros2 launch imprimis_navigation basic_nav.launch.py'
+alias build='colcon build && source install/setup.bash'
 
 goal_pub () {
   lat=${1:--22.98669}
