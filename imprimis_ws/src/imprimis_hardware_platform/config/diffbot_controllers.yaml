@@ -17,7 +17,7 @@ diffbot_base_controller:
     wheel_separation_multiplier: 1.0
     left_wheel_radius_multiplier: 1.0
     right_wheel_radius_multiplier: 1.0
-    publish_rate: 30.0  # Tf and odom output rate, bounded by the hardware update_rate above
+    publish_rate: 30.0  # Tf and odom output rate, bounded by the hardware update_rate above diddy bot
     odom_frame_id: odom
     base_frame_id: base_link
     pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
