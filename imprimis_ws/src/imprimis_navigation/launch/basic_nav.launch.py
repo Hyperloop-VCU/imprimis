@@ -7,7 +7,6 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
 
-
 def generate_launch_description():
 
     declared_arguments = []
@@ -27,31 +26,18 @@ def generate_launch_description():
             description="Whether or not to start up the logitech controller input node.",
         )
     )
-
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
             default_value="warehouse",
-            description="World used for simulation",
-        )
-    )
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "nav2_params_file",
-            default_value=PathJoinSubstitution(
-                [FindPackageShare("imprimis_navigation"), "config", "nav2_blank_map", "nav2_blank_params.yaml"]
-            ),
-            description="Full path to the Nav2 parameters YAML.",
+            description="World file used for simulation (excluding the .sdf). It must be located in imprimis_hardware_platform/worlds",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "map_yaml",
-            default_value=PathJoinSubstitution(
-                [FindPackageShare("imprimis_navigation"), "config", "nav2_blank_map", "bigger_blank.yaml"]
-            ),
-            description="Full path to the map YAML for map_server.",
+            "nav2_params",
+            default_value="SmacHybrid_RPP_1",
+            description="Filename of the nav2 parameters YAML (excluding the .yaml). It must be located in imprimis_navigation/config/nav2",
         )
     )
     declared_arguments.append(
@@ -71,24 +57,21 @@ def generate_launch_description():
 
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
-    nav2_params_file = LaunchConfiguration("nav2_params_file")
-    map_yaml = LaunchConfiguration("map_yaml")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
+    nav2_params = LaunchConfiguration("nav2_params")
+    world = LaunchConfiguration("world")
+
+    nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare("imprimis_navigation"),
-                "launch",
-                "localization.launch.py"
-            ])
-        ]),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "localization.launch.py"])]),
         launch_arguments={
             "hardware_type": hardware_type,
             "use_controller": use_controller,
-            "disable_local_EKF": disable_local_EKF
+            "disable_local_EKF": disable_local_EKF,
+            "world": world
         }.items(),
     )
 
@@ -102,73 +85,22 @@ def generate_launch_description():
         }]
     )
 
-    # map server
-    map_server_node = RegisterEventHandler(
-        OnProcessExit(
-            target_action=wait_for_map_odom_tf,
-            on_exit = [
-                Node(
-                    package="nav2_map_server",
-                    executable="map_server",
-                    name="map_server",
-                    output="screen",
-                    parameters=[{
-                        "yaml_filename": map_yaml, 
-                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-                    }],
-                )
-            ]
-        )
-    )
-
-    # lifecycle manager for map server
-    lifecycle_manager_map = RegisterEventHandler(
-        OnProcessExit(
-            target_action=wait_for_map_odom_tf,
-            on_exit = [
-                Node(
-                    package="nav2_lifecycle_manager",
-                    executable="lifecycle_manager",
-                    name="lifecycle_manager_map",
-                    output="screen",
-                    parameters=[{
-                        "autostart": True,
-                        "node_names": ["map_server"],
-                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-                    }],
-                )
-            ]
-        )
-    )
-
     # nav2 navigation stack (planner/controller/bt/costmaps)
-    nav2_navigation_launch = RegisterEventHandler(
-        OnProcessExit(
-            target_action=wait_for_map_odom_tf,
-            on_exit = [
-                IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource(
-                        PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])
-                    ),
-                    launch_arguments={
-                        "params_file": nav2_params_file,
-                        "autostart": autostart_nav2,
-                        "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-                    }.items(),
-                )
-            ]
-        )
-    )
+    nav2_params_file_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [nav2_params, '.yaml']])
+    nav2_navigation_launch = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "nav2_minimal_bringup.launch.py"])),
+            launch_arguments={
+                "params_file": nav2_params_file_path,
+                "autostart": autostart_nav2,
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+            }.items(),
+        )]
+    ))
 
     # gps_nav_bridge
-    gps_nav_bridge_params = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "gps_nav_bridge",
-            "gps_nav_bridge_sim.yaml",
-        ]
-    )
+    gps_nav_bridge_params = PathJoinSubstitution([nav_config_src_dir, "gps_nav_bridge.yaml"])
     gps_nav_bridge_node = Node(
         package="gps_nav_bridge",
         executable="gps_nav_bridge",
@@ -184,9 +116,7 @@ def generate_launch_description():
         wait_for_map_odom_tf,
 
         # nav2 stack
-        map_server_node,
-        lifecycle_manager_map,
-        nav2_navigation_launch,
+        nav2_navigation_launch
     ])
 
 
@@ -296,4 +226,48 @@ declared_arguments.append(
         )
     )
 
+"""
+
+"""
+Old map server stuff
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "map_yaml",
+            default_value="blank.yaml",
+            description="Filename of the map YAML. This file must be located in imprimis_navigation/config/nav2",
+        )
+    )
+
+# map server
+    map_yaml_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', map_yaml])
+    map_server_node = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_map_server",
+            executable="map_server",
+            name="map_server",
+            output="screen",
+            parameters=[{
+                "yaml_filename": map_yaml_path, 
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+            }],
+        )]
+    ))
+
+    # lifecycle manager for map server
+    lifecycle_manager_map = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_map",
+            output="screen",
+            parameters=[{
+                "autostart": True,
+                "node_names": ["map_server"],
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+            }],
+        )]
+    ))
 """

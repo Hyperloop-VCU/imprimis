@@ -34,105 +34,73 @@ def generate_launch_description():
             description="If false, a local EKF node fuses wheel odom with other local odom sources. If true, wheel odom is the sole local odom source.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "world",
+            default_value="warehouse",
+            description="World file used for simulation (excluding the .sdf). It must be located in imprimis_hardware_platform/worlds",
+        )
+    )
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     disable_local_ekf = LaunchConfiguration("disable_local_ekf")
+    world = LaunchConfiguration("world")
 
-    # Get robot localization nodes config file
-    roboloco_config = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_navigation"),
-            "config",
-            "localization_nodes_config.yaml",
-        ]
+    nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
+
+    # Lidar SLAM. This is ran after odom->base_link is available
+    slam_config = PathJoinSubstitution([nav_config_src_dir, "SLAM.yaml"])
+    SLAM_scanmatcher_node = Node(
+        package='scanmatcher',
+        executable='scanmatcher_node',
+        parameters=[slam_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        remappings=[('/input_cloud','/velodyne_points'), ("imu", "imu/data")],
+        output='screen',
+        arguments=["--ros-args", "--log-level", "info"],
     )
-
-    # Declare lidar SLAM launch include. This is ran after odom->base_link is available
-    lidar_SLAM_launch_source = IncludeLaunchDescription(
-        PathJoinSubstitution([
-            FindPackageShare('lidarslam'),
-            'launch',
-            'lidarslam.launch.py'
-        ]),
-        launch_arguments={
-            'use_sim_time': PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-        }.items(),
-    ) 
 
     # hardware (real or simulated)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('imprimis_hardware_platform'),
-                'launch',
-                'imprimis_hardware.launch.py'
-            ])
-        ]),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])]),
         launch_arguments={
-                'hardware_type': hardware_type,
-                'use_controller': use_controller,
-                'publish_odom_tf': disable_local_ekf
-                }.items(),
+            'hardware_type': hardware_type,
+            'use_controller': use_controller,
+            'publish_odom_tf': disable_local_ekf,
+            'world': world
+        }.items(),
     )
     
     # Local EKF node for local odom fusion from multiple sources
+    local_ekf_config = PathJoinSubstitution([ nav_config_src_dir, "Local_EKF.yaml"])
     local_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_local",
-        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[local_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         remappings=[('/odometry/filtered', '/odometry/filtered/local')],
         arguments=["--ros-args", "--log-level", "warn"],
         condition=UnlessCondition(disable_local_ekf)
     )
 
-    # Helper node to wait for odom -> base_link and lidar data; exits once both are available
+    # Helper node to wait for odom -> base_link
     wait_for_odom_tf_and_lidar = Node(
         package="utils",
         executable="wait_for_tf",
         parameters=[{
             "source_frame": "odom",
             "target_frame": "base_link",
-            #"use_topic": True,
-            #"topic": "velodyne_points"
         }]
     )
 
     # Lidar SLAM, after hardware/EKF has made odom -> base_link available
-    lidar_SLAM_launch = RegisterEventHandler(
-        OnProcessExit(
-            target_action=wait_for_odom_tf_and_lidar,
-            on_exit=[
-                lidar_SLAM_launch_source
-            ]
-        )
-    )
-    navsat_transform_node = Node(
-        package="robot_localization",
-        executable="navsat_transform_node",
-        name="navsat_transform",
-        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[("/imu", "/imu/data"), ('/odometry/filtered', '/odometry/filtered/global')],
-        arguments=["--ros-args", "--log-level", "warn"],
-    )
-   
+    SLAM_scanmatcher_run = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_odom_tf_and_lidar,
+        on_exit=[SLAM_scanmatcher_node] 
+    ))
 
     return LaunchDescription(declared_arguments + [
         imprimis_hardware_launch_include,
         local_ekf_node,
         wait_for_odom_tf_and_lidar,
-        lidar_SLAM_launch
-        #navsat_transform_node,
+        SLAM_scanmatcher_run
     ])
-
-
-"""
-Old global EKF node
-global_ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_global",
-        parameters=[roboloco_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[('/odometry/filtered', '/odometry/filtered/global')]
-    )
-"""

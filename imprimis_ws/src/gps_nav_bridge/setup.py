@@ -17,11 +17,6 @@ setup(
     maintainer_email='youssef@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
-    extras_require={
-        'test': [
-            'pytest',
-        ],
-    },
     entry_points={
         'console_scripts': [
             'gps_nav_bridge = gps_nav_bridge.gps_nav_bridge:main',

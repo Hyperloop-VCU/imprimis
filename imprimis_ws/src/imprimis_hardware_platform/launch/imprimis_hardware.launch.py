@@ -23,9 +23,17 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "show_sim",
+            default_value="true",
+            choices=("true", "false"),
+            description="If false, the simulation will run in headless mode (no GUI). If true, the gazebo GUI will run as usual. Only applicable when hardware_type is simulated."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "publish_odom_tf",
             default_value="true",
-            description="Enable/disable the diff drive controller publising the odom->base_link transform. Should be false when using robot_localization.",
+            description="If false, prevents the diff drive controller broadcasting the odom->base_link transform from wheel odometry. This MUST be false if there is another node broadcasting odom -> base_link (e.g. the local EKF).",
         )
     )
     declared_arguments.append(
@@ -56,7 +64,7 @@ def generate_launch_description():
             "lidar_rpm",
             default_value="600.0",
             choices=("300.0", "600.0", "1200.0"),
-            description="Velodyne LIDAR RPM."
+            description="Velodyne LIDAR RPM. Only works with real hardware, it's always 600.0 in simulation."
         )
     )
     gui = LaunchConfiguration("gui")
@@ -64,44 +72,37 @@ def generate_launch_description():
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
     lidar_rpm = LaunchConfiguration("lidar_rpm")
+    show_sim = LaunchConfiguration("show_sim")
 
+    # Get package directories from the workspace source folder
+    # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
+    hardware_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_hardware_platform"), '../../../../src/imprimis_hardware_platform'])
+    hardware_src_dir_os = os.path.join(get_package_share_directory("imprimis_hardware_platform"), '../../../../src/imprimis_hardware_platform')
+    description_src_dir = PathJoinSubstitution([hardware_src_dir, '../imprimis_description'])
+    description_src_dir_os = os.path.join(hardware_src_dir_os, '../imprimis_description')
 
     # Get URDF via xacro and pass arguments to it
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare("imprimis_description"), "urdf", "diffbot.urdf.xacro"]
-            ),
-            " ",
-            "hardware_type:=",
-            hardware_type,
-            " publish_odom_tf:=",
-            publish_odom_tf
-        ]
-    )
+    robot_description_content = Command([
+        PathJoinSubstitution([FindExecutable(name="xacro")]),
+        " ",
+        PathJoinSubstitution([description_src_dir, "urdf", "diffbot.urdf.xacro"]),
+        " ",
+        "hardware_type:=",
+        hardware_type,
+        " publish_odom_tf:=",
+        publish_odom_tf
+    ])
     robot_description = {"robot_description": robot_description_content}
 
     
     # controller manager
-    controller_config_filename = "diffbot_controllers.yaml"
-    robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare("imprimis_hardware_platform"),
-            "config",
-            controller_config_filename,
-        ]
-    )
-
+    controllers_config = PathJoinSubstitution([hardware_src_dir, "config", 'diffbot_controllers.yaml'])
     controller_manager_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers, {"enable_odom_tf": publish_odom_tf}],
+        parameters=[controllers_config, {"enable_odom_tf": publish_odom_tf}],
         output="both",
-        remappings=[
-            ("~/robot_description", "/robot_description"),
-        ],
+        remappings=[("~/robot_description", "/robot_description")],
         condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"])),
         arguments=["--ros-args", "--log-level", "info"]
     )
@@ -116,9 +117,7 @@ def generate_launch_description():
     )
 
     # rviz
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("imprimis_description"), "rviz", "diffbot.rviz"]
-    )
+    rviz_config_file = PathJoinSubstitution([description_src_dir, "rviz", "diffbot.rviz"])
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -128,7 +127,6 @@ def generate_launch_description():
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         condition=IfCondition(gui),
     )
-
 
     # Joint state broadcaster spawner
     joint_state_broadcaster_spawner = Node(
@@ -157,15 +155,11 @@ def generate_launch_description():
     )
 
     # Velodyne LIDAR driver, parser, and republisher
-    lidar_driver_config_file = PathJoinSubstitution(
-        [FindPackageShare("imprimis_hardware_platform"), "config", "VLP16-driver-params.yaml"]
-    )
-
-    share_dir = get_package_share_directory('imprimis_hardware_platform')
-    lidar_transform_config_file = os.path.join(share_dir, 'config', 'VLP16-transform-params.yaml')
+    lidar_driver_config_file = PathJoinSubstitution([hardware_src_dir, "config", "VLP16-driver-params.yaml"])
+    lidar_transform_config_file = os.path.join(hardware_src_dir_os, 'config', 'VLP16-transform-params.yaml')
     with open(lidar_transform_config_file, 'r') as f:
         lidar_transform_config = yaml.safe_load(f)['velodyne_transform_node']['ros__parameters']
-    lidar_transform_config['calibration'] = os.path.join(share_dir, 'config', 'VLP16-transform-calibration.yaml')
+    lidar_transform_config['calibration'] = os.path.join(hardware_src_dir_os, 'config', 'VLP16-transform-calibration.yaml')
 
     velodyne_driver_node = Node(
         package='velodyne_driver',
@@ -235,16 +229,23 @@ def generate_launch_description():
         remappings=[("/fix", "/gps/fix")]
     )
 
-    # Gazebo
-    gazebo_launch_include = IncludeLaunchDescription(
-            PathJoinSubstitution([
-                FindPackageShare('ros_gz_sim'),
-                'launch',
-                'gz_sim.launch.py'
-            ]),
-            launch_arguments={'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
-            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
-        )
+    # Gazebo when show_sim is true
+    gazebo_launch_include = IncludeLaunchDescription(PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
+        launch_arguments={
+            'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], 
+            "on_exit_shutdown": "true"
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", show_sim, "' == 'true'"]))
+    )
+    # Gazebo when show_sim is false
+    gazebo_no_gui_launch_include = IncludeLaunchDescription(
+        PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
+        launch_arguments={
+            'gz_args': ['--headless-rendering -s -v0 -r ', LaunchConfiguration("world"), '.sdf'], 
+            "on_exit_shutdown": "true"
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", show_sim, "' == 'false'"]))
+    )
 
     # Spawn imprimis into the gazebo simulation
     spawn_imprimis_gazebo = Node(
@@ -256,9 +257,7 @@ def generate_launch_description():
     )
 
     # Bridge gazebo and ROS topics
-    gzbridge_config_file = PathJoinSubstitution(
-        [FindPackageShare("imprimis_hardware_platform"), "config", "gz_bridge.yaml"]
-    )
+    gzbridge_config_file = PathJoinSubstitution([hardware_src_dir, 'config', 'gz_bridge.yaml'])
     gzbridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -275,45 +274,36 @@ def generate_launch_description():
     )
 
     # Set gazebo resource path to include all sourced ros packages
-    pkg_imprimis_hardware = get_package_share_directory('imprimis_hardware_platform')
-    pkg_imprimis_description = get_package_share_directory('imprimis_description')
     packages_paths = [os.path.join(p, 'share') for p in os.getenv('AMENT_PREFIX_PATH').split(':')]
     gz_sim_resource_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
-            os.path.join(pkg_imprimis_hardware, 'worlds') + ':',
-            os.path.join(pkg_imprimis_hardware, 'meshes') + ':',
-            os.path.join(pkg_imprimis_description, 'meshes') + ':',
+            os.path.join(hardware_src_dir_os, 'worlds') + ':',
+            os.path.join(hardware_src_dir_os, 'meshes') + ':',
+            os.path.join(description_src_dir_os, 'meshes') + ':',
             ':' + ':'.join(packages_paths)])
     
     # Do the same for old ignition variable
     old_sim_resource_path = SetEnvironmentVariable(
         name='IGN_GAZEBO_RESOURCE_PATH',
         value=[
-            os.path.join(pkg_imprimis_hardware, 'worlds') + ':',
-            os.path.join(pkg_imprimis_hardware, 'meshes') + ':',
-            os.path.join(pkg_imprimis_description, 'meshes') + ':',
+            os.path.join(hardware_src_dir_os, 'worlds') + ':',
+            os.path.join(hardware_src_dir_os, 'meshes') + ':',
+            os.path.join(description_src_dir_os, 'meshes') + ':',
             ':' + ':'.join(packages_paths)])
     
 
     # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('teleop_twist_joy'),
-                'launch',
-                'teleop-launch.py'
-            ])
-        ]),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('teleop_twist_joy'), 'launch', 'teleop-launch.py'])]),
         launch_arguments={
-                'joy_config': 'xbox',
-                "publish_stamped_twist": 'true',
-                'frame': 'base_link',
-                'joy_vel': 'diffbot_base_controller/cmd_vel'
-                }.items(),
-                
+            'joy_config': 'xbox',
+            "publish_stamped_twist": 'true',
+            'frame': 'base_link',
+            'joy_vel': 'diffbot_base_controller/cmd_vel'
+        }.items(),
         condition=IfCondition(use_controller)
-        )
+    )
 
 
     
@@ -340,6 +330,7 @@ def generate_launch_description():
         gz_sim_resource_path,
         old_sim_resource_path,
         gazebo_launch_include,
+        gazebo_no_gui_launch_include,
         gzbridge,
         spawn_imprimis_gazebo,
         gps_republisher,

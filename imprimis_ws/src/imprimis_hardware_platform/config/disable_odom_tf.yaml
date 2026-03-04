@@ -1,3 +1,6 @@
+# This tiny file is needed to edit this parameter when using the simulation.
+# Since the simulated controllers config is referenced in the URDF, there's no way (that I could figure out) to toggle it in the URDF directly with an argument,
+# The xacro argument just enables / disables the inclusion of this file, which overrides the default (true) set in sim_diffbot_controllers.yaml.
 diffbot_base_controller:
   ros__parameters:
     enable_odom_tf: false

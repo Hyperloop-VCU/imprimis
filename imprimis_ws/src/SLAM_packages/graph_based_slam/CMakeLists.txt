@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(scanmatcher)
+project(graph_based_slam)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -16,8 +16,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   #add_compile_options(-Wextra -Wpedantic)
 endif()
 
-#SET(CMAKE_BUILD_TYPE "RELEASE")
 SET(CMAKE_CXX_FLAGS "-O2 -g ${CMAKE_CXX_FLAGS}")
+add_compile_definitions(G2O_USE_VENDORED_CERES)
+
+# Find missing symbols during link time
+add_link_options(-Wl,--no-undefined)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -26,30 +29,22 @@ find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(tf2_ros REQUIRED)
-find_package(tf2_sensor_msgs REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(lidarslam_msgs REQUIRED)
 find_package(ndt_omp_ros2 REQUIRED)
 find_package(PCL REQUIRED)
-find_package(OpenMP)
-
-set(dependencies
-  rclcpp 
-  rclcpp_components 
-  tf2_ros 
-  tf2_geometry_msgs 
-  tf2_sensor_msgs 
-  tf2_eigen 
-  pcl_conversions
-  geometry_msgs 
-  sensor_msgs
-  nav_msgs
-  lidarslam_msgs
-  ndt_omp_ros2
+find_package(g2o REQUIRED
+COMPONENTS
+g2o::core
+g2o::types_slam3d
+g2o::solver_eigen
 )
+find_package(OpenMP)
 
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -61,22 +56,43 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_library(scanmatcher_component SHARED
-src/scanmatcher_component.cpp
+add_library(graph_based_slam_component SHARED
+src/graph_based_slam_component.cpp
 )
 
-target_compile_definitions(scanmatcher_component PRIVATE "GS_SM_BUILDING_DLL")
+target_compile_definitions(graph_based_slam_component PRIVATE "GS_GBS_BUILDING_DLL")
 
-ament_target_dependencies(scanmatcher_component ${dependencies})
-
-add_executable(scanmatcher_node
-src/scanmatcher_node.cpp
+ament_target_dependencies(graph_based_slam_component
+  rclcpp 
+  rclcpp_components 
+  tf2_ros 
+  tf2_eigen
+  tf2_geometry_msgs
+  tf2_sensor_msgs
+  pcl_conversions
+  geometry_msgs 
+  sensor_msgs
+  nav_msgs
+  std_srvs
+  lidarslam_msgs
+  ndt_omp_ros2
 )
 
-target_link_libraries(scanmatcher_node
-scanmatcher_component ${PCL_LIBRARIES})
+target_link_libraries(graph_based_slam_component
+  g2o::core
+  g2o::types_slam3d
+  g2o::solver_eigen
+)
 
-ament_target_dependencies(scanmatcher_node
+add_executable(graph_based_slam_node
+src/graph_based_slam_node.cpp
+)
+
+target_link_libraries(graph_based_slam_node
+  graph_based_slam_component
+)
+
+ament_target_dependencies(graph_based_slam_node
   rclcpp)
 
 include_directories(
@@ -88,33 +104,27 @@ link_directories(
 )
 add_definitions(${PCL_DEFINITIONS})
 
-rclcpp_components_register_nodes(scanmatcher_component 
-  "graphslam::ScanMatcherComponent")
+rclcpp_components_register_nodes(graph_based_slam_component 
+  "graphslam::GraphBasedSlamComponent")
 
-ament_export_libraries(scanmatcher_component)
+ament_export_libraries(graph_based_slam_component)
 
 install(
   DIRECTORY "include/"
   DESTINATION include
 )
 
-install(
-  DIRECTORY launch param
-  DESTINATION share/${PROJECT_NAME}
-)
-
 install(TARGETS
-  scanmatcher_component
+  graph_based_slam_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
 install(TARGETS 
-  scanmatcher_node
+  graph_based_slam_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_export_include_directories(include)
-ament_export_dependencies(${dependencies})
 ament_package()
