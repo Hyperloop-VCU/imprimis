@@ -231,7 +231,8 @@ def generate_launch_description():
             'baud': 9600,
             'frame_id': 'gps_link'
         }],
-        namespace="gps"
+        namespace="gps",
+        remappings=[("/fix", "/gps/fix")]
     )
 
     # Gazebo
@@ -241,7 +242,7 @@ def generate_launch_description():
                 'launch',
                 'gz_sim.launch.py'
             ]),
-            launch_arguments={'gz_args': ['-v4 -r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
+            launch_arguments={'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], "on_exit_shutdown": "true"}.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
         )
 

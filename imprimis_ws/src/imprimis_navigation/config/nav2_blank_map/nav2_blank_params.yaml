@@ -71,7 +71,7 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 1.0
+      desired_linear_vel: 0.5
 
       # These limits only apply if use_dynamic_window is true, which is a different algorithm (DWPP)
       use_dynamic_window: false
@@ -117,7 +117,7 @@ controller_server:
       # Slow down in proximity to obstacles
       use_cost_regulated_linear_velocity_scaling: true
       cost_scaling_dist: 0.8
-      cost_scaling_gain: 0.5
+      cost_scaling_gain: 1.0
 
       # Disable dynamic curvature lookahead scaling (this fixed the oscillations)
       use_fixed_curvature_lookahead: true
