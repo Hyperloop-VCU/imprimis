@@ -21,6 +21,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "map_yaml",
+            default_value="bigger_blank",
+            description="Filename of the map YAML (excluding the .yaml). This file must be located in imprimis_navigation/config/nav2",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_controller",
             default_value="false",
             description="Whether or not to start up the logitech controller input node.",
@@ -61,6 +68,7 @@ def generate_launch_description():
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
     world = LaunchConfiguration("world")
+    map_yaml = LaunchConfiguration("map_yaml")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
@@ -84,6 +92,38 @@ def generate_launch_description():
             "target_frame": "odom"
         }]
     )
+
+    # map server
+    map_yaml_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [map_yaml, '.yaml']])
+    map_server_node = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_map_server",
+            executable="map_server",
+            name="map_server",
+            output="screen",
+            parameters=[{
+                "yaml_filename": map_yaml_path, 
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+            }],
+        )]
+    ))
+
+    # lifecycle manager for map server
+    lifecycle_manager_map = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_map",
+            output="screen",
+            parameters=[{
+                "autostart": True,
+                "node_names": ["map_server"],
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+            }],
+        )]
+    ))
 
     # nav2 navigation stack (planner/controller/bt/costmaps)
     nav2_params_file_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [nav2_params, '.yaml']])
@@ -116,6 +156,8 @@ def generate_launch_description():
         wait_for_map_odom_tf,
 
         # nav2 stack
+        map_server_node,
+        lifecycle_manager_map,
         nav2_navigation_launch
     ])
 
@@ -226,48 +268,4 @@ declared_arguments.append(
         )
     )
 
-"""
-
-"""
-Old map server stuff
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "map_yaml",
-            default_value="blank.yaml",
-            description="Filename of the map YAML. This file must be located in imprimis_navigation/config/nav2",
-        )
-    )
-
-# map server
-    map_yaml_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', map_yaml])
-    map_server_node = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package="nav2_map_server",
-            executable="map_server",
-            name="map_server",
-            output="screen",
-            parameters=[{
-                "yaml_filename": map_yaml_path, 
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-            }],
-        )]
-    ))
-
-    # lifecycle manager for map server
-    lifecycle_manager_map = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package="nav2_lifecycle_manager",
-            executable="lifecycle_manager",
-            name="lifecycle_manager_map",
-            output="screen",
-            parameters=[{
-                "autostart": True,
-                "node_names": ["map_server"],
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-            }],
-        )]
-    ))
 """
