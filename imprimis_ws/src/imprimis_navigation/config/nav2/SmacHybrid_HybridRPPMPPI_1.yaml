@@ -1,0 +1,416 @@
+# Crucial fixes in this params file from previous attempts:
+  # Moved the robot base frame to base_footprint (the actual center of the robot), not base_link (the center of the wheelbase)
+    # for both costmaps. This improved planner and controller performance dramatically.
+  # Added behavior server params.
+  # Made the controller server's goal checker think the goal has been reached regardless of heading. In the competition, we don't really care what the final rotation of the robot is.
+  # Included static layer in the global costmap so we can plan wherever we want
+  # Adjusted footprints and inflation radii so the planner NEVER generates a path that will cause the robot to collide with an obstacle if it is followed perfectly.
+    # This planner is smart and will ensure the path is collision-free.
+    # This controller is dumb and will just follow the planned path as best it can. 
+    # The controller's path-following might not be exact. 
+    # The planner must have sufficient margins to ensure the controller can deviate slightly if it needs to.
+  # Changed voxel layers into obstacle layers for a ligher processing load and better clearing of the costmap if/when obstacles move around.
+  # Adjusted footprint to better match the robot.
+
+# Unfortunately, due to the mechanical design, the robot cannot spin in-place. The robot's ass swings around when it spins.
+# The controller would have to be much smarter than just "follow the path as best as possible" to avoid collisions when making sharp adjustments near obstacles.
+# We can keep the RPP (dumb) controller and ensure the planner accounts for this.
+
+map_server:
+  ros__parameters:
+    yaml_filename: "bigger_blank.yaml"
+
+bt_navigator:
+  ros__parameters:
+    global_frame: map
+    robot_base_frame: base_footprint
+    odom_topic: /odom
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 1.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_smac_planner::SmacPlannerHybrid" # In Iron and older versions, "/" was used instead of "::"
+      downsample_costmap: false           # whether or not to downsample the map
+      downsampling_factor: 1              # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
+      tolerance: 0.25                     # dist-to-goal heuristic cost (distance) for valid tolerance endpoints if exact goal cannot be found.
+      allow_unknown: true                 # allow traveling in unknown space
+      max_iterations: 1000000             # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
+      max_on_approach_iterations: 1000    # Maximum number of iterations after within tolerances to continue to try to find exact solution
+      max_planning_time: 1.0              # max time in s for planner to plan, smooth
+      motion_model_for_search: "REEDS_SHEPP"    # Reeds_Shepp is the motion model which accounts for reversing in the path, change this to something wrong and nav2 will spit out the available options (don't trust the docs)
+      angle_quantization_bins: 72         # Number of angle bins for search
+      analytic_expansion_ratio: 3.5       # The ratio to attempt analytic expansions during search for final approach.
+      analytic_expansion_max_length: 3.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
+      analytic_expansion_max_cost: 200.0  # The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
+      analytic_expansion_max_cost_override: false  #  Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
+      minimum_turning_radius: 0.40        # minimum turning radius in m of path / vehicle
+      reverse_penalty: 1.1              # Penalty to apply if motion is reversing, must be => 1
+      change_penalty: 0.0                 # Penalty to apply if motion is changing directions (L to R), must be >= 0
+      non_straight_penalty: 1.2           # Penalty to apply if motion is non-straight, must be => 1
+      cost_penalty: 2.0                   # Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      retrospective_penalty: 0.015
+      lookup_table_size: 20.0             # Size of the dubin/reeds-sheep distance window to cache, in meters.
+      cache_obstacle_heuristic: false     # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
+      debug_visualizations: false         # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.
+      use_quadratic_cost_penalty: False
+      downsample_obstacle_heuristic: True
+      allow_primitive_interpolation: False
+      coarse_search_resolution: 4         # Number of bins to skip when doing a coarse search for the path. Only used for all_direction goal heading mode.
+      goal_heading_mode: "ALL_DIRECTION"        # DEFAULT, BIDIRECTIONAL, ALL_DIRECTION
+      smooth_path: True                   # If true, does a simple and quick smoothing post-processing to the path
+      smoother:
+        max_iterations: 1000
+        w_smooth: 0.3
+        w_data: 0.2
+        tolerance: 1.0e-10
+        do_refinement: true
+        refinement_num: 2
+
+behavior_server:
+  ros__parameters:
+    local_costmap_topic: local_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
+    spin:
+      plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
+    backup:
+      plugin: "nav2_behaviors::BackUp" # In Iron and older versions, "/" was used instead of "::"
+    drive_on_heading:
+      plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
+    wait:
+      plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
+    assisted_teleop:
+      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_footprint
+    transform_tolerance: 0.1
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+    enable_stamped_cmd_vel: true
+
+controller_server:
+  ros__parameters:
+    enable_stamped_cmd_vel: true 
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.01 
+    min_theta_velocity_threshold: 0.01
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["goal_checker"]
+    controller_plugins: ["FollowPath", "MPPI"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.05
+      movement_time_allowance: 15.0
+
+    goal_checker:
+      plugin: "nav2_controller::PositionGoalChecker"  # position only, no yaw
+      stateful: true
+      xy_goal_tolerance: 0.5
+
+    FollowPath:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 1.0
+
+      # These limits only apply if use_dynamic_window is true, which is a different algorithm (DWPP)
+      use_dynamic_window: false
+      min_linear_vel: 0.1
+      max_angular_vel: 0.7
+      min_angular_vel: -0.7
+      max_linear_accel: 2.5
+      max_linear_decel: -2.5
+      max_angular_accel: 0.4
+      max_angular_decel: -0.4 
+
+      # Dynamic steering lookahead distance scaling
+      use_velocity_scaled_lookahead_dist: true
+      min_lookahead_dist: 1.0
+      max_lookahead_dist: 2.0
+      lookahead_time: 0.2
+
+      # Constant, if velocity scaled lookahead dist is false
+      lookahead_dist: 1.5
+
+      # Acceptable time deviation in transform
+      transform_tolerance: 0.3
+
+      # If true, will rotate in-place according to odometry heading (must not be true while allow_reversing is also true)
+      use_rotate_to_heading: false
+      rotate_to_heading_angular_vel: 1.0
+      rotate_to_heading_min_angle: 0.5
+
+      # For goal approach
+      min_approach_linear_velocity: 0.05
+      approach_velocity_scaling_dist: 0.6
+      interpolate_curvature_after_goal: false
+
+      # Collision detection. max_allowed_time_to_collision_up_to_carrot is the lookahead time to check for collisions
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 0.01
+
+      # Slow down according to curvature
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 1.0  # radius before slowdown applies
+      regulated_linear_scaling_min_speed: 0.25
+
+      # Slow down in proximity to obstacles
+      use_cost_regulated_linear_velocity_scaling: true
+      cost_scaling_dist: 0.6
+      cost_scaling_gain: 0.7
+
+      # Fixed curvature lookahead
+      use_fixed_curvature_lookahead: false
+      curvature_lookahead_dist: 1.0
+
+      allow_reversing: true  # must not be true while use_rotate_to_heading is also true
+      stateful: true
+      
+      
+      
+    MPPI:
+      plugin: "nav2_mppi_controller::MPPIController"
+      time_steps: 40
+      model_dt: 0.1
+      batch_size: 3000
+      publish_critics_stats: true
+      shift_control_sequence: true
+      regenerate_noises: false
+      iteration_count: 3
+      vx_std: 0.8
+      vy_std: 0.0
+      wz_std: 0.1
+      vx_max: 2.0
+      vx_min: -0.3
+      vy_max: 0.0
+      wz_max: 1.9
+      ax_max: 2.0
+      ax_min: -2.0
+      ay_min: 0.0
+      ay_max: 0.0
+      az_max: 3.5
+      temperature: 0.15
+      gamma: 0.015
+      motion_model: "DiffDrive"
+      prune_distance: 5.0
+      visualize: false
+      TrajectoryVisualizer:
+        trajectory_step: 5
+        time_step: 3
+
+
+
+        #CRITICS
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "VelocityDeadbandCritic", "TwirlingCritic"]
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 0.5
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0
+        threshold_to_consider: 0.3
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 0.5
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.0
+        critical_cost: 300.0
+        consider_footprint: true
+        collision_cost: 500000.0
+        near_goal_distance: 1.0
+        trajectory_point_step: 2
+
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 7.0
+        max_path_occupancy_ratio: 0.1
+        trajectory_point_step: 4
+        threshold_to_consider: 0.5
+        offset_from_furthest: 15
+        use_path_orientations: true
+
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        offset_from_furthest: 10
+        threshold_to_consider: 1.0
+
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.0
+        offset_from_furthest: 4
+        threshold_to_consider: 0.5
+        max_angle_to_furthest: 1.0
+        forward_preference: true
+        mode: 2
+
+      VelocityDeadbandCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        deadband_velocities: [0.05, 0.0, 0.05]
+
+      TwirlingCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 7.0
+
+
+
+
+        #COSTMAPS
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      plugins: ["obstacle_layer", "inflation_layer", "static_layer"]
+      height: 400
+      width: 400
+      publish_frequency: 2.0
+      rolling_window: true
+      global_frame: map
+      robot_base_frame: base_footprint
+      resolution: 0.05
+
+      footprint_padding: 0.0  # footprint padding doesn't work for this
+      footprint: "[ [0.62, 0.6], [0.62, -0.6], [0.08, -0.6], [0.08, -0.42], [-0.61, -0.42], [-0.61, 0.42], [0.08, 0.42], [0.08, 0.6] ]"
+
+      track_unknown_space: false
+      unknown_cost_value: 0
+
+      # Project lidar data down to 2d for the costmap
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        max_obstacle_height: 2.0
+        min_obstacle_height: 0.0
+        observation_sources: velodyne_data
+        velodyne_data:
+          topic: /velodyne_points
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.3
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.3
+
+      # Add a "danger zone" around obstacles
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 5.0
+        inflation_radius: 2.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
+      always_send_full_costmap: false
+
+      # Massive blank map, filled over time
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        enabled: true
+
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      plugins: ["obstacle_layer", "inflation_layer"]
+      height: 20
+      width: 20
+      publish_frequency: 5.0
+      rolling_window: true
+      global_frame: odom
+      robot_base_frame: base_footprint
+      always_send_full_costmap: false
+
+      resolution: 0.05
+
+      footprint_padding: 0.0  # footprint padding doesn't work for this
+      footprint: "[ [0.62, 0.6], [0.62, -0.6], [0.08, -0.6], [0.08, -0.42], [-0.61, -0.42], [-0.61, 0.42], [0.08, 0.42], [0.08, 0.6] ]"
+
+      track_unknown_space: false
+      unknown_cost_value: 0
+
+      # Project lidar data down to 2d for the costmap
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        max_obstacle_height: 2.0
+        min_obstacle_height: 0.0
+        observation_sources: velodyne_data
+        velodyne_data:
+          topic: /velodyne_points
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.3
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.3
+
+      # Add a "danger zone" around obstacles
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 5.0  # very small inflation for local costmap because the planner already accounts for the robot footprint
+        inflation_radius: 2.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
+
+
+velocity_smoother:
+  ros__parameters:
+    enable_stamped_cmd_vel: true
+    smoothing_frequency: 10.0
+    feedback: "OPEN_LOOP"
+    scale_velocities: false
+    max_velocity: [2.0, 0.0, 0.8]    # was [2.0, 0.0, 1.0]
+    min_velocity: [-2.0, 0.0, -0.8]  # was [-2.0, 0.0, -1.0]
+    max_accel: [2.5, 0.0, 5.0]       # was [2.0, 0.0, 1.0]
+    max_decel: [-2.5, 0.0, -5.0]     # was [-2.0, 0.0, -1.0]
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+    odom_topic: /odometry/filtered/local
+    odom_duration: 0.1
+
+collision_monitor:
+  ros__parameters:
+    enabled: false
+    observation_sources: ["velodyne_points"]
+    polygons: ["PolygonStop"]
+    PolygonStop:
+      type: "circle"
+      radius: 0.1
+      action_type: "stop"
+      min_points: 4  # max_points: 3 for Humble
+      visualize: True
+      polygon_pub_topic: "polygon_stop"
+      enabled: false
+
+smoother_server:
+  ros__parameters:
+    smoother_plugins: ["simple_smoother"]
+    simple_smoother:
+      plugin: "nav2_smoother::SimpleSmoother"
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: True
+
+

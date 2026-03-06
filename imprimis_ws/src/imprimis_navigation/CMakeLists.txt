@@ -17,6 +17,12 @@ install(
   DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
+#add controller switching script
+install(PROGRAMS
+  scripts/controller_switcher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

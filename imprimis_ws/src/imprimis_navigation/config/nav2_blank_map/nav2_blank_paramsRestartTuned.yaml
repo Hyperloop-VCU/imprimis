@@ -23,18 +23,18 @@ planner_server:
       terminal_checking_interval: 5000     # number of iterations between checking if the goal has been cancelled or planner timed out
       max_planning_time: 3.5              # max time in s for planner to plan, smooth, and upsample. Will scale maximum smoothing and upsampling times based on remaining time after planning.
       motion_model_for_search: "REEDS_SHEPP"    # For Hybrid Dubin, Reeds-Shepp
-      cost_travel_multiplier: 1.5         # For 2D: Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
+      cost_travel_multiplier: 2.0         # For 2D: Cost multiplier to apply to search to steer away from high cost areas. Larger values will place in the center of aisles more exactly (if non-`FREE` cost potential field exists) but take slightly longer to compute. To optimize for speed, a value of 1.0 is reasonable. A reasonable tradeoff value is 2.0. A value of 0.0 effective disables steering away from obstacles and acts like a naive binary search A*.
       angle_quantization_bins: 72         # For Hybrid nodes: Number of angle bins for search, must be 1 for 2D node (no angle search)
       analytic_expansion_ratio: 3.5       # For Hybrid/Lattice nodes: The ratio to attempt analytic expansions during search for final approach.
       analytic_expansion_max_length: 3.0    # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting (in meters). This should be scaled with minimum turning radius and be no less than 4-5x the minimum radius
       analytic_expansion_max_cost: 200.0   # For Hybrid/Lattice nodes: The maximum single cost for any part of an analytic expansion to contain and be valid (except when necessary on approach to goal)
       analytic_expansion_max_cost_override: false # For Hybrid/Lattice nodes: Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required). If expansion is within 2*pi*min_r of the goal, then it will override the max cost if ``false``.
       minimum_turning_radius: 0.05        # For Hybrid/Lattice nodes: minimum turning radius in m of path / vehicle
-      reverse_penalty: 3.5                # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
+      reverse_penalty: 2.1                # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
       change_penalty: 0.5                 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
       non_straight_penalty: 1.20          # For Hybrid nodes: penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 3.5                   # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
-      retrospective_penalty: 0.1      # For Hybrid/Lattice nodes: penalty to prefer later maneuvers before earlier along the path. Saves search time since earlier nodes are not expanded until it is necessary. Must be >= 0.0 and <= 1.0
+      cost_penalty: 4.0                   # For Hybrid nodes: penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      retrospective_penalty: 0.025        # For Hybrid/Lattice nodes: penalty to prefer later maneuvers before earlier along the path. Saves search time since earlier nodes are not expanded until it is necessary. Must be >= 0.0 and <= 1.0
       rotation_penalty: 5.0               # For Lattice node: Penalty to apply only to pure rotate in place commands when using minimum control sets containing rotate in place primitives. This should always be set sufficiently high to weight against this action unless strictly necessary for obstacle avoidance or there may be frequent discontinuities in the plan where it requests the robot to rotate in place to short-cut an otherwise smooth path for marginal path distance savings.
       lookup_table_size: 20.0               # For Hybrid nodes: Size of the dubin/reeds-sheep distance window to cache, in meters.
       cache_obstacle_heuristic: True      # For Hybrid nodes: Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
@@ -67,18 +67,18 @@ controller_server:
       plugin: "nav2_controller::SimpleGoalChecker"
       stateful: true
       xy_goal_tolerance: 0.5
-      yaw_goal_tolerance: 1.0
+      yaw_goal_tolerance: 0.5
 
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 56
       model_dt: 0.1
-      batch_size: 6000
+      batch_size: 5000
       vx_std: 0.5
       vy_std: 0.0
       wz_std: 0.4
       vx_max: 1.5
-      vx_min: -0.05
+      vx_min: -0.35
       vy_max: 0.0
       wz_max: 1.9
       iteration_count: 2
@@ -92,7 +92,7 @@ controller_server:
         time_step: 3
       #AckermannConstraints:
      #   min_turning_r: 0.2
-      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "VelocityDeadbandCritic", "TwirlingCritic"]
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
       ConstraintCritic:  #penalize trajectory that violates acceleratin limits
         enabled: true
         cost_power: 1
@@ -102,19 +102,19 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
-        threshold_to_consider: 0.5
+        threshold_to_consider: 1.4
 
       GoalAngleCritic:  #penalize trajectory that do not end at goal in the right direction
         enabled: true
         cost_power: 1
         cost_weight: 3.0
-        threshold_to_consider: 0.3
+        threshold_to_consider: 0.5
 
 
-      PreferForwardCritic: #penalizes reverse
+      PreferForwardCritic: #
         enabled: true
         cost_power: 1
-        cost_weight: 10.0
+        cost_weight: 5.0
         threshold_to_consider: 0.5
       # Option to replace Cost and use Obstacles instead
       # ObstaclesCritic:
@@ -126,7 +126,7 @@ controller_server:
       #   collision_cost: 10000.0
       #   collision_margin_distance: 0.1
       #   near_goal_distance: 0.5
-      CostCritic:  #penalizes going through high cost area
+      CostCritic:
         enabled: true
         cost_power: 1
         cost_weight: 2.0
@@ -135,25 +135,22 @@ controller_server:
         collision_cost: 1000000.0
         near_goal_distance: 1.0
         trajectory_point_step: 2
-
-      PathAlignCritic:  #penalizes trajectories that don't align with the path orientation
+      PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 3.0
-        max_path_occupancy_ratio: 0.1
+        cost_weight: 7.0
+        max_path_occupancy_ratio: 0.05
         trajectory_point_step: 4
         threshold_to_consider: 0.5
         offset_from_furthest: 20
         use_path_orientations: false
-
-      PathFollowCritic:  #penalizes not following the path
+      PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 10.0
+        cost_weight: 8.0
         offset_from_furthest: 5
-        threshold_to_consider: 1.0
-
-      PathAngleCritic: #helps robot orient itself before commiting to a trajectory
+        threshold_to_consider: 1.4
+      PathAngleCritic:
         enabled: true
         cost_power: 1
         cost_weight: 2.0
@@ -161,17 +158,15 @@ controller_server:
         threshold_to_consider: 0.5
         max_angle_to_furthest: 1.0
         forward_preference: true
-
-      VelocityDeadbandCritic:  #penalizes trajectories where falls within deadband range
-         enabled: true
-         cost_power: 1
-         cost_weight: 15.0
-         deadband_velocities: [0.05, 0.0, 0.05]
-
-      TwirlingCritic:   #penalizes hgih angular velocity
-         enabled: true
-         cost_power: 1
-         cost_weight: 4.0
+      # VelocityDeadbandCritic:
+      #   enabled: true
+      #   cost_power: 1
+      #   cost_weight: 35.0
+      #   deadband_velocities: [0.05, 0.05, 0.05]
+      # TwirlingCritic:
+      #   enabled: true
+      #   twirling_cost_power: 1
+      #   twirling_cost_weight: 10.0
 
 global_costmap:
   global_costmap:
@@ -211,7 +206,7 @@ global_costmap:
           obstacle_min_range: 0.4
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 2.0
         inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
       always_send_full_costmap: false
 
@@ -233,7 +228,7 @@ local_costmap:
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 2.0
         inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"

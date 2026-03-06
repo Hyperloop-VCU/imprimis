@@ -62,6 +62,14 @@ def generate_launch_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_controller_switcher",
+            default_value="false",
+            description="Enable automatic RPP/MPPI controller switching based on obstacle proximity.",
+        )
+)
+
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
@@ -69,7 +77,7 @@ def generate_launch_description():
     nav2_params = LaunchConfiguration("nav2_params")
     world = LaunchConfiguration("world")
     map_yaml = LaunchConfiguration("map_yaml")
-
+    use_controller_switcher = LaunchConfiguration("use_controller_switcher")
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
     # hardware and localization (real or simulated)
@@ -148,6 +156,22 @@ def generate_launch_description():
         parameters=[gps_nav_bridge_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
     )
 
+    # Controller_switcher
+    controller_switcher_run = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="imprimis_navigation",
+            executable="controller_switcher.py",
+            name="controller_switcher",
+            output="screen",
+            condition=IfCondition(
+                PythonExpression([
+                    "'", use_controller_switcher, "' == 'true' or '", nav2_params, "' == 'SmacHybrid_HybridRPPMPPI_1'"
+                ])
+            ),
+        )]
+    ))
+    
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
         gps_nav_bridge_node,
@@ -158,7 +182,8 @@ def generate_launch_description():
         # nav2 stack
         map_server_node,
         lifecycle_manager_map,
-        nav2_navigation_launch
+        nav2_navigation_launch,
+        controller_switcher_run
     ])
 
 
