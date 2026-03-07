@@ -14,7 +14,7 @@ find_package(ament_cmake REQUIRED)
 
 # install
 install(
-  DIRECTORY launch config
+  DIRECTORY launch config scripts nav2_bt
   DESTINATION share/${PROJECT_NAME}
 )
 #add controller switching script
