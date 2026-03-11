@@ -203,9 +203,9 @@ global_costmap:
           marking: True
           data_type: "PointCloud2"
           raytrace_max_range: 5.0
-          raytrace_min_range: 0.3
+          raytrace_min_range: 0.1
           obstacle_max_range: 5.0
-          obstacle_min_range: 0.3
+          obstacle_min_range: 0.1
 
       # Add a "danger zone" around obstacles
       inflation_layer:
@@ -254,9 +254,9 @@ local_costmap:
           marking: True
           data_type: "PointCloud2"
           raytrace_max_range: 1.5
-          raytrace_min_range: 0.3
+          raytrace_min_range: 0.1
           obstacle_max_range: 1.5
-          obstacle_min_range: 0.3
+          obstacle_min_range: 0.1
 
       # Add a "danger zone" around obstacles
       inflation_layer:

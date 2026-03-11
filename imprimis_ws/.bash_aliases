@@ -11,12 +11,11 @@ IMPRIMIS_ALIAS_BASH_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /d
 
 alias imp='clear && cd $IMPRIMIS_ALIAS_BASH_SCRIPT_DIR'
 alias imp-code='imp && code src'
-alias launch_hardware='imp && ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py'
-alias launch_localization='imp && ros2 launch imprimis_navigation localization.launch.py'
-alias launch_nav='imp && ros2 launch imprimis_navigation basic_nav.launch.py'
-alias clear-build='imp && rm -rf build install log'
+alias launch_hardware='imp && source install/setup.bash && ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py'
+alias launch_localization='imp && source install/setup.bash && ros2 launch imprimis_navigation localization.launch.py'
+alias launch_nav='imp && source install/setup.bash && ros2 launch imprimis_navigation basic_nav.launch.py'
+alias reset-build='imp && rm -rf build install log && rebuild'
 alias rebuild='imp && colcon build && source install/setup.bash'
-alias rebuild-safe='imp && colcon build --executor sequential && source install/setup.bash'
 
 goal_pub () {
   lat=${1:--22.98669}

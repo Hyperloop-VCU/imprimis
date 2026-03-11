@@ -21,6 +21,21 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "map_type",
+            default_value="lidar",
+            choices=("lidar", "gps", "fake"),
+            description="If lidar, the map frame is generated from SLAM. If gps, the map frame is generated from fusing local odom with GPS. If fake, map is identical to odom."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "show_sim",
+            default_value="true",
+            description="If false, runs Gazebo in headless mode (no GUI, just server). If true, runs the GUI like normal."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "map_yaml",
             default_value="bigger_blank",
             description="Filename of the map YAML (excluding the .yaml). This file must be located in imprimis_navigation/config/nav2",
@@ -76,6 +91,9 @@ def generate_launch_description():
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
     world = LaunchConfiguration("world")
+    map_type = LaunchConfiguration("map_type")
+    show_sim = LaunchConfiguration("show_sim")
+
     map_yaml = LaunchConfiguration("map_yaml")
     use_controller_switcher = LaunchConfiguration("use_controller_switcher")
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
@@ -87,7 +105,9 @@ def generate_launch_description():
             "hardware_type": hardware_type,
             "use_controller": use_controller,
             "disable_local_EKF": disable_local_EKF,
-            "world": world
+            "world": world,
+            "map_type": map_type,
+            "show_sim": show_sim
         }.items(),
     )
 

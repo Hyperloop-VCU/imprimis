@@ -65,57 +65,5 @@
         </visual>
       </link>
     </model>
-
-    <!--
-      Some accessories for OutdoorNav
-    -->
-    <model name='base_station'>
-      <pose>-30 -10 0.45 0 0 0</pose>
-      <static>true</static>
-      <link name='base_station'>
-        <collision name='base_station_collision'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/base_station_with_tripod.stl
-              </uri>
-            </mesh>
-          </geometry>
-        </collision>
-        <visual name='base_station_visual'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/base_station_with_tripod.dae
-              </uri>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
-    <model name='charge_dock'>
-      <pose>-4.5 -4 0 0 0 3.14159</pose>
-      <static>true</static>
-      <link name='charge_dock'>
-        <collision name='charge_dock_collision'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/wibotic_tr301.stl
-              </uri>
-            </mesh>
-          </geometry>
-        </collision>
-        <visual name='charge_dock_visual'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/wibotic_tr301.dae
-              </uri>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
   </world>
 </sdf>

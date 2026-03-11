@@ -114,29 +114,6 @@
       </link>
     </model>
 
-    <model name='base_station'>
-      <pose>-8 -8 0 0 0 0</pose>
-      <static>true</static>
-      <link name='base_station'>
-        <collision name='base_station_collision'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/base_station_with_tripod.stl
-              </uri>
-            </mesh>
-          </geometry>
-        </collision>
-        <visual name='base_station_visual'>
-          <geometry>
-            <mesh>
-              <uri>
-                model://accessories/base_station_with_tripod.dae
-              </uri>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
+    
   </world>
 </sdf>

@@ -3,7 +3,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch.conditions import UnlessCondition
+from launch.conditions import UnlessCondition, IfCondition
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PythonExpression
 from launch.event_handlers import OnProcessExit
@@ -18,6 +18,21 @@ def generate_launch_description():
             default_value="real",
             choices=("real", "simulated"),
             description="Choose between real or simulated hardware.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "show_sim",
+            default_value="true",
+            description="If false, runs Gazebo in headless mode (no GUI, just server). If true, runs the GUI like normal."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "map_type",
+            default_value="lidar",
+            choices=("lidar", "gps", "fake"),
+            description="If lidar, the map frame is generated from SLAM. If gps, the map frame is generated from fusing local odom with GPS. If fake, map is identical to odom."
         )
     )
     declared_arguments.append(
@@ -45,19 +60,10 @@ def generate_launch_description():
     use_controller = LaunchConfiguration("use_controller")
     disable_local_ekf = LaunchConfiguration("disable_local_ekf")
     world = LaunchConfiguration("world")
+    map_type = LaunchConfiguration("map_type")
+    show_sim = LaunchConfiguration("show_sim")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
-
-    # Lidar SLAM. This is ran after odom->base_link is available
-    slam_config = PathJoinSubstitution([nav_config_src_dir, "SLAM.yaml"])
-    SLAM_scanmatcher_node = Node(
-        package='scanmatcher',
-        executable='scanmatcher_node',
-        parameters=[slam_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[('/input_cloud','/velodyne_points'), ("imu", "imu/data")],
-        output='screen',
-        arguments=["--ros-args", "--log-level", "info"],
-    )
 
     # hardware (real or simulated)
     imprimis_hardware_launch_include = IncludeLaunchDescription(
@@ -66,7 +72,8 @@ def generate_launch_description():
             'hardware_type': hardware_type,
             'use_controller': use_controller,
             'publish_odom_tf': disable_local_ekf,
-            'world': world
+            'world': world,
+            'show_sim:': show_sim
         }.items(),
     )
     
@@ -83,7 +90,7 @@ def generate_launch_description():
     )
 
     # Helper node to wait for odom -> base_link
-    wait_for_odom_tf_and_lidar = Node(
+    wait_for_odom_tf = Node(
         package="utils",
         executable="wait_for_tf",
         parameters=[{
@@ -92,15 +99,41 @@ def generate_launch_description():
         }]
     )
 
-    # Lidar SLAM, after hardware/EKF has made odom -> base_link available
+    # Map to odom transform source, after hardware/EKF has made odom -> base_link available
+    slam_config = PathJoinSubstitution([nav_config_src_dir, "SLAM.yaml"])
     SLAM_scanmatcher_run = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_odom_tf_and_lidar,
-        on_exit=[SLAM_scanmatcher_node] 
+        target_action=wait_for_odom_tf,
+        on_exit=[Node(
+            package='scanmatcher',
+            executable='scanmatcher_node',
+            parameters=[slam_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            remappings=[('/input_cloud','/velodyne_points'), ("imu", "imu/data")],
+            output='screen',
+            arguments=["--ros-args", "--log-level", "info"],
+            condition=IfCondition(PythonExpression(["'", map_type, "' == 'lidar'"]))
+        )],
+    ))
+    map_faker_run = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_odom_tf,
+        on_exit=[Node(
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            arguments=["--frame-id", "map", "--child-frame-id", "odom", "--x", "0", "--y", "4", "--z", "0", "--roll", "0", "--pitch", "0", "--yaw", "0"],
+            condition=IfCondition(PythonExpression(["'", map_type, "' == 'fake'"]))
+        )],
     ))
 
     return LaunchDescription(declared_arguments + [
         imprimis_hardware_launch_include,
         local_ekf_node,
-        wait_for_odom_tf_and_lidar,
-        SLAM_scanmatcher_run
+        wait_for_odom_tf,
+
+        # If map_type is lidar
+        SLAM_scanmatcher_run,
+
+        # If map_type is gps
+        # TODO
+
+        # If map_type is fake
+        map_faker_run
     ])
