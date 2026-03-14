@@ -25,40 +25,56 @@
     <gravity>0 0 -9.8000000000000007</gravity>
     <magnetic_field>5.5644999999999998e-06 2.2875799999999999e-05 -4.2388400000000002e-05</magnetic_field>
     <atmosphere type='adiabatic'/>
-    <model name='solar_farm'>
-      <pose>0 0 0 0 0 3.1415899999999999</pose>
+    <model name='course_lanes'>
       <static>true</static>
-      <link name='solar_farm'>
-        <collision name='solar_farm_collision'>
+      <pose>0 0 0.001 0 0 0</pose> 
+      <link name='lines_link'>
+        <collision name='lines_collision'>
           <geometry>
             <mesh>
-<uri>model://igvc/agriculture_world.dae</uri>
+              <uri>model://igvc/lane_lines.obj</uri>
+              <scale>500 500 500</scale>
             </mesh>
           </geometry>
         </collision>
-        <visual name='solar_farm_visual'>
+        <visual name='lines_visual'>
           <geometry>
             <mesh>
-<uri>model://igvc/agriculture_world.dae</uri>
+              <uri>model://igvc/lane_lines.obj</uri>
+              <scale>500 500 500</scale>
             </mesh>
           </geometry>
         </visual>
-        <pose>0 0 0 0 0 0</pose>
-        <inertial>
-          <pose>0 0 0 0 0 0</pose>
-          <mass>1</mass>
-          <inertia>
-            <ixx>1</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>1</iyy>
-            <iyz>0</iyz>
-            <izz>1</izz>
-          </inertia>
-        </inertial>
-        <enable_wind>false</enable_wind>
       </link>
-      <self_collide>false</self_collide>
+    </model>
+    <model name='custom_ground'>
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose> 
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://igvc/custom_asphalt.glb</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://igvc/custom_asphalt.glb</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
     </model>
     <model name='barrel'>
       <pose>0.10030285468948816 1.0014385119704703 -4.9846883593398577 -0.0035589972364638909 -0.01607665853075791 3.1405439708640057</pose>
