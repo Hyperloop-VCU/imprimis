@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch.substitutions import PythonExpression
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction, SetEnvironmentVariable
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -305,6 +305,14 @@ def generate_launch_description():
         condition=IfCondition(use_controller)
     )
 
+    # Remap wheel odometry topic to mirror ekf output if publish_odom_tf is false, so higher level stuff doesn't have to care
+    odom_remapper = Node(
+        package="utils",
+        executable="odom_remapper",
+        condition=IfCondition(publish_odom_tf),
+        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+    )
+
 
     
 
@@ -340,6 +348,9 @@ def generate_launch_description():
 
         # If gui == true
         rviz_node,
+
+        # If publish_odom_tf == false
+        odom_remapper
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)

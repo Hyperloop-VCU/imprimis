@@ -1,9 +1,11 @@
-# Local ekf, in charge of odom frame
-ekf_local:
+# Global EKF, in charge of map frame
+# Only runs when using GPS-based global localization (map_type:=gps)
+# If map_type:=lidar, the lidar SLAM is in charge of the map frame
+ekf_global:
   ros__parameters:
     frequency: 30.0
     sensor_timeout: 0.1
-    two_d_mode: false
+    two_d_mode: true
     transform_time_offset: 0.0
     transform_timeout: 0.0
     print_diagnostics: true
@@ -12,17 +14,27 @@ ekf_local:
     map_frame: map
     odom_frame: odom
     base_link_frame: base_link
-    world_frame: odom
-    
-    odom0: /diffbot_base_controller/odom
-    odom0_config: [false, false, false,
+    world_frame: map
+
+    odom0: /odometry/gps
+    odom0_config: [true, true, false,
                   false, false, false,
-                  true,  true,  false,
+                  false,  false,  false,
                   false, false, false,
                   false, false, false]
     odom0_queue_size: 10
     odom0_differential: false
     odom0_relative: false
+
+    odom1: /diffbot_base_controller/odom
+    odom1_config: [false, false, false,
+                  false, false, false,
+                  true,  true,  false,
+                  false, false, false,
+                  false, false, false]
+    odom1_queue_size: 10
+    odom1_differential: false
+    odom1_relative: false
 
     imu0: imu/data
     imu0_config: [false, false, false,
@@ -36,7 +48,3 @@ ekf_local:
     imu0_remove_gravitational_acceleration: true
 
     use_control: false
-
-    #process_noise_covariance: [1e-3, 1e-3, 1e-3, 0.3, 0.3, 0.01, 0.5, 0.5, 0.1, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
-
-    #initial_estimate_covariance: [1e-9, 1e-9, 1e-9, 1.0, 1.0, 1e-9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]

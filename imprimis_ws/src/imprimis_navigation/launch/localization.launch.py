@@ -66,7 +66,7 @@ def generate_launch_description():
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
     # hardware (real or simulated)
-    imprimis_hardware_launch_include = IncludeLaunchDescription(
+    imprimis_hardware_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])]),
         launch_arguments={
             'hardware_type': hardware_type,
@@ -79,7 +79,7 @@ def generate_launch_description():
     
     # Local EKF node for local odom fusion from multiple sources
     local_ekf_config = PathJoinSubstitution([ nav_config_src_dir, "Local_EKF.yaml"])
-    local_ekf_node = Node(
+    local_ekf = Node(
         package="robot_localization",
         executable="ekf_node",
         name="ekf_local",
@@ -99,9 +99,9 @@ def generate_launch_description():
         }]
     )
 
-    # Map to odom transform source, after hardware/EKF has made odom -> base_link available
+    # SLAM-based map frame
     slam_config = PathJoinSubstitution([nav_config_src_dir, "SLAM.yaml"])
-    SLAM_scanmatcher_run = RegisterEventHandler(OnProcessExit(
+    SLAM_scanmatcher = RegisterEventHandler(OnProcessExit(
         target_action=wait_for_odom_tf,
         on_exit=[Node(
             package='scanmatcher',
@@ -113,27 +113,56 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'lidar'"]))
         )],
     ))
-    map_faker_run = RegisterEventHandler(OnProcessExit(
+
+    # Faked map frame
+    map_faker = RegisterEventHandler(OnProcessExit(
         target_action=wait_for_odom_tf,
         on_exit=[Node(
             package="tf2_ros",
             executable="static_transform_publisher",
-            arguments=["--frame-id", "map", "--child-frame-id", "odom", "--x", "0", "--y", "4", "--z", "0", "--roll", "0", "--pitch", "0", "--yaw", "0"],
+            arguments=["--frame-id", "map", "--child-frame-id", "odom", "--x", "0", "--y", "0", "--z", "0", "--roll", "0", "--pitch", "0", "--yaw", "0"],
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'fake'"]))
         )],
     ))
 
+    # GPS-based map frame
+    navsat_transform_config = PathJoinSubstitution([nav_config_src_dir, "navsat_transform.yaml"])
+    global_ekf_config = PathJoinSubstitution([nav_config_src_dir, "Global_EKF.yaml"])
+    navsat_transform = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_odom_tf,
+        on_exit=[Node(
+            package="robot_localization",
+            executable="navsat_transform_node",
+            parameters=[navsat_transform_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            remappings=[('odometry/filtered', 'odometry/filtered/global'), ('imu', 'imu/data')],
+            condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
+        )],
+    ))
+    global_ekf = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_odom_tf,
+        on_exit=[Node(
+            package="robot_localization",
+            executable="ekf_node",
+            name="ekf_global",
+            parameters=[global_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            remappings=[('/odometry/filtered', '/odometry/filtered/global')],
+            arguments=["--ros-args", "--log-level", "warn"],
+            condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
+        )],
+    ))
+
     return LaunchDescription(declared_arguments + [
-        imprimis_hardware_launch_include,
-        local_ekf_node,
+        imprimis_hardware_launch,
+        local_ekf,
         wait_for_odom_tf,
 
         # If map_type is lidar
-        SLAM_scanmatcher_run,
+        SLAM_scanmatcher,
 
         # If map_type is gps
-        # TODO
+        navsat_transform,
+        global_ekf,
 
         # If map_type is fake
-        map_faker_run
+        map_faker
     ])

@@ -101,7 +101,7 @@
         <horizontal>
           <noise type="gaussian">
             <mean>0</mean>
-            <stddev>1.5e-6</stddev>
+            <stddev>3.0e-6</stddev>
           </noise>
         </horizontal>
       </position_sensing>

@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'utils'
+package_name = 'map_goal_to_odom'
 
 setup(
     name=package_name,
@@ -13,7 +13,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='hyperlabs',
+    maintainer='ray',
     maintainer_email='rayneralla@icloud.com',
     description='TODO: Package description',
     license='TODO: License declaration',
@@ -24,10 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'gps = utils.gps:main',
-            'lidar = utils.lidar:main',
-            'wait_for_tf = utils.wait_for_tf:main',
-            'odom_remapper = utils.odom_remapper:main'
+            'map_goal_to_odom = map_goal_to_odom.map_goal_to_odom:main'
         ],
     },
 )

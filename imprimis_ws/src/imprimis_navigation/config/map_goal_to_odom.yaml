@@ -1,0 +1,12 @@
+map_goal_to_odom:
+  ros__parameters:
+    localFrame: "odom"
+    globalFrame: "map"
+    inputTopic: "goal_pose"
+    outputTopic: "odom_goal_pose"
+    outputRvizTopic: "odom_goal_pose_rviz"
+    errorBeforeRepublish: 2.0
+    errorCheckPeriod: 0.5
+    tfTimeout: 0.02
+    debug: false
+    navStatusTopic: "/navigate_to_pose/_action/status"

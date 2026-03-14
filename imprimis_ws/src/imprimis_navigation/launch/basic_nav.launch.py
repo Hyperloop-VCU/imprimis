@@ -169,15 +169,18 @@ def generate_launch_description():
 
     # gps_nav_bridge
     gps_nav_bridge_params = PathJoinSubstitution([nav_config_src_dir, "gps_nav_bridge.yaml"])
-    gps_nav_bridge_node = Node(
-        package="gps_nav_bridge",
-        executable="gps_nav_bridge",
-        name="gps_nav_bridge",
-        parameters=[gps_nav_bridge_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-    )
+    gps_nav_bridge = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="gps_nav_bridge",
+            executable="gps_nav_bridge",
+            name="gps_nav_bridge",
+            parameters=[gps_nav_bridge_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        )]
+    ))
 
     # Controller_switcher
-    controller_switcher_run = RegisterEventHandler(OnProcessExit(
+    controller_switcher = RegisterEventHandler(OnProcessExit(
         target_action=wait_for_map_odom_tf,
         on_exit=[Node(
             package="imprimis_navigation",
@@ -191,19 +194,33 @@ def generate_launch_description():
             ),
         )]
     ))
+
+    # map_goal_to_odom
+    map_goal_to_odom_params = PathJoinSubstitution([nav_config_src_dir, "map_goal_to_odom.yaml"])
+    map_goal_to_odom = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="map_goal_to_odom",
+            executable="map_goal_to_odom",
+            name="map_goal_to_odom",
+            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        )]
+    ))
     
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
-        gps_nav_bridge_node,
 
-        # wait for map -> odom tf before launching nav2 stack
+        # wait for map -> odom tf before starting anything else
         wait_for_map_odom_tf,
+
+        gps_nav_bridge,
+        map_goal_to_odom,
 
         # nav2 stack
         map_server_node,
         lifecycle_manager_map,
         nav2_navigation_launch,
-        controller_switcher_run
+        controller_switcher
     ])
 
 

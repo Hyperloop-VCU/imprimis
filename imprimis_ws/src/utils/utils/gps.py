@@ -14,7 +14,8 @@ class GPSFixRepublisher(Node):
         # params
         self.fix_input_topic = self.declare_parameter("fix_input_topic", "/gps/fix_no_cov").value
         self.fix_output_topic = self.declare_parameter("fix_output_topic", "/gps/fix").value
-        self.covariance = self.declare_parameter("covariance", 0.1).value
+        self.diagonal_variance = self.declare_parameter("diagonal_variance", 3.0).value
+        self.off_diagonal_covariance = self.declare_parameter("off_diagonal_covariance", 0.0).value
 
         # pub and sub
         self.fix_output_pub = self.create_publisher(NavSatFix, self.fix_output_topic, 10)
@@ -22,9 +23,10 @@ class GPSFixRepublisher(Node):
 
     def fix_input_cb(self, msg):
         outputMsg = msg
-        outputMsg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
+        outputMsg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_KNOWN
         for i in range(9):
-            msg.position_covariance[i] = self.covariance
+            msg.position_covariance[i] = self.off_diagonal_covariance
+        msg.position_covariance[0] = msg.position_covariance[4] = msg.position_covariance[8] = self.diagonal_variance
         self.fix_output_pub.publish(outputMsg)
     
 
