@@ -84,6 +84,15 @@ def generate_launch_description():
             description="Enable automatic RPP/MPPI controller switching based on obstacle proximity.",
         )
 )
+    
+
+    declared_arguments.append(
+    DeclareLaunchArgument(
+        "track_velocity",
+        default_value="false",
+        description="Enable velocity tracker node.",
+    )
+)
 
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
@@ -97,6 +106,7 @@ def generate_launch_description():
     map_yaml = LaunchConfiguration("map_yaml")
     use_controller_switcher = LaunchConfiguration("use_controller_switcher")
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
+    track_velocity = LaunchConfiguration("track_velocity")
 
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
@@ -192,6 +202,14 @@ def generate_launch_description():
         )]
     ))
     
+    velocity_tracker_node = Node(
+        package="imprimis_navigation",
+        executable="velocity_tracker.py",
+        name="velocity_tracker",
+        output="screen",
+        condition=IfCondition(track_velocity),
+    )
+    
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
         gps_nav_bridge_node,
@@ -203,7 +221,8 @@ def generate_launch_description():
         map_server_node,
         lifecycle_manager_map,
         nav2_navigation_launch,
-        controller_switcher_run
+        controller_switcher_run,
+        velocity_tracker_node,
     ])
 
 

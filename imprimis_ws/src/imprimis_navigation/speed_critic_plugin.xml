@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<library path="speed_critic">
+  <class type="mppi::critics::SpeedCritic" base_class_type="mppi::critics::CriticFunction">
+    <description>
+      Penalizes low average forward velocity to encourage faster navigation.
+      Scales down near obstacles to avoid conflicting with obstacle avoidance critics.
+    </description>
+  </class>
+</library>

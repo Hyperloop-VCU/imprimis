@@ -7,10 +7,11 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odometry/filtered/local
+    default_nav_to_pose_bt_xml: $(find-pkg-share imprimis_navigation)/../../../../src/imprimis_navigation/nav2_bt/imprimis_nav2pos_bt.xml
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 1.0
+    expected_planner_frequency: 0.5
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_smac_planner::SmacPlannerHybrid" # In Iron and older versions, "/" was used instead of "::"
@@ -21,22 +22,22 @@ planner_server:
       max_iterations: 1000000             # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
       max_on_approach_iterations: 1000    # Maximum number of iterations after within tolerances to continue to try to find exact solution
       max_planning_time: 1.0              # max time in s for planner to plan, smooth
-      motion_model_for_search: "REEDS_SHEPP"    # Reeds_Shepp is the motion model which accounts for reversing in the path, change this to something wrong and nav2 will spit out the available options (don't trust the docs)
+      motion_model_for_search: "DUBIN"    # REEDS_SHEPP is the motion model which accounts for reversing in the path, DUBIN does not and assumes a turning radius
       angle_quantization_bins: 72         # Number of angle bins for search
-      analytic_expansion_ratio: 3.5       # The ratio to attempt analytic expansions during search for final approach.
-      analytic_expansion_max_length: 3.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
-      analytic_expansion_max_cost: 200.0  # The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
-      analytic_expansion_max_cost_override: false  #  Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
-      minimum_turning_radius: 0.40        # minimum turning radius in m of path / vehicle
-      reverse_penalty: 1.1              # Penalty to apply if motion is reversing, must be => 1
-      change_penalty: 0.0                 # Penalty to apply if motion is changing directions (L to R), must be >= 0
-      non_straight_penalty: 1.2           # Penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 2.0                   # Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
-      retrospective_penalty: 0.015
+      analytic_expansion_ratio: 2.0       # The ratio to attempt analytic expansions during search for final approach.
+      analytic_expansion_max_length: 2.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
+      analytic_expansion_max_cost: 100.0  #  The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
+      analytic_expansion_max_cost_override: True  #  (Prev false)Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
+      minimum_turning_radius: 0.3      # (previously 0.2) minimum turning radius in m of path / vehicle
+      reverse_penalty: 2.5             # Penalty to apply if motion is reversing, must be => 1
+      change_penalty: 2.5                 # (Previously 0.0) Penalty to apply if motion is changing directions (L to R), must be >= 0
+      non_straight_penalty: 3.5          # Penalty to apply if motion is non-straight, must be => 1
+      cost_penalty: 5.0               # (Previously 1.5) Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
+      retrospective_penalty: 0.05
       lookup_table_size: 20.0             # Size of the dubin/reeds-sheep distance window to cache, in meters.
-      cache_obstacle_heuristic: false     # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
+      cache_obstacle_heuristic: true    # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
       debug_visualizations: false         # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.
-      use_quadratic_cost_penalty: False
+      use_quadratic_cost_penalty: True # previously false
       downsample_obstacle_heuristic: True
       allow_primitive_interpolation: False
       coarse_search_resolution: 4         # Number of bins to skip when doing a coarse search for the path. Only used for all_direction goal heading mode.
@@ -152,7 +153,7 @@ controller_server:
       use_fixed_curvature_lookahead: false
       curvature_lookahead_dist: 1.0
 
-      allow_reversing: true  # must not be true while use_rotate_to_heading is also true
+      allow_reversing: false  # must not be true while use_rotate_to_heading is also true
       stateful: true
       
     MPPI:
@@ -164,11 +165,11 @@ controller_server:
       shift_control_sequence: true
       regenerate_noises: false
       iteration_count: 3
-      vx_std: 1.2
+      vx_std: 1.5
       vy_std: 0.0
       wz_std: 0.3
       vx_max: 2.0
-      vx_min: -0.1
+      vx_min: 0.0
       vy_max: 0.0
       wz_max: 1.9
       ax_max: 10.0
@@ -188,7 +189,8 @@ controller_server:
         plugin: "mppi::DefaultOptimalTrajectoryValidator"
         collision_lookahead_time: 2.0
         consider_footprint: false
-      critics: ["ConstraintCritic", "ObstaclesCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "VelocityDeadbandCritic", "TwirlingCritic"]
+      critics: ["ConstraintCritic", "ObstaclesCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "VelocityDeadbandCritic", "TwirlingCritic", "SpeedCritic"]
+     
       ConstraintCritic:
         enabled: true
         cost_power: 1
@@ -211,22 +213,22 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 7.0
+        cost_weight: 4.0
         max_path_occupancy_ratio: 0.1
         trajectory_point_step: 4
         threshold_to_consider: 0.5
-        offset_from_furthest: 15
+        offset_from_furthest: 8
         use_path_orientations: true
       PathFollowCritic:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
-        offset_from_furthest: 10
+        offset_from_furthest: 5
         threshold_to_consider: 1.0
       PathAngleCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 2.0
+        cost_weight: 4.0
         offset_from_furthest: 4
         threshold_to_consider: 0.5
         max_angle_to_furthest: 1.0
@@ -240,36 +242,40 @@ controller_server:
       TwirlingCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 7.0
+        cost_weight: 10.0
       ObstaclesCritic:
         enabled: true
         cost_power: 1
         repulsion_weight: 1.5
-        critical_weight: 20.0
+        critical_weight: 30.0
         consider_footprint: false
-        collision_cost: 10000.0
-        collision_margin_distance: 0.1
+        collision_cost: 1000000.0
+        collision_margin_distance: 0.3
         near_goal_distance: 0.5
-    #  SpeedCritic:
-        #cost_weight: 2.0
-       # vx_max: 2.0
-       # threshold_to_consider: 0.5
-      #  obstacle_cost_threshold: 50.0
-     #   near_obstacle_cost: 200.0
-            #COSTMAPS
+      SpeedCritic:
+        cost_weight: 3.0
+        vx_max: 2.0
+        threshold_to_consider: 0.5
+        obstacle_cost_threshold: 80.0
+        near_obstacle_cost: 200.0
+    
+
+        #COSTMAPS
 global_costmap:
   global_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "inflation_layer", "static_layer"]
-      height: 400
-      width: 400
-      publish_frequency: 5.0
+      plugins: ["obstacle_layer", "inflation_layer"]
+      height: 40
+      width: 40
+      origin_x: -20.0
+      origin_y: -20.0
+      publish_frequency: 3.0
       rolling_window: true
       global_frame: map
       robot_base_frame: base_link
       resolution: 0.05
 
-      footprint_padding: 0.03
+      footprint_padding: 0.11
       footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
 
       track_unknown_space: false
@@ -297,23 +303,23 @@ global_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 5.0
-        inflation_radius: 2.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
+        cost_scaling_factor: 3.5
+        inflation_radius: 1.138 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
       always_send_full_costmap: false
 
       # Massive blank map, filled over time
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        enabled: true
+      #static_layer:
+      #  plugin: "nav2_costmap_2d::StaticLayer"
+      #  enabled: true
 
 
 local_costmap:
   local_costmap:
     ros__parameters:
       plugins: ["obstacle_layer", "inflation_layer"]
-      height: 20
-      width: 20
-      publish_frequency: 5.0
+      height: 10
+      width: 10
+      publish_frequency: 3.0
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
@@ -321,7 +327,7 @@ local_costmap:
 
       resolution: 0.05
 
-      footprint_padding: 0.03
+      footprint_padding: 0.11
       footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
 
       track_unknown_space: false
@@ -348,8 +354,8 @@ local_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 5.0  # very small inflation for local costmap because the planner already accounts for the robot footprint
-        inflation_radius: 2.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER (for imprimis this is about 1.98)
+        cost_scaling_factor: 3.5
+        inflation_radius: 1.138 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER. nav2 will tell you if it's too small.
 
 
 velocity_smoother:
@@ -359,9 +365,9 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     scale_velocities: false
     max_velocity: [2.0, 0.0, 0.8]    # was [2.0, 0.0, 1.0]
-    min_velocity: [-2.0, 0.0, -0.8]  # was [-2.0, 0.0, -1.0]
-    max_accel: [5.0, 0.0, 5.0]       # was [2.0, 0.0, 1.0]
-    max_decel: [-5.0, 0.0, -5.0]     # was [-2.0, 0.0, -1.0]
+    min_velocity: [0.0, 0.0, -0.8]  # was [-2.0, 0.0, -1.0]
+    max_accel: [7.0, 0.0, 7.0]       # was [2.0, 0.0, 1.0]
+    max_decel: [-7.0, 0.0, -7.0]     # was [-2.0, 0.0, -1.0]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     odom_topic: /odometry/filtered/local
