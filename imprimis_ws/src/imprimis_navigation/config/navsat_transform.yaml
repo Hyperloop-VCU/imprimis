@@ -1,6 +1,6 @@
 # Navsat transform, processes /gps/fix into usable cartesian coordinates
 # Only runs when using GPS-based global localization (map_type:=gps)
-navsat_transform:
+navsat_transform_node:
   ros__parameters:
     frequency: 30.0
     delay: 1.0

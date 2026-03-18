@@ -24,10 +24,11 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'gps = utils.gps:main',
-            'lidar = utils.lidar:main',
+            'gps_add_sim_covariance = utils.gps_add_sim_covariance:main',
+            'fix_lidar_delay = utils.fix_lidar_delay:main',
             'wait_for_tf = utils.wait_for_tf:main',
-            'odom_remapper = utils.odom_remapper:main'
+            'odom_remapper = utils.odom_remapper:main',
+            'gps_monitor = utils.gps_monitor:main'
         ],
     },
 )

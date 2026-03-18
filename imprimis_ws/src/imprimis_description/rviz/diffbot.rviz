@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Pose1
         - /Odometry1/Shape1
         - /Odometry1/Covariance1
         - /Odometry1/Covariance1/Position1
@@ -169,24 +170,25 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          odom:
-            base_link:
-              base_footprint:
-                gps_link:
-                  {}
-              chassis:
-                caster_sphere:
-                  {}
-                lidar_pole:
-                  lidar_model_link:
-                    velodyne:
-                      {}
-              imu_link:
+          {}
+        odom:
+          base_link:
+            base_footprint:
+              gps_link:
                 {}
-              left_wheel:
+            chassis:
+              caster_sphere:
                 {}
-              right_wheel:
-                {}
+              lidar_pole:
+                lidar_model_link:
+                  velodyne:
+                    {}
+            imu_link:
+              {}
+            left_wheel:
+              {}
+            right_wheel:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 0.20000000298023224
@@ -322,7 +324,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /goal_pose
+        Value: /odom_goal_pose
       Value: true
     - Alpha: 1
       Axes Length: 1
@@ -429,15 +431,15 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 9.000293731689453
+      Distance: 8.370668411254883
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.7538326978683472
-        Y: -1.5269179344177246
+        X: -1.5064945220947266
+        Y: -0.8319745063781738
         Z: 1.293351650238037
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
