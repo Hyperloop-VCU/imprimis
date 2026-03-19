@@ -1,0 +1,44 @@
+rosbag2_bagfile_information:
+  version: 9
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 33799482192
+  starting_time:
+    nanoseconds_since_epoch: 1773853932170235095
+  message_count: 125
+  topics_with_message_count:
+    - topic_metadata:
+        name: /gps/fix
+        type: sensor_msgs/msg/NavSatFix
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_62223ab3fe210a15976021da7afddc9e200dc9ec75231c1b6a557fc598a65404
+      message_count: 125
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - rosbag2_2026_03_18-13_12_09_0.mcap
+  files:
+    - path: rosbag2_2026_03_18-13_12_09_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 1773853932170235095
+      duration:
+        nanoseconds: 33799482192
+      message_count: 125
+  custom_data: ~
+  ros_distro: jazzy
