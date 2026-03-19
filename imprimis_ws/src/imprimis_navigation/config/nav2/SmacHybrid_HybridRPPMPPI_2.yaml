@@ -8,6 +8,7 @@
 #Avg vx  : 0.6945 m/s
 #Max vx  : 1.0000 m/s
 #Min vx  : 0.0533 m/s
+#ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated nav2_params:=SmacHybrid_HybridRPPMPPI_2 map_type:=gps track_velocity:=true use_controller_switcher:=true use_waypoints:=true
 
 map_server:
   ros__parameters:
@@ -260,7 +261,7 @@ controller_server:
         enabled: true
         cost_power: 1
         repulsion_weight: 1.5
-        critical_weight: 30.0
+        critical_weight: 100.0
         consider_footprint: false
         collision_cost: 1000000.0
         collision_margin_distance: 0.3
