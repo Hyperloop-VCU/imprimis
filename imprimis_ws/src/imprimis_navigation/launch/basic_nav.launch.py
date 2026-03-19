@@ -93,7 +93,16 @@ def generate_launch_description():
         description="Enable velocity tracker node.",
     )
 )
-
+    
+    
+    declared_arguments.append(
+    DeclareLaunchArgument(
+        "use_waypoints",
+        default_value="false",
+        description="Send waypoints automatically on launch.",
+    )
+)
+    
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
@@ -107,7 +116,8 @@ def generate_launch_description():
     use_controller_switcher = LaunchConfiguration("use_controller_switcher")
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
     track_velocity = LaunchConfiguration("track_velocity")
-
+    waypoints_file = PathJoinSubstitution([nav_config_src_dir, 'waypoints.yaml'])
+    use_waypoints = LaunchConfiguration("use_waypoints")
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "localization.launch.py"])]),
@@ -225,6 +235,17 @@ def generate_launch_description():
         condition=IfCondition(track_velocity),
     )
     
+    waypoint_sender = RegisterEventHandler(OnProcessExit(
+    target_action=wait_for_map_odom_tf,
+    on_exit=[Node(
+        package="imprimis_navigation",
+        executable="waypoint_sender.py",
+        name="waypoint_sender",
+        output="screen",
+        parameters=[{"waypoints_file": waypoints_file}],
+        condition=IfCondition(use_waypoints),
+    )]
+))
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
 
@@ -238,12 +259,9 @@ def generate_launch_description():
         map_server_node,
         lifecycle_manager_map,
         nav2_navigation_launch,
-<<<<<<< HEAD
-        controller_switcher_run,
+        controller_switcher,
         velocity_tracker_node,
-=======
-        controller_switcher
->>>>>>> 316d88c2ffb8eaf92aa26543844156a4193fc2dd
+        waypoint_sender
     ])
 
 

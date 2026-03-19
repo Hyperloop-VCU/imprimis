@@ -55,6 +55,7 @@ install(
 install(PROGRAMS
   scripts/controller_switcher.py
   scripts/velocity_tracker.py
+  scripts/waypoint_sender.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
