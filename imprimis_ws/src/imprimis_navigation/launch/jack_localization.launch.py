@@ -20,29 +20,9 @@ def generate_launch_description():
             description="If lidar, the map frame is generated from SLAM. If gps, the map frame is generated from fusing local odom with GPS. If fake, map is identical to odom."
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "disable_local_ekf",
-            default_value="false",
-            description="If false, a local EKF node fuses wheel odom with other local odom sources. If true, wheel odom is the sole local odom source.",
-        )
-    )
-    disable_local_ekf = LaunchConfiguration("disable_local_ekf")
     map_type = LaunchConfiguration("map_type")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
-
-    # Local EKF node for local odom fusion from multiple sources
-    local_ekf_config = PathJoinSubstitution([ nav_config_src_dir, "Local_EKF.yaml"])
-    local_ekf = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_local",
-        parameters=[local_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[('/odometry/filtered', '/odometry/filtered/local')],
-        arguments=["--ros-args", "--log-level", "warn"],
-        condition=UnlessCondition(disable_local_ekf)
-    )
 
     # Helper node to wait for odom -> base_link
     wait_for_odom_tf = Node(
@@ -61,7 +41,7 @@ def generate_launch_description():
         on_exit=[Node(
             package='scanmatcher',
             executable='scanmatcher_node',
-            parameters=[slam_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[slam_config],
             remappings=[('/input_cloud','/velodyne_points'), ("imu", "imu/data")],
             output='screen',
             arguments=["--ros-args", "--log-level", "info"],
@@ -88,7 +68,7 @@ def generate_launch_description():
         on_exit=[Node(
             package="robot_localization",
             executable="navsat_transform_node",
-            parameters=[navsat_transform_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[navsat_transform_config],
             remappings=[('odometry/filtered', 'odometry/filtered/global'), ('imu', 'imu/data')],
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
         )],
@@ -99,7 +79,7 @@ def generate_launch_description():
             package="robot_localization",
             executable="ekf_node",
             name="ekf_global",
-            parameters=[global_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[global_ekf_config],
             remappings=[('/odometry/filtered', '/odometry/filtered/global')],
             arguments=["--ros-args", "--log-level", "warn"],
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
@@ -108,17 +88,13 @@ def generate_launch_description():
     gps_monitor = Node(
         package="utils",
         executable="gps_monitor",
-        condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"])),
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
     )
 
     return LaunchDescription(declared_arguments + [
-        imprimis_hardware_launch,
-        local_ekf,
-        wait_for_odom_tf,
-
         # If map_type is lidar
         SLAM_scanmatcher,
+        wait_for_odom_tf,
 
         # If map_type is gps
         navsat_transform,

@@ -35,13 +35,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "disable_local_ekf",
-            default_value='false',
-            description="If false, a local EKF node fuses wheel odom with other local odom sources. If true, wheel odom is the sole local odom source.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "autostart_nav2",
             default_value="true",
             description="Autostart Nav2 lifecycle nodes.",
@@ -54,28 +47,27 @@ def generate_launch_description():
             default_value="false",
             description="Enable automatic RPP/MPPI controller switching based on obstacle proximity.",
         )
-)
+    )
     
 
     declared_arguments.append(
-    DeclareLaunchArgument(
-        "track_velocity",
-        default_value="false",
-        description="Enable velocity tracker node.",
+        DeclareLaunchArgument(
+            "track_velocity",
+            default_value="false",
+            description="Enable velocity tracker node.",
+         )
     )
-)
     
     
     declared_arguments.append(
-    DeclareLaunchArgument(
-        "use_waypoints",
-        default_value="false",
-        description="Send waypoints automatically on launch.",
+         DeclareLaunchArgument(
+             "use_waypoints",
+              default_value="false",
+              description="Send waypoints automatically on launch.",
+         )
     )
-)
     
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
-    disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
     map_type = LaunchConfiguration("map_type")
 
@@ -87,11 +79,9 @@ def generate_launch_description():
     use_waypoints = LaunchConfiguration("use_waypoints")
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "jack-localization.launch.py"])]),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "jack_localization.launch.py"])]),
         launch_arguments={
-            "disable_local_EKF": disable_local_EKF,
             "map_type": map_type,
-            "show_sim": show_sim
         }.items(),
     )
 
@@ -116,7 +106,6 @@ def generate_launch_description():
             output="screen",
             parameters=[{
                 "yaml_filename": map_yaml_path, 
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
             }],
         )]
     ))
@@ -132,7 +121,6 @@ def generate_launch_description():
             parameters=[{
                 "autostart": True,
                 "node_names": ["map_server"],
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
             }],
         )]
     ))
@@ -146,7 +134,6 @@ def generate_launch_description():
             launch_arguments={
                 "params_file": nav2_params_file_path,
                 "autostart": autostart_nav2,
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
             }.items(),
         )]
     ))
@@ -159,7 +146,7 @@ def generate_launch_description():
             package="gps_nav_bridge",
             executable="gps_nav_bridge",
             name="gps_nav_bridge",
-            parameters=[gps_nav_bridge_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[gps_nav_bridge_params],
         )]
     ))
 
@@ -187,7 +174,7 @@ def generate_launch_description():
             package="map_goal_to_odom",
             executable="map_goal_to_odom",
             name="map_goal_to_odom",
-            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[map_goal_to_odom_params],
         )]
     ))
     
