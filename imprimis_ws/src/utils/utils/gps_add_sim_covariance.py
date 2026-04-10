@@ -15,7 +15,7 @@ class GPSFixRepublisher(Node):
         # params
         self.fix_input_topic = self.declare_parameter("fix_input_topic", "/gps/fix_no_cov").value
         self.fix_output_topic = self.declare_parameter("fix_output_topic", "/gps/fix").value
-        self.diagonal_variance = self.declare_parameter("diagonal_variance", 0.1).value
+        self.diagonal_variance = self.declare_parameter("diagonal_variance", 1.0).value
         self.off_diagonal_covariance = self.declare_parameter("off_diagonal_covariance", 0.0).value
 
         # pub and sub
