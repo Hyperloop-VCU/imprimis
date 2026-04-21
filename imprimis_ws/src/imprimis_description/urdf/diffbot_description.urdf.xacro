@@ -17,7 +17,7 @@
 <xacro:property name="base_top_width" value="0.749"/>
 <xacro:property name="base_top_height" value="0.305"/>
 <xacro:property name="lidar_pole_side" value="0.023"/> 
-<xacro:property name="lidar_pole_height" value="0.635"/> <!-- height from the top of chassis to lidar-->
+<xacro:property name="lidar_pole_height" value="0.279"/> <!-- height from the top of chassis to lidar-->
 <xacro:property name="lidar_pole_xoff" value="0.48"/> <!-- length from back of robot to lidar pole-->
 <xacro:property name="lidar_pole_mass" value="2.0"/>
 <xacro:property name="lidar_pole_angle" value="0.033"/> <!-- slight tilt of the lidar pole along the x axis-->
