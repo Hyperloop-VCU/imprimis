@@ -91,8 +91,11 @@ private:
   std::shared_ptr<SerialLink> esp32;
 
   // debugging flags
-  bool PRINT_READ_STATES = false;
-  bool PRINT_COMMANDS = false;
+  const bool PRINT_READ_STATES = true;
+  const bool PRINT_COMMANDS = false;
+
+  // If we read an angvel outside [-range, range], ignore it and keep previous angvel
+  const double VALID_ANGVEL_RANGE = 20.0;
 
   // Objects for logging
   std::shared_ptr<rclcpp::Logger> logger_;
@@ -102,16 +105,9 @@ private:
   std::vector<double> hw_commands_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
-  double imuHeading_gpio;
   double mode_gpio;
   double boardBConnected_gpio;
   double dummy_gpio_cmd;
-  double gpsFix_gpio;
-  double gpsLat_gpio;
-  double gpsLong_gpio;
-  double gpsAlt_gpio;
-  double gpsHdop_gpio;
-  double max_state_delta;
 };
 
 }  // namespace imprimis_hardware_platform

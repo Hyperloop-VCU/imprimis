@@ -53,7 +53,6 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   mode_gpio = 0.0;
-  imuHeading_gpio = 0.0;
   boardBConnected_gpio = 0.0;
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -74,14 +73,8 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
   }
 
   auto gpio = info_.gpios[0];
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "imuHeading", &imuHeading_gpio));
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manualMode", &mode_gpio));
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "boardBConnected", &boardBConnected_gpio));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsFix", &gpsFix_gpio));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsLat", &gpsLat_gpio));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsLong", &gpsLong_gpio));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsAlt", &gpsAlt_gpio));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "gpsHdop", &gpsHdop_gpio));
 
   return state_interfaces;
 }
@@ -131,17 +124,16 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
       std::this_thread::sleep_for(100ms);
       esp32->write_reset_encoders();
       std::this_thread::sleep_for(100ms);
-      float leftAngvel, rightAngvel, imuHeading;
-      bool read_mode, boardBConnected, gpsFix;
-      float gpsLat, gpsLong, gpsAlt, gpsHdop;
-      status = esp32->read_current_state(leftAngvel, rightAngvel, imuHeading, read_mode, boardBConnected, gpsFix, gpsLat, gpsLong, gpsAlt, gpsHdop);
+      float leftAngvel, rightAngvel;
+      bool read_mode, boardBConnected;
+      status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
 
       if (status != SerialLink::Status::Ok) {
         RCLCPP_INFO(get_logger(), "Non-boardA device found on port %s (%s)", ports[i], esp32->status_to_string(status));
         esp32->close();
       }
       else {
-        RCLCPP_INFO(get_logger(), "Successfully initialized comms with board A on port %s", ports[i]);
+        RCLCPP_INFO(get_logger(), "\n\n\nSuccessfully initialized comms with board A on port %s! :)\n\n\n", ports[i]);
         serial_init_success = true;
         break;
       }
@@ -184,56 +176,66 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(const rc
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
   // read states from board A
-  float leftAngvel, rightAngvel, imuHeading;
-  bool read_mode, boardBConnected, gpsFix;
-  float gpsLat, gpsLong, gpsAlt, gpsHdop;
-  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, imuHeading, read_mode, boardBConnected, gpsFix, gpsLat, gpsLong, gpsAlt, gpsHdop);
+  float leftAngvel, rightAngvel;
+  bool read_mode, boardBConnected;
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
+
+  // Check backlog
   size_t backlog = esp32->getAvailable();
   if (backlog != 0)
     RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 100, "Backlog: %zu", backlog);
 
-  // read succeeded
-  if (read_status == SerialLink::Status::Ok) {
-    hw_velocities_[0] = leftAngvel;
-    hw_velocities_[1] = rightAngvel;
-    hw_positions_[0] += period.seconds() * hw_velocities_[0]; // integrate velocity to get position
+  // read failed, velocity kept to what it was previously
+  if (read_status != SerialLink::Status::Ok) {
+    hw_positions_[0] += period.seconds() * hw_velocities_[0];
     hw_positions_[1] += period.seconds() * hw_velocities_[1];
-    if (read_mode != mode_gpio)
-      RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
-    if (!boardBConnected && boardBConnected_gpio)
-      RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
-    else if (boardBConnected && !boardBConnected_gpio)
-      RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
-    mode_gpio = static_cast<double>(read_mode);
-    boardBConnected_gpio = static_cast<double>(boardBConnected);
-    imuHeading_gpio = static_cast<double>(imuHeading);
-    gpsFix_gpio = static_cast<double>(gpsFix);
-    gpsLat_gpio = static_cast<double>(gpsLat);
-    gpsLong_gpio = static_cast<double>(gpsLong);
-    gpsAlt_gpio = static_cast<double>(gpsAlt);
-    gpsHdop_gpio = static_cast<double>(gpsHdop);
-  }
-
-  // read failed; velocity kept to what it was previously
-  else
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 500, "Could not read hardware states from board A (%s)", esp32->status_to_string(read_status));
-
-  // print the newly-read states if debugging
-  if (PRINT_READ_STATES && read_status == SerialLink::Status::Ok) {
-    std::stringstream ss;
-    ss << "Reading states:";
-    ss << std::fixed << std::setprecision(2) << std::endl
-        << "\t"
-          "position "
-        << hw_positions_[0] << " and velocity " << hw_velocities_[0] << " for '"
-        << info_.joints[0].name.c_str() << "'!";
-    ss << std::fixed << std::setprecision(2) << std::endl
-        << "\t"
-          "position "
-        << hw_positions_[1] << " and velocity " << hw_velocities_[1] << " for '"
-        << info_.joints[1].name.c_str() << "'!";
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+    return hardware_interface::return_type::OK; // Return OK is fine, infrequent read fails are normal
   }
+
+  // read succeeded
+  mode_gpio = static_cast<double>(read_mode);
+  boardBConnected_gpio = static_cast<double>(boardBConnected);
+
+  // Board B and motors off, assume motors stopped
+  if (!boardBConnected_gpio) {
+    hw_velocities_[0] = 0.0;
+    hw_velocities_[1] = 0.0; // no need to integrate, velocity is zero
+
+    if (PRINT_READ_STATES)
+      RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 400, "Board B turned off, setting hw velocities to zero.\n");
+    return hardware_interface::return_type::OK;
+  }
+
+  // Board B and motors on
+  // Sanity check angvels
+  if (leftAngvel < -VALID_ANGVEL_RANGE || leftAngvel > VALID_ANGVEL_RANGE || rightAngvel < -VALID_ANGVEL_RANGE || rightAngvel > VALID_ANGVEL_RANGE) {
+    RCLCPP_ERROR(get_logger(), "Bad angvel read from board A!\n");
+    return hardware_interface::return_type::OK; // TODO handle this error properly, fix the underlying serial issue causing it
+  }
+
+  // Set wheel velocities and integrate to get position
+  hw_velocities_[0] = leftAngvel;
+  hw_velocities_[1] = rightAngvel;
+  hw_positions_[0] += period.seconds() * hw_velocities_[0];
+  hw_positions_[1] += period.seconds() * hw_velocities_[1];
+
+  // Print wheel states
+  if (PRINT_READ_STATES) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Left angvel: " << leftAngvel << "  |  Right angvel: " << rightAngvel << '\n';
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 400, "%s", ss.str().c_str()); 
+  }
+
+  // Print additional info
+  if (read_mode != mode_gpio)
+    RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
+  if (!boardBConnected && boardBConnected_gpio)
+    RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
+  else if (boardBConnected && !boardBConnected_gpio)
+    RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
+
   return hardware_interface::return_type::OK;
 }
 
@@ -254,18 +256,14 @@ hardware_interface::return_type imprimis_hardware_platform::DiffBotSystemHardwar
   // print commands written if debugging
   if (PRINT_COMMANDS) {
     std::stringstream ss;
-    ss << "Writing commands:";
-    ss << std::fixed << std::setprecision(2) << std::endl
-        << "\t" << "command " << hw_commands_[0] << " for '" << info_.joints[0].name.c_str() << "'!";
-    ss << std::fixed << std::setprecision(2) << std::endl
-        << "\t" << "command " << hw_commands_[1] << " for '" << info_.joints[1].name.c_str() << "'!";
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+    ss << std::fixed << std::setprecision(2);
+    ss << "Left cmd: " << hw_commands_[0] << "  |   Right cmd: " << hw_commands_[1] << '\n';
+    RCLCPP_INFO(get_logger(), "%s", ss.str().c_str());
   }
 
   // write commands
   if (esp32->write_angvel_commands(hw_commands_[0], hw_commands_[1]) != SerialLink::Status::Ok) {
-    // Handle failed serial writing. We don't need to do anything here - If board A didn't get the data,
-    // it will not send data back, read() will fail, and we will handle a bad/lost connection in there.
+    // Handle failed serial writing in this block
   }
 
   return hardware_interface::return_type::OK;

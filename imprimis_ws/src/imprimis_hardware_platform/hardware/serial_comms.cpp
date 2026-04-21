@@ -67,8 +67,7 @@ SerialLink::Status SerialLink::initialize_link(const char* port_name)
 }
 
 
-SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, float& imuHeading, bool& manual_mode, bool& boardBConnected,
-                                                    bool& gpsFix, float& gpsLat, float& gpsLong, float& gpsAlt, float& gpsHdop)
+SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode, bool& boardBConnected)
 {
     if (!is_connected()) return Status::NotConnected;
 
@@ -83,9 +82,8 @@ SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& righ
             g_ser->readline(bytes, 512); // clear bad data
             return Status::BadData;
         }
-        iss >> leftAngVel >> rightAngVel >> imuHeading >> manual_mode >> boardBConnected \
-        >> gpsFix >> gpsLat >> gpsLong >> gpsAlt >> gpsHdop;
-        g_ser->readline(bytes, 512); // clear backlog
+        iss >> leftAngVel >> rightAngVel >> manual_mode >> boardBConnected;
+        //g_ser->readline(bytes, 512); // clear backlog 
         return Status::Ok;
     } 
     catch (...) 

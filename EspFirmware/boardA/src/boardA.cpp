@@ -88,17 +88,11 @@ bool handle_ROS_command(struct AtoBPacket& dataToSend)
   bool boardBConnected_tmp = boardBConnected;
   
   Serial.printf(
-    "@%.2f %.2f %d %d %d %d %.7f %.7f %.2f %.2f\n", 
+    "@%.2f %.2f %d %d\n", 
     leftAngvel_tmp, 
-    rightAngvel_tmp, 
-    0, // imu heading, removed
+    rightAngvel_tmp,
     dataToSend.openLoop, 
-    boardBConnected_tmp, 
-    0, 
-    0, 
-    0, 
-    0, 
-    0
+    boardBConnected_tmp
   );
   return true;
 }
