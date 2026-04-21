@@ -28,7 +28,8 @@ This software usually runs on the robot's main computer, but it is possible to r
   7. Source workspace: ```source install/setup.bash```
   8. Change permissions for gazebo fixer script: ```chmod 777 ./fix_gazebo.bash```
   9. Run the gazebo fixer script: ```./fix_gazebo.bash```
-  10. Launch simulated robot: ```ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated```
+  10. Launch simulated robot (hardware only): ```ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py hardware_type:=simulated```
+  11. Launch simulated robot (full navigation system): ```ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated nav2_params:=SmacHybrid_DWB_2```
 
 You should see two windows appear - a simulated world with the robot in it (gazebo), and a ROS visualization tool (rviz) which shows the LiDAR data and navigation maps.
 
