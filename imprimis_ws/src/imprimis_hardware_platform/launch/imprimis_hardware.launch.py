@@ -303,7 +303,7 @@ def generate_launch_description():
     controller_input_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('teleop_twist_joy'), 'launch', 'teleop-launch.py'])]),
         launch_arguments={
-            'joy_config': 'xbox',
+            'joy_config': 'ps3',
             "publish_stamped_twist": 'true',
             'frame': 'base_link',
             'joy_vel': 'diffbot_base_controller/cmd_vel'
