@@ -20,7 +20,7 @@ Board B manages the motors exclusively. It is powered by the motor driver's 5V o
 
 * **Control modes**: In autonomous mode, it wirelessly receives desired angular velocity setpoint commands for each wheel, and runs a closed-loop PID controller for each motor. In manual mode, it wirelessly receives joint efforts (0-100% power) for each motor, and simply sets the speeds directly without any PID control.
 
-* **Encoders**: This board uses the ESP32's dedicated pulse counter hardware to read the encoder pulses from each wheel. These pulses are converted to the wheel angular velocities and send to Board A. In closed-loop mode, the wheel angvels are also used to provide feedback to the PID controllers. A bidirectional 3.3V <-> 5V logic level shifter is used between the ESP32 (3.3V only) and encoders (5V only).
+* **Encoders**: This board uses the ESP32's dedicated pulse counter hardware to read the encoder pulses from each wheel. These pulses are converted to the wheel angular velocities and sent to Board A. In closed-loop mode, the wheel angvels are also used to provide feedback to the PID controllers. A bidirectional 3.3V <-> 5V logic level shifter is used between the ESP32 (3.3V only) and encoders (5V only).
 
 * **Safety logic**: Board B expects constant commands from Board A. If it doesn't receive any for a short (configurable) time, it immediately stops the robot.
 
@@ -28,7 +28,7 @@ Board B manages the motors exclusively. It is powered by the motor driver's 5V o
 Both the **boardA** and **boardB** folders are **PlatformIO projects.** The PlatformIO VSCode extension is a nice way to work on MCU firmware without the Arduino IDE. You can clone the repo, download VSCode, get the PlatformIO extension, and open either board A or board B as a PlatformIO project in VSCode to edit the code. The **common** folder contains packet definitions and configurations shared between the two boards.
 
 # ROS Packages in imprimis_ws/src
-This folder contains some of the ROS packages required for Imprimis. Some are custom-made, and some are third-party. In addition to these packages, Imprimis depends on lots of other third-party packages (robot_localization, nav2, etc). The dependencies of each package are listed in the **package.xml** folder, and can be automatically installed by running the ```rosdep``` command in the offboard computer setup instructions. Each package has a more detailed README in its respective folder.
+This folder contains some of the ROS packages required for Imprimis. Some are custom-made, and some are third-party. In addition to these packages, Imprimis depends on lots of other third-party packages (robot_localization, nav2, etc). The dependencies of each package are listed in each package's **package.xml** file, and can be automatically installed by running the ```rosdep``` command in the offboard computer setup instructions. Each package has a more detailed README in its respective folder.
 
 
 * **imprimis_hardware_platform**: Contains all configuration files for hardware and sensors, and implements the hardware interface. Has a launch file which starts up all the hardware, either real or simulated.
