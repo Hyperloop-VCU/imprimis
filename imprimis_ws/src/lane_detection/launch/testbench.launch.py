@@ -5,6 +5,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+# ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true
+
 def generate_launch_description():
     pkg_dir = get_package_share_directory('lane_detection')
     costmap_config = os.path.join(pkg_dir, 'config', 'isolated_costmap.yaml')

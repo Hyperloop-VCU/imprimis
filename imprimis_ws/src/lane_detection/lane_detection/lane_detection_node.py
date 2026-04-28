@@ -51,6 +51,7 @@ class LaneDetectionNode(Node):
 
         h, w = frame.shape[:2]
         
+        # Crop image to ROI if applicable
         if no_roi:
             roi = frame
             offset_y = 0
@@ -58,45 +59,58 @@ class LaneDetectionNode(Node):
             roi = frame[int(h/2):h, :] 
             offset_y = int(h/2)
 
+        # Convert image to HSV, create mask for yellow colors
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         lower_yellow = np.array([15, 60, 60])
         upper_yellow = np.array([40, 255, 255])
         yellow_mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
         
+        # A morphological transformation is similar to a convolution. It slides a small kernel across a binary mask.
+        # In this case, we do a morphological opening operation. It's similar to a lowpass filter; it has the effect of removing noise while keeping the overall image structure intact.
         kernel = np.ones((3, 3), np.uint8)
         bin_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_OPEN, kernel)
 
+        # Create a new mask identical to the previous one that matches the shape of the entire image
         full_mask = np.zeros((h, w), dtype=np.uint8)
-        full_mask[offset_y:offset_y + bin_mask.shape[0], :] = bin_mask
+        full_mask[offset_y:offset_y+bin_mask.shape[0], :] = bin_mask
 
+
+        # Find the contours (object boundaries) of the whole image
+        # cv2.RETR_EXTERNAL = only care about outermost outlines
+        # cv2.CHAIN_APPROX_SIMPLE = only store the endpoints of outlines
         contours, _ = cv2.findContours(full_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         filter_bin_mask = np.zeros_like(full_mask)
 
+        # Since we only have the endpoints of the outlines,
+        # we need to loop through each of them and apply them to the mask.
+        # This could normally be done in a single call to drawContours, but we want to clamp the area bounds.
+        # ***This whole contour business is used for defining how wide/narrow of a lane we want to detect***
         for contour in contours:
             area = cv2.contourArea(contour)
             if min_area <= area <= max_area:
                 cv2.drawContours(filter_bin_mask, [contour], 0, 255, cv2.FILLED)
 
+        # Irrelevant
         if self.debug_pub.get_subscription_count() > 0:
             debug_msg = self.bridge.cv2_to_imgmsg(filter_bin_mask, "mono8")
             debug_msg.header = rgb_msg.header
             self.debug_pub.publish(debug_msg)
 
+        # Downsample the mask
         sampled_mask = np.zeros_like(filter_bin_mask)
         sampled_mask[::4, ::4] = filter_bin_mask[::4, ::4]
-        
         v_coords, u_coords = np.nonzero(sampled_mask)
         if len(v_coords) == 0: return
 
+        # Filter further based on valid depth range
         Z_mm = depth_img[v_coords, u_coords]
         valid_depth = (Z_mm > 0) & (Z_mm < (max_depth * 1000.0))
-        
         u_valid = u_coords[valid_depth]
         v_valid = v_coords[valid_depth]
         Z_clean_mm = Z_mm[valid_depth]
-
         if len(Z_clean_mm) == 0: return
 
+        # Convert screen space coordinates to points (?)
         Z_clean = Z_clean_mm.astype(np.float32) / 1000.0
         X_clean = (u_valid - cx) * Z_clean / fx
         Y_clean = (v_valid - cy) * Z_clean / fy
