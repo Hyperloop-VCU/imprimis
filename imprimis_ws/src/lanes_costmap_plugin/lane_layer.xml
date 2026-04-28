@@ -1,0 +1,5 @@
+<library path="lanes_costmap_plugin_core">
+  <class name="lanes_costmap_plugin/LaneLayer" type="lanes_costmap_plugin::LaneLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>Custom costmap layer for lane detection.</description>
+  </class>
+</library>

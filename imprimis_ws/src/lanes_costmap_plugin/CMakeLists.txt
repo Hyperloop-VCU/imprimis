@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(nav2_gradient_costmap_plugin)
+project(lanes_costmap_plugin)
 
 set(lib_name ${PROJECT_NAME}_core)
 
@@ -25,8 +25,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(OpenCV REQUIRED)
 
 set(dep_pkgs
+    OpenCV
     rclcpp
     nav2_costmap_2d
     pluginlib)
@@ -34,8 +36,9 @@ set(dep_pkgs
 # === Build ===
 
 add_library(${lib_name} SHARED
-            src/gradient_layer.cpp)
+            src/lane_layer.cpp)
 include_directories(include)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 # === Installation ===
 
@@ -43,10 +46,6 @@ install(TARGETS ${lib_name}
         DESTINATION lib)
 
 # === Ament work ===
-
-# pluginlib_export_plugin_description_file() installs gradient_layer.xml
-# file into "share" directory and sets ament indexes for it.
-# This allows the plugin to be discovered as a plugin of required type.
-pluginlib_export_plugin_description_file(nav2_costmap_2d gradient_layer.xml)
+pluginlib_export_plugin_description_file(nav2_costmap_2d lane_layer.xml)
 ament_target_dependencies(${lib_name} ${dep_pkgs})
 ament_package()
