@@ -91,7 +91,7 @@ private:
   std::shared_ptr<SerialLink> esp32;
 
   // debugging flags
-  const bool PRINT_READ_STATES = true;
+  const bool PRINT_READ_STATES = false;
   const bool PRINT_COMMANDS = false;
 
   // If we read an angvel outside [-range, range], ignore it and keep previous angvel

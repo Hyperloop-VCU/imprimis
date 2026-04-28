@@ -194,7 +194,9 @@ global_costmap:
       width: 100
       origin_x: -50.0
       origin_y: -50.0
-      publish_frequency: 10.0
+      publish_frequency: 20.0
+      update_frequency: 20.0
+      always_send_full_costmap: false
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
@@ -209,7 +211,7 @@ global_costmap:
       svtl_layer:  # Copy-Pasted from https://github.com/SteveMacenski/spatio_temporal_voxel_layer/blob/jazzy/spatio_temporal_voxel_layer/example/vlp16_config.yaml
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled:                  true
-        voxel_decay:              0.5  # seconds if linear, e^n if exponential
+        voxel_decay:              0.5   # seconds if linear, e^n if exponential
         decay_model:              0     # 0=linear, 1=exponential, -1=persistent
         voxel_size:               0.05  # meters
         track_unknown_space:      true  # default space is known
@@ -228,8 +230,8 @@ global_costmap:
           marking: true
           clearing: false
           obstacle_range: 7.0          # meters
-          min_obstacle_height: 0.3     # default 0, meters
-          max_obstacle_height: 1.0     # default 3, meters TODO measure imprimis
+          min_obstacle_height: 0.5     # default 0, meters
+          max_obstacle_height: 1.5     # default 3, meters TODO measure imprimis
           expected_update_rate: 0.0    # default 0, if not updating at this rate at least, remove from buffer
           observation_persistence: 0.0 # default 0, use all measurements taken during now-value, 0=latest
           inf_is_valid: false          # default false, for laser scans
@@ -242,7 +244,7 @@ global_costmap:
           marking: false
           clearing: true
           max_z: 8.0                  # default 0, meters
-          min_z: 1.0                  # default 10, meters
+          min_z: 0.5                  # default 10, meters
           vertical_fov_angle: 0.523   # default 0.7, radians. For 3D lidars it's the symmetric FOV about the planar axis.
           vertical_fov_padding: 0.05    # 3D Lidar only. Default 0, in meters 
           horizontal_fov_angle: 6.29  # 3D lidar scanners like the VLP16 have 360 deg horizontal FOV.
@@ -254,7 +256,6 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 1.5
         inflation_radius: 1.138 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
-      always_send_full_costmap: true
 
       # Massive blank map, filled over time
       #static_layer:

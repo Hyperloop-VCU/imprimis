@@ -194,6 +194,12 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   }
 
   // read succeeded
+  if (read_mode != mode_gpio)
+    RCLCPP_INFO(get_logger(), "Switched to %s mode.", (read_mode ? "manual" : "autonomous"));
+  if (!boardBConnected && boardBConnected_gpio)
+    RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
+  else if (boardBConnected && !boardBConnected_gpio)
+    RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
   mode_gpio = static_cast<double>(read_mode);
   boardBConnected_gpio = static_cast<double>(boardBConnected);
 
@@ -220,21 +226,13 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   hw_positions_[0] += period.seconds() * hw_velocities_[0];
   hw_positions_[1] += period.seconds() * hw_velocities_[1];
 
-  // Print wheel states
+  // Print wheel states if needed
   if (PRINT_READ_STATES) {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2);
     ss << "Left angvel: " << leftAngvel << "  |  Right angvel: " << rightAngvel << '\n';
     RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 400, "%s", ss.str().c_str()); 
   }
-
-  // Print additional info
-  if (read_mode != mode_gpio)
-    RCLCPP_INFO(get_logger(), "Switched to %s mode", (read_mode ? "manual" : "autonomous"));
-  if (!boardBConnected && boardBConnected_gpio)
-    RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
-  else if (boardBConnected && !boardBConnected_gpio)
-    RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
 
   return hardware_interface::return_type::OK;
 }
