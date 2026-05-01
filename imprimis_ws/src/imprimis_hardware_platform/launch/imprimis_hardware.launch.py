@@ -65,7 +65,31 @@ def generate_launch_description():
             "sim_real_gps",
             default_value="false",
             choices=("true", "false"),
-            description="If true, gazebo will not publish the GPS fix topic, and the GPS driver will be started."
+            description="If true, gazebo will not publish the GPS fix topic, and the GPS driver will be started. Used for specific testing scenarios only."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_cams",
+            default_value="true",
+            choices=("true", "false"),
+            description="Whether or not to start up the depth cameras. Only applicable for real hardware.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_lidar",
+            default_value="true",
+            choices=("true", "false"),
+            description="Whether or not to start up the nodes reading from the VLP16 lidar. Only applicable for real hardware.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_gps",
+            default_value="false",
+            choices=("true", "false"),
+            description="Whether or not to start up the GPS driver. Only applicable for real hardware.",
         )
     )
     hardware_type = LaunchConfiguration("hardware_type")
@@ -74,6 +98,9 @@ def generate_launch_description():
     lidar_rpm = LaunchConfiguration("lidar_rpm")
     show_sim = LaunchConfiguration("show_sim")
     sim_real_gps = LaunchConfiguration("sim_real_gps")
+    use_cams = LaunchConfiguration("use_cams")
+    use_lidar = LaunchConfiguration("use_lidar")
+    use_gps = LaunchConfiguration("use_gps")
 
     # Get package directories from the workspace source folder
     # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
@@ -134,7 +161,6 @@ def generate_launch_description():
         executable="spawner",
         parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
-        
     )
 
     # Diff drive controller spawner
@@ -166,7 +192,7 @@ def generate_launch_description():
         executable='velodyne_driver_node',
         output='both',
         parameters=[lidar_driver_config_file, {"rpm": lidar_rpm}],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_lidar, "' == 'true'"])),
         arguments=["--ros-args", "--log-level", "warn"]
     )
     velodyne_transform_node = Node(
@@ -174,7 +200,7 @@ def generate_launch_description():
         executable='velodyne_transform_node',
         output='log', # shut up
         parameters=[lidar_transform_config],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"])),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_lidar, "' == 'true'"])),
         arguments=["--ros-args", "--log-level", "error"]
     )
     lidar_delay_fixer = Node(
@@ -218,7 +244,7 @@ def generate_launch_description():
     gps_driver = Node(
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' or ('", hardware_type, "' == 'simulated' and '", sim_real_gps, "' == 'true')"])),
+        condition=IfCondition(PythonExpression(["('", hardware_type, "' == 'real' and '", use_gps, "' == 'true') or ('", hardware_type, "' == 'simulated' and '", sim_real_gps, "' == 'true')"])),
         arguments=["--ros-args", "--log-level", "warn"],
         parameters=[{
             'port': '/dev/ttyACM0',
@@ -227,6 +253,18 @@ def generate_launch_description():
         }, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
         namespace="gps",
         remappings=[("fix", "fix_no_cov")]
+    )
+
+    # Camera driver
+    camera_launch_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
+        launch_arguments={
+            'pointcloud.enable': 'true',
+            'log_level': 'error',
+            'camera_namespace': 'cameras',
+            'camera_name': 'front'
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_cams, "' == 'true'"])),
     )
 
     # Gazebo simulation
@@ -325,6 +363,7 @@ def generate_launch_description():
         gps_driver,  # OR, if hardware_type == simulated and sim_real_gps == true
         velodyne_driver_node,
         velodyne_transform_node,
+        camera_launch_include,
 
         # If hardware type != simulated
         controller_manager_node,

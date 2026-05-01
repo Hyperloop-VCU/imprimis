@@ -33,8 +33,8 @@ void LaneLayer::onInitialize()
 
     // params
     declareParameter("enabled", rclcpp::ParameterValue(true));
-    declareParameter("pointcloud_topic", rclcpp::ParameterValue("/camera/camera/depth/color/points"));
-    declareParameter("image_topic", rclcpp::ParameterValue("/camera/camera/color/image_raw"));
+    declareParameter("pointcloud_topic", rclcpp::ParameterValue("/cameras/front/depth/color/points"));
+    declareParameter("image_topic", rclcpp::ParameterValue("/cameras/front/color/image_raw"));
     node->get_parameter(name_ + "." + "enabled", enabled_);
     node->get_parameter(name_ + "." + "pointcloud_topic", pointcloud_topic);
     node->get_parameter(name_ + "." + "image_topic", image_topic);
@@ -50,12 +50,12 @@ void LaneLayer::onInitialize()
 
 void LaneLayer::pointcloudCb(const PointCloud2::UniquePtr msg) 
 {
-    RCLCPP_INFO(logger_, "Pointcloud received");
+    RCLCPP_ERROR(logger_, "Pointcloud received");
 }
 
 void LaneLayer::imageCb(const Image::UniquePtr msg) 
 {
-    RCLCPP_INFO(logger_, "Image received");
+    RCLCPP_ERROR(logger_, "Image received");
 }
 
 
@@ -119,8 +119,7 @@ void LaneLayer::updateCosts(nav2_costmap_2d::Costmap2D& master_grid, int min_i, 
     // master_grid - is a resulting costmap combined from all layers.
     // By using this pointer all layers will be overwritten!
     // To work with costmap layer and merge it with other costmap layers,
-    // please use costmap_ pointer instead (this is pointer to current
-    // costmap layer grid) and then call one of updates methods:
+    // please use costmap_ pointer instead (this is pointer to current costmap layer grid) and then call one of updates methods:
     // - updateWithAddition()
     // - updateWithMax()
     // - updateWithOverwrite()

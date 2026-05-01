@@ -36,6 +36,7 @@ class LaneLayer : public nav2_costmap_2d::Layer
     std::string pointcloud_topic;
     std::string image_topic;
 
+    std::vector<std::string> cameras;
     // Subscriptions
     rclcpp::Subscription<PointCloud2>::SharedPtr pointcloudSub;
     rclcpp::Subscription<Image>::SharedPtr imageSub;

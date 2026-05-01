@@ -54,3 +54,24 @@
 #  ros_type_name: "sensor_msgs/msg/NavSatFix"
 #  gz_type_name: "ignition.msgs.NavSat"
 #  direction: GZ_TO_ROS
+
+# Camera
+- ros_topic_name: "cameras/front/color/image_raw"
+  gz_topic_name:  "cameras/front/gzrgb/image_raw"
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: ignition.msgs.Image
+  direction: GZ_TO_ROS 
+
+
+- ros_topic_name: "cameras/front/depth/color/points"
+  gz_topic_name: "cameras/front/gzdepth/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: ignition.msgs.PointCloudPacked
+  direction: GZ_TO_ROS 
+
+
+- ros_topic_name: "cameras/front/color/camera_info"
+  gz_topic_name: "cameras/front/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: ignition.msgs.CameraInfo
+  direction: GZ_TO_ROS 

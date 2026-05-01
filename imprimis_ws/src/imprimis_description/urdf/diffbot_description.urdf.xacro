@@ -4,32 +4,47 @@
 <xacro:macro name="diffbot">
 <xacro:property name="PI" value="3.1415926535897931"/>
 
-<!-- Constants for robot dimensions -->
-<xacro:property name="base_mass" value="30.0" />
-<xacro:property name="wheel_mass" value="0.3" />
-<xacro:property name="base_width" value="0.62" />
-<xacro:property name="base_length" value="1.016" />
-<xacro:property name="base_height" value="0.51" />
-<xacro:property name="wheel_len" value="0.1" />
-<xacro:property name="wheel_radius" value="0.165" />
-<xacro:property name="wheel_yoff" value="0.13"/>
-<xacro:property name="wheel_zoff" value="0.054"/>
-<xacro:property name="base_top_width" value="0.749"/>
-<xacro:property name="base_top_height" value="0.305"/>
-<xacro:property name="lidar_pole_side" value="0.023"/> 
-<xacro:property name="lidar_pole_height" value="0.279"/> <!-- height from the top of chassis to lidar-->
-<xacro:property name="lidar_pole_xoff" value="0.48"/> <!-- length from back of robot to lidar pole-->
-<xacro:property name="lidar_pole_mass" value="2.0"/>
-<xacro:property name="lidar_pole_angle" value="0.033"/> <!-- slight tilt of the lidar pole along the x axis-->
+<!-- Include inertial macros -->
+<xacro:include filename="inertial_macros.xacro" />
 
-<!-- Constants for simulated caster wheel-->
+<!-- Inertial properties, only applicable in physics sims -->
+<xacro:property name="base_mass" value="20.0" />
+<xacro:property name="wheel_mass" value="0.3" />
+<xacro:property name="lidar_pole_mass" value="2.0"/>
+<xacro:property name="top_section_mass" value="10.0"/>
+
+<!-- Robot measurements -->
+<xacro:property name="base_width" value="0.6223" />  <!-- 24.500" --> <!-- Edge-to-edge robot width, same across all heights. This allows us to represent the robot width as a single rectangular prism if we want. -->
+<xacro:property name="base_length" value="1.022" />  <!-- 40.250" --> <!-- Edge-to-edge length of the bottom and middle planes -->
+<xacro:property name="base_height" value="0.486" />  <!-- 19.125" --> <!-- Top of bottom plane to top of middle plane -->
+<xacro:property name="wheel_len" value="0.1020" />   <!-- 04.000" -->
+<xacro:property name="wheel_radius" value="0.18" />  <!-- 07.000" -->
+<!-- Coincidentally, wheel_xoff is almost exactly equal to the wheel radius -->
+<xacro:property name="wheel_yoff" value="0.124"/>    <!-- 04.875" --> <!-- Edge of robot width to wheel center -->
+<xacro:property name="wheel_zoff" value="0.0523"/>   <!-- 02.050" --> <!-- Top of bottom plane to wheel center-->
+<xacro:property name="lidar_pole_side" value="0.0266"/>  <!-- 01.050" --> <!-- Side length of lidar pole -->
+<xacro:property name="lidar_pole_height" value="0.300"/> <!-- 11.810" --> <!-- Top of top plane to top of the pole -->
+<xacro:property name="lidar_pole_xoff" value="0.483"/>   <!-- 19.000" --> <!-- Back of robot to center of lidar pole-->
+<xacro:property name="lidar_pole_angle" value="0.033"/>                   <!-- Slight tilt of the lidar pole along the x-axis-->
+<xacro:property name="top_section_length" value="0.75"/> <!-- 25.560" --> <!-- Back of the robot to the end of the top section -->
+<!-- Top section width is the same as base_width -->
+<xacro:property name="top_section_height" value="0.279"/> <!-- 11.000" --> <!-- Top of middle plane to top of top plane-->
+
+<!-- TOTAL ROBOT HEIGHT: 1.1173 m-->
+<!-- Simulated caster wheel-->
 <xacro:property name="caster_mass" value="0.1"/>
-<xacro:property name="caster_radius" value="0.105"/>
+<xacro:property name="caster_radius" value="${wheel_radius - wheel_zoff}"/>
 <xacro:property name="caster_xoff" value="0.15"/>
 
 
 
-<xacro:include filename="inertial_macros.xacro" />
+
+
+
+<!-- ***BEGIN ROBOT DESCRIPTION*** -->
+
+
+
 
 <!-- Base link -->
 <link name="base_link">
@@ -48,7 +63,7 @@
 <joint name="chassis_joint" type="fixed">
   <parent link="base_link"/>
   <child link="chassis"/>
-  <origin xyz="-0.85 0 0"/>
+  <origin xyz="${-base_length + wheel_radius} 0 0"/>
 </joint>
 
 <!-- Chassis link -->
@@ -63,7 +78,7 @@
   <collision>
     <origin xyz="${base_length/2} 0 ${base_height/2}" rpy="0 0 0"/>
     <geometry>
-    <box size="${base_length} ${base_width} ${base_height}" />
+      <box size="${base_length} ${base_width} ${base_height}" />
     </geometry>
   </collision>
   <xacro:inertial_box mass="${base_mass}" x="${base_length}" y="${base_width}" z="${base_height}"> <!-- inertial macro -->
@@ -151,7 +166,7 @@
     <geometry>
       <sphere radius="${caster_radius}"/>
     </geometry>
-  <material name="white"/>
+    <material name="white"/>
   </visual>
   <collision>
     <geometry>
@@ -166,12 +181,38 @@
   </inertial>
 </link>
 
+<!-- Top section joint -->
+<joint name="top_section_joint" type="fixed">
+  <parent link="chassis"/>
+  <child link="top_section"/>
+  <origin xyz="0 0 ${base_height}"/>
+</joint>
+
+<!-- Top section link -->
+<link name="top_section">
+  <visual>
+    <geometry>
+      <box size="${top_section_length} ${base_width} ${top_section_height}"/>
+    </geometry>
+    <material name="grey"/>
+    <origin xyz="${top_section_length/2} 0 ${top_section_height/2}"/>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="${top_section_length} ${base_width} ${top_section_height}"/>
+    </geometry>
+    <origin xyz="${top_section_length/2} 0 ${top_section_height/2}"/>
+  </collision>
+  <xacro:inertial_box mass="${top_section_mass}" x="${top_section_length}" y="${base_width}" z="${top_section_height}"> <!-- inertial macro -->
+    <origin xyz="${top_section_length/2} 0 ${top_section_height/2}" rpy="0 0 0"/>
+  </xacro:inertial_box>
+</link>
 
 <!-- Lidar pole joint-->
 <joint name="lidar_pole_joint" type="fixed">
-  <parent link="chassis"/>
+  <parent link="top_section"/>
   <child link="lidar_pole"/>
-  <origin xyz="${lidar_pole_xoff} 0 ${base_height}" rpy="0 ${-lidar_pole_angle} 0"/>
+  <origin xyz="${lidar_pole_xoff} 0 ${top_section_height}" rpy="0 ${-lidar_pole_angle} 0"/>
 </joint>
 
 <!-- Lidar pole link-->
@@ -269,7 +310,12 @@
   <child link="velodyne"/>
 </joint>
 
-
+<!-- Camera joint and link -->
+<xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+<xacro:sensor_d435i parent="chassis" name="front">
+  <origin xyz="${base_length+0.01} 0 ${base_height-0.022}" rpy="0 0 0"/>
+  <!-- Camera is placed slightly off from where it's mounted without these magic numbers. -->
+</xacro:sensor_d435i>
 
 
 <!-- Lidar joint and link -->

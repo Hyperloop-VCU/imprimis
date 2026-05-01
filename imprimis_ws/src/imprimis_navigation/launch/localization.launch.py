@@ -65,6 +65,7 @@ def generate_launch_description():
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
+
     # hardware (real or simulated)
     imprimis_hardware_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])]),
@@ -73,7 +74,8 @@ def generate_launch_description():
             'use_controller': use_controller,
             'publish_odom_tf': disable_local_ekf,
             'world': world,
-            'show_sim:': show_sim
+            'show_sim:': show_sim,
+            'use_gps': 'true'
         }.items(),
     )
     
