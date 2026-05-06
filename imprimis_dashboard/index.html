@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Imprimis Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+</head>
+<body>
+  <h1>Imprimis Dashboard</h1>
+  <p>Connection: <span id="status">connecting...</span></p>
+  <pre id="odom"></pre>
+  <script>
+    const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
+    ros.on('connection', () => document.getElementById('status').textContent = 'CONNECTED');
+    ros.on('error', (e) => document.getElementById('status').textContent = 'ERROR: ' + e);
+    ros.on('close', () => document.getElementById('status').textContent = 'DISCONNECTED');
+
+    const odomTopic = new ROSLIB.Topic({
+      ros, name: '/odom', messageType: 'nav_msgs/msg/Odometry'
+    });
+    odomTopic.subscribe(msg => {
+      document.getElementById('odom').textContent = JSON.stringify(msg.pose.pose, null, 2);
+    });
+  </script>
+</body>
+</html>
