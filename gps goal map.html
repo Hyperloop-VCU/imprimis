@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Goal Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+<style>
+  :root {
+    --bg: #14171a;
+    --panel: rgba(20, 23, 26, 0.92);
+    --line: #2c3238;
+    --text: #d7dde2;
+    --dim: #7d8790;
+    --accent: #57c4ad;      /* robot */
+    --goal: #e8b64c;        /* goal */
+    --danger: #d96a5a;
+    --mono: "SF Mono", "Cascadia Code", Consolas, "DejaVu Sans Mono", monospace;
+    --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); }
+  #map { position: absolute; inset: 0; background: #0a0c0e; }
+
+  /* ---------- control panel ---------- */
+  #panel {
+    position: absolute; top: 12px; left: 12px; z-index: 1000;
+    width: 300px; max-height: calc(100% - 24px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    backdrop-filter: blur(6px);
+    font-size: 13px;
+  }
+  #panel header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+    cursor: pointer; user-select: none;
+  }
+  #panel header h1 { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; flex: 1; }
+  #statusDot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--danger); flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  #statusDot.connected { background: var(--accent); }
+  #statusDot.connecting { background: var(--goal); }
+  #collapseArrow { color: var(--dim); font-size: 11px; transition: transform 0.15s; }
+  #panel.collapsed #collapseArrow { transform: rotate(-90deg); }
+  #panel.collapsed #panelBody { display: none; }
+
+  section { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  section:last-child { border-bottom: none; }
+  section h2 {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--dim); margin-bottom: 8px;
+  }
+  label { display: block; font-size: 11px; color: var(--dim); margin: 8px 0 3px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text], select {
+    width: 100%; padding: 6px 8px;
+    background: #0e1114; color: var(--text);
+    border: 1px solid var(--line); border-radius: 5px;
+    font-family: var(--mono); font-size: 12px;
+  }
+  input[type=text]:focus, select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+  button {
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px;
+    background: #1d2226; color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; width: 100%;
+  }
+  button:hover { background: #262c31; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0c1512; }
+  button.primary:hover { background: #6cd2bc; }
+  button.goal-btn { background: var(--goal); border-color: var(--goal); color: #1d1608; }
+  button.goal-btn:hover { background: #f0c565; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .row { display: flex; gap: 6px; margin-top: 8px; }
+  .row button { flex: 1; }
+
+  .readout {
+    font-family: var(--mono); font-size: 12px;
+    display: grid; grid-template-columns: auto 1fr; gap: 3px 10px;
+  }
+  .readout .k { color: var(--dim); }
+  .readout .v { text-align: right; }
+
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; }
+  .toggle-row input { accent-color: var(--accent); }
+
+  #goalSection .coords {
+    font-family: var(--mono); font-size: 12px; margin-bottom: 8px;
+    padding: 6px 8px; background: #0e1114; border-radius: 5px; border: 1px solid var(--line);
+  }
+  #goalHint { font-size: 11px; color: var(--dim); }
+  #pubFlash { font-size: 11px; color: var(--accent); margin-top: 6px; min-height: 14px; }
+  #connError { font-size: 11px; color: var(--danger); margin-top: 6px; min-height: 0; word-break: break-word; }
+
+  /* ---------- map markers ---------- */
+  .robot-marker { filter: drop-shadow(0 0 4px rgba(87, 196, 173, 0.8)); }
+  .goal-marker  { filter: drop-shadow(0 0 4px rgba(232, 182, 76, 0.8)); }
+
+  .leaflet-container { font-family: var(--sans); }
+  .leaflet-control-attribution { background: rgba(20,23,26,0.75) !important; color: var(--dim) !important; }
+  .leaflet-control-attribution a { color: var(--dim) !important; }
+
+  @media (max-width: 480px) {
+    #panel { width: calc(100% - 24px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="panel">
+  <header id="panelHeader">
+    <div id="statusDot"></div>
+    <h1>GPS GOAL MAP</h1>
+    <span id="collapseArrow">&#9660;</span>
+  </header>
+  <div id="panelBody">
+
+    <section>
+      <h2>Connection</h2>
+      <label for="rosUrl">rosbridge websocket</label>
+      <input type="text" id="rosUrl" value="ws://localhost:9090">
+      <div class="row">
+        <button id="connectBtn" class="primary">Connect</button>
+      </div>
+      <div id="connError"></div>
+    </section>
+
+    <section>
+      <h2>Topics</h2>
+      <label for="fixTopic">robot fix (sensor_msgs/NavSatFix)</label>
+      <input type="text" id="fixTopic" value="/gps/fix">
+      <label for="goalTopic">goal publish topic</label>
+      <input type="text" id="goalTopic" value="/gps_goal">
+      <label for="goalType">goal message type</label>
+      <select id="goalType">
+        <option value="sensor_msgs/msg/NavSatFix">sensor_msgs/NavSatFix</option>
+        <option value="geographic_msgs/msg/GeoPoseStamped">geographic_msgs/GeoPoseStamped</option>
+        <option value="geographic_msgs/msg/GeoPoint">geographic_msgs/GeoPoint</option>
+      </select>
+      <div class="row">
+        <button id="applyTopicsBtn">Apply topics</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Robot</h2>
+      <div class="readout">
+        <span class="k">lat</span><span class="v" id="roLat">—</span>
+        <span class="k">lon</span><span class="v" id="roLon">—</span>
+        <span class="k">alt</span><span class="v" id="roAlt">—</span>
+        <span class="k">fixes</span><span class="v" id="roCount">0</span>
+        <span class="k">age</span><span class="v" id="roAge">—</span>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="followChk" checked>
+        <label for="followChk" style="margin:0; color:var(--text);">Follow robot</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="trailChk" checked>
+        <label for="trailChk" style="margin:0; color:var(--text);">Show trail</label>
+      </div>
+      <div class="row">
+        <button id="centerBtn">Center on robot</button>
+        <button id="clearTrailBtn">Clear trail</button>
+      </div>
+    </section>
+
+    <section id="goalSection">
+      <h2>Goal</h2>
+      <div id="goalHint">Click the map to place a goal.</div>
+      <div id="goalDetails" style="display:none;">
+        <div class="coords" id="goalCoords"></div>
+        <div class="row">
+          <button id="publishGoalBtn" class="goal-btn">Publish goal</button>
+          <button id="clearGoalBtn">Clear</button>
+        </div>
+      </div>
+      <div id="pubFlash"></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- map setup
+const map = L.map('map', { zoomControl: true }).setView([40.0, -83.0], 4);
+map.zoomControl.setPosition('bottomright');
+
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: 'Imagery &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+}).addTo(map);
+
+// hybrid labels/roads overlay (subtle, helps orientation)
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19, opacity: 0.75
+}).addTo(map);
+
+// ---------------------------------------------------------------- markers
+const robotIcon = L.divIcon({
+  className: 'robot-marker',
+  html: '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="7" fill="#57c4ad" stroke="#0c1512" stroke-width="2.5"/><circle cx="13" cy="13" r="2.4" fill="#0c1512"/></svg>',
+  iconSize: [26, 26], iconAnchor: [13, 13]
+});
+const goalIcon = L.divIcon({
+  className: 'goal-marker',
+  html: '<svg width="30" height="38" viewBox="0 0 30 38"><path d="M15 1 C7 1 1 7 1 15 c0 10 14 22 14 22 s14-12 14-22 C29 7 23 1 15 1z" fill="#e8b64c" stroke="#1d1608" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#1d1608"/></svg>',
+  iconSize: [30, 38], iconAnchor: [15, 37]
+});
+
+let robotMarker = null;
+let accuracyCircle = null;
+let goalMarker = null;
+let trail = L.polyline([], { color: '#57c4ad', weight: 2, opacity: 0.65 }).addTo(map);
+let firstFix = true;
+
+// ---------------------------------------------------------------- state
+const $ = id => document.getElementById(id);
+let ros = null;
+let fixSub = null;
+let goalPub = null;
+let lastFixTime = null;
+let fixCount = 0;
+let pendingGoal = null;   // {lat, lng}
+
+// ---------------------------------------------------------------- panel collapse
+$('panelHeader').addEventListener('click', () => $('panel').classList.toggle('collapsed'));
+
+// ---------------------------------------------------------------- connection
+function setStatus(state, msg) {
+  const dot = $('statusDot');
+  dot.className = state;                       // '', 'connecting', 'connected'
+  $('connError').textContent = msg || '';
+  $('connectBtn').textContent = (state === 'connected') ? 'Disconnect' : 'Connect';
+}
+
+function teardownTopics() {
+  if (fixSub) { fixSub.unsubscribe(); fixSub = null; }
+  goalPub = null;
+}
+
+function connect() {
+  if (ros) { ros.close(); return; }            // button doubles as disconnect
+  setStatus('connecting', '');
+  ros = new ROSLIB.Ros({ url: $('rosUrl').value.trim() });
+
+  ros.on('connection', () => {
+    setStatus('connected', '');
+    setupTopics();
+  });
+  ros.on('error', (e) => {
+    setStatus('', 'Connection error. Is rosbridge running? (ros2 launch rosbridge_server rosbridge_websocket_launch.xml)');
+  });
+  ros.on('close', () => {
+    setStatus('', '');
+    teardownTopics();
+    ros = null;
+  });
+}
+$('connectBtn').addEventListener('click', connect);
+
+// ---------------------------------------------------------------- topics
+function setupTopics() {
+  if (!ros) return;
+  teardownTopics();
+
+  fixSub = new ROSLIB.Topic({
+    ros: ros,
+    name: $('fixTopic').value.trim(),
+    messageType: 'sensor_msgs/msg/NavSatFix',
+    throttle_rate: 200
+  });
+  fixSub.subscribe(onFix);
+
+  goalPub = new ROSLIB.Topic({
+    ros: ros,
+    name: $('goalTopic').value.trim(),
+    messageType: $('goalType').value
+  });
+  goalPub.advertise();
+}
+$('applyTopicsBtn').addEventListener('click', () => {
+  setupTopics();
+  flash('Topics applied.');
+});
+
+// ---------------------------------------------------------------- fix handling
+function onFix(msg) {
+  if (!isFinite(msg.latitude) || !isFinite(msg.longitude)) return;
+  if (msg.status && msg.status.status === -1) return;   // STATUS_NO_FIX
+
+  const ll = [msg.latitude, msg.longitude];
+  fixCount++;
+  lastFixTime = Date.now();
+
+  if (!robotMarker) {
+    robotMarker = L.marker(ll, { icon: robotIcon, zIndexOffset: 500 }).addTo(map);
+  } else {
+    robotMarker.setLatLng(ll);
+  }
+
+  // horizontal accuracy from covariance diagonal, if provided
+  if (msg.position_covariance_type > 0) {
+    const r = Math.sqrt(Math.max(msg.position_covariance[0], msg.position_covariance[4]));
+    if (isFinite(r) && r > 0) {
+      if (!accuracyCircle) {
+        accuracyCircle = L.circle(ll, { radius: r, color: '#57c4ad', weight: 1, opacity: 0.4, fillOpacity: 0.08 }).addTo(map);
+      } else {
+        accuracyCircle.setLatLng(ll).setRadius(r);
+      }
+    }
+  }
+
+  if ($('trailChk').checked) trail.addLatLng(ll);
+
+  if (firstFix) {
+    map.setView(ll, 18);
+    firstFix = false;
+  } else if ($('followChk').checked) {
+    map.panTo(ll, { animate: true });
+  }
+
+  $('roLat').textContent = msg.latitude.toFixed(7);
+  $('roLon').textContent = msg.longitude.toFixed(7);
+  $('roAlt').textContent = isFinite(msg.altitude) ? msg.altitude.toFixed(1) + ' m' : '—';
+  $('roCount').textContent = fixCount;
+}
+
+// fix age ticker
+setInterval(() => {
+  if (lastFixTime === null) return;
+  const age = (Date.now() - lastFixTime) / 1000;
+  $('roAge').textContent = age < 1 ? '<1 s' : age.toFixed(0) + ' s';
+  $('roAge').style.color = age > 5 ? 'var(--danger)' : 'var(--text)';
+}, 500);
+
+$('centerBtn').addEventListener('click', () => {
+  if (robotMarker) map.setView(robotMarker.getLatLng(), Math.max(map.getZoom(), 17));
+});
+$('clearTrailBtn').addEventListener('click', () => trail.setLatLngs([]));
+$('trailChk').addEventListener('change', (e) => {
+  trail.setStyle({ opacity: e.target.checked ? 0.65 : 0 });
+});
+
+// ---------------------------------------------------------------- goal placement
+map.on('click', (e) => {
+  pendingGoal = { lat: e.latlng.lat, lng: e.latlng.lng };
+  if (!goalMarker) {
+    goalMarker = L.marker(e.latlng, { icon: goalIcon, draggable: true, zIndexOffset: 600 }).addTo(map);
+    goalMarker.on('dragend', () => {
+      const p = goalMarker.getLatLng();
+      pendingGoal = { lat: p.lat, lng: p.lng };
+      renderGoal();
+    });
+  } else {
+    goalMarker.setLatLng(e.latlng);
+  }
+  renderGoal();
+});
+
+function renderGoal() {
+  if (!pendingGoal) return;
+  $('goalHint').style.display = 'none';
+  $('goalDetails').style.display = 'block';
+  $('goalCoords').textContent = pendingGoal.lat.toFixed(7) + ', ' + pendingGoal.lng.toFixed(7);
+  $('publishGoalBtn').disabled = !goalPub;
+  $('pubFlash').textContent = '';
+}
+
+function clearGoal() {
+  pendingGoal = null;
+  if (goalMarker) { map.removeLayer(goalMarker); goalMarker = null; }
+  $('goalDetails').style.display = 'none';
+  $('goalHint').style.display = 'block';
+  $('pubFlash').textContent = '';
+}
+$('clearGoalBtn').addEventListener('click', clearGoal);
+
+// ---------------------------------------------------------------- goal publish
+function rosTimeNow() {
+  const ms = Date.now();
+  return { sec: Math.floor(ms / 1000), nanosec: (ms % 1000) * 1e6 };
+}
+
+function buildGoalMessage(type, lat, lon) {
+  switch (type) {
+    case 'sensor_msgs/msg/NavSatFix':
+      return {
+        header: { stamp: rosTimeNow(), frame_id: 'gps' },
+        status: { status: 0, service: 1 },
+        latitude: lat, longitude: lon, altitude: 0.0,
+        position_covariance: [0,0,0, 0,0,0, 0,0,0],
+        position_covariance_type: 0
+      };
+    case 'geographic_msgs/msg/GeoPoseStamped':
+      return {
+        header: { stamp: rosTimeNow(), frame_id: 'wgs84' },
+        pose: {
+          position: { latitude: lat, longitude: lon, altitude: 0.0 },
+          orientation: { x: 0, y: 0, z: 0, w: 1 }
+        }
+      };
+    case 'geographic_msgs/msg/GeoPoint':
+      return { latitude: lat, longitude: lon, altitude: 0.0 };
+  }
+}
+
+let flashTimer = null;
+function flash(text) {
+  $('pubFlash').textContent = text;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { $('pubFlash').textContent = ''; }, 3000);
+}
+
+$('publishGoalBtn').addEventListener('click', () => {
+  if (!pendingGoal || !goalPub) return;
+  const msg = buildGoalMessage($('goalType').value, pendingGoal.lat, pendingGoal.lng);
+  goalPub.publish(new ROSLIB.Message(msg));
+  flash('Published to ' + goalPub.name);
+});
+</script>
+</body>
+</html>
