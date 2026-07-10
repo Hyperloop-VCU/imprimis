@@ -3,18 +3,24 @@ from rclpy.time import Time
 from rclpy.node import Node
 from rclpy.duration import Duration
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import NavSatFix
 from action_msgs.msg import GoalStatusArray
+from geographic_msgs.msg import GeoPoint
 import tf2_ros
 import tf2_geometry_msgs
 from threading import Lock
 from math import dist
+from robot_localization.srv import FromLL, FromLL_Request, FromLL_Response
 
 class MapToOdomGoalConverter(Node):
     """
     Converts a pose message from the global frame (map) to the local frame (odom).
-    Republishes a local goal to outputTopic if any of the following are true:
+    Republishes a local goal to outputTopic if either of the following happen:
         - A new goal was published to inputTopic
-        - The globalFrame to localFrame transform has deviated by more than errorBeforeRepublish (m) since the last time we published to outputTopic
+        - The globalFrame to localFrame transform has deviated by more than errorBeforeRepublish (m) since the last time we updated it
+    
+    Additionally, GPS NavSatFix messages can be published to inputGPSTopic. On receiving one,
+    this node will use navsat_transform_node's /FromLL service to convert it to a map goal, handles it the same as as any other map goal.
     
     If there is no navigation happening (according to navStatusTopic), this node will not publish a local goal.
 
@@ -28,28 +34,62 @@ class MapToOdomGoalConverter(Node):
         self.globalFrame = self.declare_parameter("globalFrame", "map").value
         self.localFrame = self.declare_parameter("localFrame", "odom").value
         self.inputTopic = self.declare_parameter("inputTopic", "goal_pose").value
+        self.inputGPSTopic = self.declare_parameter("inputGPSTopic", "gps_goal").value
         self.outputTopic = self.declare_parameter("outputTopic", "odom_goal_pose").value
         self.outputRvizTopic = self.declare_parameter("outputRvizTopic", "odom_goal_pose_rviz").value
         self.errorBeforeRepublish = self.declare_parameter("errorBeforeRepublish", 3.0).value  # meters
-        self.errorCheckPeriod = self.declare_parameter("errorCheckPeriod", 1.0).value
+        self.errorCheckPeriod = self.declare_parameter("errorCheckPeriod", 1.0).value # seconds
         self.navStatusTopic = self.declare_parameter("navStatusTopic", "navigate_to_pose/_action/status").value
-        self.tfTimeout = self.declare_parameter("tfTimeout", 0.02).value
+        self.tfTimeout = self.declare_parameter("tfTimeout", 0.02).value # seconds
         self.debug = self.declare_parameter("debug", False).value
 
         # ROS objects
         self.outputPub = self.create_publisher(PoseStamped, self.outputTopic, 10)
         self.outputRvizPub = self.create_publisher(PoseStamped, self.outputRvizTopic, 10)
         self.inputSub = self.create_subscription(PoseStamped, self.inputTopic, self.new_global_goal_cb, 10)
+        self.inputGPSSub = self.create_subscription(NavSatFix, self.inputGPSTopic, self.new_gps_goal_cb, 10)
         self.tfBuffer = tf2_ros.buffer.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.errorChecker = self.create_timer(self.errorCheckPeriod, self.error_check_cb)
         self.navStatusSub = self.create_subscription(GoalStatusArray, self.navStatusTopic, self.navStatus_cb, 10)
+        self.fromLLclient = self.create_client(FromLL, "/fromLL")
 
         # Internal variables
         self.currGlobalGoal = None
         self.currLocalGoal = None
         self.goalLock = Lock()
         self.navigating = False 
+
+    def new_gps_goal_cb(self, receivedFixMsg: NavSatFix):
+        
+        # convert NavSatFix to GeoPoint
+        self.get_logger().info(f"\n\nReceived new GPS waypoint navigation goal: {receivedFixMsg.latitude}, {receivedFixMsg.longitude}")
+        geoPointMsg = FromLL_Request()
+        geoPointMsg.ll_point.latitude = receivedFixMsg.latitude
+        geoPointMsg.ll_point.longitude = receivedFixMsg.longitude
+        geoPointMsg.ll_point.altitude = 0.0
+
+        # call navsat_transform_node's /FromLL service to convert it to a map goal coordinate
+        i = 0
+        while not self.fromLLclient.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn(f'{i} GPS goal requested but navsat_transform_node\'s fromLL service is not available yet')
+            i += 1
+            if i > 3:
+                self.get_logger().error('Cannot follow GPS goal: Waited too long for navsat_transform_node\'s fromLL service to become available')
+                return
+        self.get_logger().info(f"Called the service {geoPointMsg.ll_point.latitude} {geoPointMsg.ll_point.longitude}")
+        mapGoalCoords: FromLL_Response = self.fromLLclient.call(geoPointMsg)
+        self.get_logger().info(f"\n\nService completed")
+        if mapGoalCoords is None or mapGoalCoords.map_point.x == 0.0 or mapGoalCoords.map_point.y == 0.0:
+            self.get_logger().error('Cannot follow GPS goal: zero or empty map coordinate received from navsat_transform_node')
+
+
+        # convert it to a PoseStamped, and handle it the exact same as a regular map goal
+        mapGoal = PoseStamped()
+        mapGoal.pose.position.x = mapGoalCoords.map_point.x
+        mapGoal.pose.position.y = mapGoalCoords.map_point.y
+        mapGoal.header.stamp = self.get_clock().now().to_msg()
+        self.new_global_goal_cb(mapGoal)
 
     def new_global_goal_cb(self, receivedGoalMsg: PoseStamped):
         """
@@ -61,8 +101,8 @@ class MapToOdomGoalConverter(Node):
 
         # If goal was given in the wrong frame, transform it to the global frame
         receivedFrame = receivedGoalMsg.header.frame_id
+        self.get_logger().info(f"\n\nReceived new navigation goal in the {receivedFrame} frame: {receivedGoalMsg.pose.position.x}, {receivedGoalMsg.pose.position.y}")
         if receivedFrame != self.globalFrame:
-            self.get_logger().info(f"\n\nReceived goal in the {receivedFrame} frame, transforming it to the {self.globalFrame} frame.\n")
             try:
                 if self.tfBuffer.can_transform(receivedFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout)):
                     receivedToGlobalTransform = self.tfBuffer.lookup_transform(self.globalFrame, receivedFrame, Time(), Duration(seconds=self.tfTimeout))

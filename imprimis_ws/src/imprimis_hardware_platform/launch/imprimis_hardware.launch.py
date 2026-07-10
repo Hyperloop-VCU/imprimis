@@ -4,6 +4,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Exec
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 import os
@@ -349,6 +350,13 @@ def generate_launch_description():
         condition=IfCondition(use_controller)
     )
 
+    # rosbridge
+    #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+    rosbridge_launch_include = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
+        launch_arguments={'port': '9090'}.items()
+    )
+
     things_to_launch = [
         # Always
         robot_state_pub_node,
@@ -356,6 +364,7 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         lidar_delay_fixer,
         rviz_node,
+        rosbridge_launch_include,
 
         # If hardware_type == real
         imu_driver,

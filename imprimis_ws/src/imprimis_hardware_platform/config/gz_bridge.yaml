@@ -46,6 +46,13 @@
   gz_type_name: "ignition.msgs.IMU"
   direction: GZ_TO_ROS
 
+# gz topic published by sensors plugin (GPS)
+- ros_topic_name: "gps/fix_no_cov"
+  gz_topic_name: "gps"
+  ros_type_name: "sensor_msgs/msg/NavSatFix"
+  gz_type_name: "ignition.msgs.NavSat"
+  direction: GZ_TO_ROS
+
 # Camera
 - ros_topic_name: "cameras/front/color/image_raw"
   gz_topic_name:  "cameras/front/gzrgb/image_raw"

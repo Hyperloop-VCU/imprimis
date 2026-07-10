@@ -3,6 +3,7 @@ map_goal_to_odom:
     localFrame: "odom"
     globalFrame: "map"
     inputTopic: "goal_pose"
+    inputGPSTopic: "gps_goal"
     outputTopic: "odom_goal_pose"
     outputRvizTopic: "odom_goal_pose_rviz"
     errorBeforeRepublish: 2.0
