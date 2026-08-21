@@ -21,10 +21,10 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "map_type",
-            default_value="lidar",
-            choices=("lidar", "gps", "fake"),
-            description="If lidar, the map frame is generated from SLAM. If gps, the map frame is generated from fusing local odom with GPS. If fake, map is identical to odom."
+            "nav_mode",
+            default_value="outdoor",
+            choices=("indoor", "outdoor"),
+            description="If indoor mode, the map frame is generated from SLAM. If outdoor mode, the map frame is generated from fusing local odom with GPS."
         )
     )
     declared_arguments.append(
@@ -109,7 +109,7 @@ def generate_launch_description():
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
     world = LaunchConfiguration("world")
-    map_type = LaunchConfiguration("map_type")
+    nav_mode = LaunchConfiguration("nav_mode")
     show_sim = LaunchConfiguration("show_sim")
 
     map_yaml = LaunchConfiguration("map_yaml")
@@ -126,7 +126,7 @@ def generate_launch_description():
             "use_controller": use_controller,
             "disable_local_EKF": disable_local_EKF,
             "world": world,
-            "map_type": map_type,
+            "map_type": PythonExpression(["'lidar' if '", nav_mode, "' == 'indoor' else 'gps'"]),
             "show_sim": show_sim
         }.items(),
     )
@@ -211,7 +211,7 @@ def generate_launch_description():
             package="map_goal_to_odom",
             executable="map_goal_to_odom",
             name="map_goal_to_odom",
-            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]), "useGps": PythonExpression(["'", nav_mode, "' == 'outdoor'"])}]
         )]
     ))
     

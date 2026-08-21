@@ -1,3 +1,8 @@
+# Entries with a "sensor:" key are only bridged when the matching use_<sensor>
+# launch argument is true (see imprimis_sim.launch.py). The key is stripped
+# before the filtered config is handed to ros_gz_bridge. Valid values:
+# lidar, imu, gps, cams. Entries without the key are always bridged.
+
 - ros_topic_name: "clock"
   gz_topic_name: "clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
@@ -33,42 +38,48 @@
   direction: GZ_TO_ROS
 
 # gz topic published by sensors plugin (lidar)
-- ros_topic_name: "velodyne_points"
+- sensor: lidar
+  ros_topic_name: "velodyne_points"
   gz_topic_name: "lidar/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "ignition.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
 
 # gz topic published by sensors plugin (IMU)
-- ros_topic_name: "imu/data"
+- sensor: imu
+  ros_topic_name: "imu/data"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "ignition.msgs.IMU"
   direction: GZ_TO_ROS
 
 # gz topic published by sensors plugin (GPS)
-- ros_topic_name: "gps/fix_no_cov"
+- sensor: gps
+  ros_topic_name: "gps/fix_no_cov"
   gz_topic_name: "gps"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "ignition.msgs.NavSat"
   direction: GZ_TO_ROS
 
 # Camera
-- ros_topic_name: "cameras/front/color/image_raw"
+- sensor: cams
+  ros_topic_name: "cameras/front/color/image_raw"
   gz_topic_name:  "cameras/front/gzrgb/image_raw"
   ros_type_name: sensor_msgs/msg/Image
   gz_type_name: ignition.msgs.Image
   direction: GZ_TO_ROS 
 
 
-- ros_topic_name: "cameras/front/depth/color/points"
+- sensor: cams
+  ros_topic_name: "cameras/front/depth/color/points"
   gz_topic_name: "cameras/front/gzdepth/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: ignition.msgs.PointCloudPacked
   direction: GZ_TO_ROS 
 
 
-- ros_topic_name: "cameras/front/color/camera_info"
+- sensor: cams
+  ros_topic_name: "cameras/front/color/camera_info"
   gz_topic_name: "cameras/front/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: ignition.msgs.CameraInfo

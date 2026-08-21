@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.time import Time
 from rclpy.node import Node
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.duration import Duration
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import NavSatFix
@@ -34,7 +35,7 @@ class MapToOdomGoalConverter(Node):
         self.globalFrame = self.declare_parameter("globalFrame", "map").value
         self.localFrame = self.declare_parameter("localFrame", "odom").value
         self.inputTopic = self.declare_parameter("inputTopic", "goal_pose").value
-        self.inputGPSTopic = self.declare_parameter("inputGPSTopic", "gps_goal").value
+        self.inputGPSTopic = self.declare_parameter("inputGPSTopic", "gps_waypoint_goal").value
         self.outputTopic = self.declare_parameter("outputTopic", "odom_goal_pose").value
         self.outputRvizTopic = self.declare_parameter("outputRvizTopic", "odom_goal_pose_rviz").value
         self.errorBeforeRepublish = self.declare_parameter("errorBeforeRepublish", 3.0).value  # meters
@@ -43,16 +44,25 @@ class MapToOdomGoalConverter(Node):
         self.tfTimeout = self.declare_parameter("tfTimeout", 0.02).value # seconds
         self.debug = self.declare_parameter("debug", False).value
 
+        # dynamic parameter
+        self.useGps = self.declare_parameter("useGps", True).value
+
         # ROS objects
+        self.cb_group = ReentrantCallbackGroup()
         self.outputPub = self.create_publisher(PoseStamped, self.outputTopic, 10)
         self.outputRvizPub = self.create_publisher(PoseStamped, self.outputRvizTopic, 10)
         self.inputSub = self.create_subscription(PoseStamped, self.inputTopic, self.new_global_goal_cb, 10)
-        self.inputGPSSub = self.create_subscription(NavSatFix, self.inputGPSTopic, self.new_gps_goal_cb, 10)
+
+        if self.useGps:
+            self.cb_group = ReentrantCallbackGroup()
+            self.inputGPSSub = self.create_subscription(GeoPoint, self.inputGPSTopic, self.new_gps_goal_cb, 10, callback_group=self.cb_group)
+            self.fromLLclient = self.create_client(FromLL, "/fromLL", callback_group=self.cb_group)
+        
         self.tfBuffer = tf2_ros.buffer.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
         self.errorChecker = self.create_timer(self.errorCheckPeriod, self.error_check_cb)
+        
         self.navStatusSub = self.create_subscription(GoalStatusArray, self.navStatusTopic, self.navStatus_cb, 10)
-        self.fromLLclient = self.create_client(FromLL, "/fromLL")
 
         # Internal variables
         self.currGlobalGoal = None
@@ -60,16 +70,16 @@ class MapToOdomGoalConverter(Node):
         self.goalLock = Lock()
         self.navigating = False 
 
-    def new_gps_goal_cb(self, receivedFixMsg: NavSatFix):
+    async def new_gps_goal_cb(self, receivedGeopointMsg: GeoPoint):
         
-        # convert NavSatFix to GeoPoint
-        self.get_logger().info(f"\n\nReceived new GPS waypoint navigation goal: {receivedFixMsg.latitude}, {receivedFixMsg.longitude}")
+        # create fromLL service message
+        self.get_logger().info(f"\n\nReceived new GPS waypoint navigation goal: {receivedGeopointMsg.latitude}, {receivedGeopointMsg.longitude}")
         geoPointMsg = FromLL_Request()
-        geoPointMsg.ll_point.latitude = receivedFixMsg.latitude
-        geoPointMsg.ll_point.longitude = receivedFixMsg.longitude
+        geoPointMsg.ll_point.latitude = receivedGeopointMsg.latitude
+        geoPointMsg.ll_point.longitude = receivedGeopointMsg.longitude
         geoPointMsg.ll_point.altitude = 0.0
 
-        # call navsat_transform_node's /FromLL service to convert it to a map goal coordinate
+        # ensure fromLL service is available
         i = 0
         while not self.fromLLclient.wait_for_service(timeout_sec=1.0):
             self.get_logger().warn(f'{i} GPS goal requested but navsat_transform_node\'s fromLL service is not available yet')
@@ -77,17 +87,20 @@ class MapToOdomGoalConverter(Node):
             if i > 3:
                 self.get_logger().error('Cannot follow GPS goal: Waited too long for navsat_transform_node\'s fromLL service to become available')
                 return
-        self.get_logger().info(f"Called the service {geoPointMsg.ll_point.latitude} {geoPointMsg.ll_point.longitude}")
-        mapGoalCoords: FromLL_Response = self.fromLLclient.call(geoPointMsg)
+
+        # use fromLL service to convert lat/long to robot map frame
+        self.get_logger().info(f"Calling the service {geoPointMsg.ll_point.latitude} {geoPointMsg.ll_point.longitude}")
+        mapGoalCoords = await self.fromLLclient.call_async(geoPointMsg)
         self.get_logger().info(f"\n\nService completed")
         if mapGoalCoords is None or mapGoalCoords.map_point.x == 0.0 or mapGoalCoords.map_point.y == 0.0:
-            self.get_logger().error('Cannot follow GPS goal: zero or empty map coordinate received from navsat_transform_node')
+            self.get_logger().error('Cannot follow GPS goal, zero or empty map-frame coordinate received from navsat_transform_node')
+        
 
-
-        # convert it to a PoseStamped, and handle it the exact same as a regular map goal
+        # convert service response to a PoseStamped message, then handle it the exact same as a regular map goal
         mapGoal = PoseStamped()
         mapGoal.pose.position.x = mapGoalCoords.map_point.x
         mapGoal.pose.position.y = mapGoalCoords.map_point.y
+        mapGoal.header.frame_id = self.globalFrame
         mapGoal.header.stamp = self.get_clock().now().to_msg()
         self.new_global_goal_cb(mapGoal)
 

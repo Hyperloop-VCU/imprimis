@@ -66,18 +66,32 @@ def generate_launch_description():
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
 
-    # hardware (real or simulated)
-    imprimis_hardware_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])]),
+    # simulated
+    imprimis_sim_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_sim.launch.py'])]),
         launch_arguments={
-            'hardware_type': hardware_type,
             'use_controller': use_controller,
             'publish_odom_tf': disable_local_ekf,
             'world': world,
             'show_sim:': show_sim,
-            'use_gps': 'true'
+            'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
+            'use_cams': "false"
         }.items(),
+        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
+
+    # real
+    imprimis_hardware_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])]),
+            launch_arguments={
+                'use_controller': use_controller,
+                'publish_odom_tf': disable_local_ekf,
+                'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
+                'use_cams': "false"
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        )
+    
     
     # Local EKF node for local odom fusion from multiple sources
     local_ekf_config = PathJoinSubstitution([ nav_config_src_dir, "Local_EKF.yaml"])
@@ -91,6 +105,7 @@ def generate_launch_description():
         condition=UnlessCondition(disable_local_ekf)
     )
 
+    
     # Helper node to wait for odom -> base_link
     wait_for_odom_tf = Node(
         package="utils",
@@ -160,7 +175,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription(declared_arguments + [
+        # always
         imprimis_hardware_launch,
+        imprimis_sim_launch,
         local_ekf,
         wait_for_odom_tf,
 

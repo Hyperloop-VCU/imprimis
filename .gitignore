@@ -12,4 +12,4 @@ imprimis_ws/src/install/
 imprimis_ws/src/log/
 imprimis_ws/src/map.pcd
 imprimis_ws/src/pose_graph.g2o
-
+gps_goal_map_assets/

@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GPS Goal Map</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+<!-- Vendored locally so the page works with no internet. See gps_goal_map_assets/. -->
+<link rel="stylesheet" href="gps_goal_map_assets/leaflet.min.css">
+<script src="gps_goal_map_assets/leaflet.min.js"></script>
+<script src="gps_goal_map_assets/roslib.min.js"></script>
 <style>
   :root {
     --bg: #14171a;
@@ -15,7 +16,8 @@
     --text: #d7dde2;
     --dim: #7d8790;
     --accent: #57c4ad;      /* robot */
-    --goal: #e8b64c;        /* goal */
+    --goal: #e8b64c;        /* staged goal */
+    --published: #66d34f;   /* last published goal */
     --danger: #d96a5a;
     --mono: "SF Mono", "Cascadia Code", Consolas, "DejaVu Sans Mono", monospace;
     --sans: system-ui, "Segoe UI", Roboto, sans-serif;
@@ -95,12 +97,22 @@
     padding: 6px 8px; background: #0e1114; border-radius: 5px; border: 1px solid var(--line);
   }
   #goalHint { font-size: 11px; color: var(--dim); }
+  .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .coord-grid label { margin: 0 0 3px; }
+  #manualErr { font-size: 11px; color: var(--danger); margin-top: 6px; min-height: 0; }
+  #offlineNote {
+    display: none; margin: 0 12px 10px; padding: 6px 8px;
+    background: rgba(232, 182, 76, 0.12); border: 1px solid var(--goal);
+    border-radius: 5px; font-size: 11px; color: var(--goal); line-height: 1.4;
+  }
   #pubFlash { font-size: 11px; color: var(--accent); margin-top: 6px; min-height: 14px; }
+  #publishedCoords { border-color: var(--published); color: var(--published); }
   #connError { font-size: 11px; color: var(--danger); margin-top: 6px; min-height: 0; word-break: break-word; }
 
   /* ---------- map markers ---------- */
   .robot-marker { filter: drop-shadow(0 0 4px rgba(87, 196, 173, 0.8)); }
   .goal-marker  { filter: drop-shadow(0 0 4px rgba(232, 182, 76, 0.8)); }
+  .published-marker { filter: drop-shadow(0 0 4px rgba(102, 211, 79, 0.85)); }
 
   .leaflet-container { font-family: var(--sans); }
   .leaflet-control-attribution { background: rgba(20,23,26,0.75) !important; color: var(--dim) !important; }
@@ -124,6 +136,7 @@
     <span id="collapseArrow">&#9660;</span>
   </header>
   <div id="panelBody">
+    <div id="offlineNote"></div>
 
     <section>
       <h2>Connection</h2>
@@ -136,19 +149,10 @@
     </section>
 
     <section>
-      <h2>Topics</h2>
-      <label for="fixTopic">robot fix (sensor_msgs/NavSatFix)</label>
-      <input type="text" id="fixTopic" value="/gps/fix">
-      <label for="goalTopic">goal publish topic</label>
-      <input type="text" id="goalTopic" value="/gps_goal">
-      <label for="goalType">goal message type</label>
-      <select id="goalType">
-        <option value="sensor_msgs/msg/NavSatFix">sensor_msgs/NavSatFix</option>
-        <option value="geographic_msgs/msg/GeoPoseStamped">geographic_msgs/GeoPoseStamped</option>
-        <option value="geographic_msgs/msg/GeoPoint">geographic_msgs/GeoPoint</option>
-      </select>
-      <div class="row">
-        <button id="applyTopicsBtn">Apply topics</button>
+      <h2>Display</h2>
+      <div class="toggle-row" style="margin-top:0;">
+        <input type="checkbox" id="mapChk" checked>
+        <label for="mapChk" style="margin:0; color:var(--text);">Show map</label>
       </div>
     </section>
 
@@ -157,7 +161,7 @@
       <div class="readout">
         <span class="k">lat</span><span class="v" id="roLat">—</span>
         <span class="k">lon</span><span class="v" id="roLon">—</span>
-        <span class="k">alt</span><span class="v" id="roAlt">—</span>
+        <span class="k">fix rate</span><span class="v" id="roRate">—</span>
         <span class="k">fixes</span><span class="v" id="roCount">0</span>
         <span class="k">age</span><span class="v" id="roAge">—</span>
       </div>
@@ -177,8 +181,24 @@
 
     <section id="goalSection">
       <h2>Goal</h2>
-      <div id="goalHint">Click the map to place a goal.</div>
-      <div id="goalDetails" style="display:none;">
+      <div id="goalHint">Click the map to place a goal, or type coordinates below.</div>
+
+      <div class="coord-grid" style="margin-top:8px;">
+        <div>
+          <label for="manLat">latitude</label>
+          <input type="text" id="manLat" inputmode="decimal" placeholder="37.545358" autocomplete="off">
+        </div>
+        <div>
+          <label for="manLon">longitude</label>
+          <input type="text" id="manLon" inputmode="decimal" placeholder="-77.448637" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <button id="setManualBtn">Set goal from coordinates</button>
+      </div>
+      <div id="manualErr"></div>
+
+      <div id="goalDetails" style="display:none; margin-top:8px;">
         <div class="coords" id="goalCoords"></div>
         <div class="row">
           <button id="publishGoalBtn" class="goal-btn">Publish goal</button>
@@ -186,6 +206,11 @@
         </div>
       </div>
       <div id="pubFlash"></div>
+
+      <div id="publishedRow" style="display:none;">
+        <label>last published goal</label>
+        <div class="coords" id="publishedCoords" style="margin-bottom:0;"></div>
+      </div>
     </section>
 
   </div>
@@ -194,37 +219,124 @@
 <script>
 "use strict";
 
+// ---------------------------------------------------------------- topic names
+const FIX_TOPIC  = '/gps/fix';
+const GOAL_TOPIC = '/gps_waypoint_goal';
+const GOAL_TYPE  = 'geographic_msgs/msg/GeoPoint';
+
 // ---------------------------------------------------------------- map setup
-const map = L.map('map', { zoomControl: true }).setView([40.0, -83.0], 4);
-map.zoomControl.setPosition('bottomright');
+// The map is the ONLY part of this page allowed to fail without internet.
+// Everything below is written so that a missing Leaflet, missing tile cache or
+// dead network degrades the basemap and nothing else.
+const HAS_LEAFLET = (typeof L !== 'undefined');
+let map = null;
 
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 19,
-  attribution: 'Imagery &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
-}).addTo(map);
+// Tile source: try the local cache first, fall back to Esri if we're online.
+// Cached area: 0.5 mi around VCU College of Engineering East Hall (37.545358, -77.448637).
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const LAYER_DEFS = [
+  { local: 'gps_goal_map_assets/tiles/imagery/{z}/{y}/{x}.png',
+    remote: ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    opts: { maxZoom: 24, maxNativeZoom: 20,
+            attribution: 'Imagery &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics' } },
+  // hybrid labels/roads overlay (subtle, helps orientation)
+  { local: 'gps_goal_map_assets/tiles/reference/{z}/{y}/{x}.png',
+    remote: ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    opts: { maxZoom: 24, maxNativeZoom: 19, opacity: 0.75 } }
+];
 
-// hybrid labels/roads overlay (subtle, helps orientation)
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 19, opacity: 0.75
-}).addTo(map);
+let tileFailures = 0;
+let remoteTilesDead = false;    // latched once the live service is clearly unreachable
+let remoteMisses = 0;
+function noteTileFailure() {
+  if (++tileFailures === 8) {
+    showNote('Basemap tiles unavailable here \u2014 you are outside the cached area ' +
+             '(0.5 mi around VCU Engineering East Hall) with no internet. ' +
+             'Position tracking and goal publishing are unaffected.');
+  }
+  // Offline, every uncached tile costs a doomed request that ties up a socket
+  // until it times out. After enough misses stop trying and fail fast instead.
+  if (!remoteTilesDead && ++remoteMisses >= 24) remoteTilesDead = true;
+}
+
+// Tile layer that falls back local -> remote before giving up.
+const CachedTileLayer = HAS_LEAFLET ? L.TileLayer.extend({
+  // build a URL from the remote template using Leaflet's own coord math
+  _remoteUrl: function (coords) {
+    const saved = this._url;
+    this._url = this.options.remoteUrl;
+    const url = this.getTileUrl(coords);
+    this._url = saved;
+    return url;
+  },
+  createTile: function (coords, done) {
+    const tile = document.createElement('img');
+    tile.alt = '';
+    let triedRemote = false;
+    L.DomEvent.on(tile, 'load', L.Util.bind(function (e) {
+      if (triedRemote) { remoteMisses = 0; }   // service is alive again
+      this._tileOnLoad(done, tile, e);
+    }, this));
+    L.DomEvent.on(tile, 'error', L.Util.bind(function (e) {
+      if (!triedRemote && !remoteTilesDead) {   // local cache miss -> try live service
+        triedRemote = true;
+        tile.src = this._remoteUrl(coords);
+        return;
+      }
+      noteTileFailure();            // offline AND uncached: give up on this tile
+      this._tileOnError(done, tile, e);
+    }, this));
+    tile.src = this.getTileUrl(coords);
+    return tile;
+  }
+}) : null;
+
+if (HAS_LEAFLET) {
+  // preferCanvas: the trail and accuracy circle are redrawn on every fix; the
+  // canvas renderer costs far less than one SVG path element per vertex.
+  map = L.map('map', { zoomControl: true, maxZoom: 24, preferCanvas: true })
+         .setView([40.0, -83.0], 4);
+  map.zoomControl.setPosition('bottomright');
+  LAYER_DEFS.forEach(d => {
+    new CachedTileLayer(d.local, Object.assign({ remoteUrl: d.remote }, d.opts)).addTo(map);
+  });
+}
 
 // ---------------------------------------------------------------- markers
-const robotIcon = L.divIcon({
+const robotIcon = !HAS_LEAFLET ? null : L.divIcon({
   className: 'robot-marker',
   html: '<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="7" fill="#57c4ad" stroke="#0c1512" stroke-width="2.5"/><circle cx="13" cy="13" r="2.4" fill="#0c1512"/></svg>',
   iconSize: [26, 26], iconAnchor: [13, 13]
 });
-const goalIcon = L.divIcon({
+const goalIcon  = !HAS_LEAFLET ? null : L.divIcon({
   className: 'goal-marker',
   html: '<svg width="30" height="38" viewBox="0 0 30 38"><path d="M15 1 C7 1 1 7 1 15 c0 10 14 22 14 22 s14-12 14-22 C29 7 23 1 15 1z" fill="#e8b64c" stroke="#1d1608" stroke-width="2.5"/><circle cx="15" cy="15" r="4.5" fill="#1d1608"/></svg>',
   iconSize: [30, 38], iconAnchor: [15, 37]
 });
 
+// A check inside a circle, centred on the point: distinct from the amber pin
+// (whose tip marks the point) so a staged goal sitting on top of the published
+// one still reads clearly.
+const publishedIcon = !HAS_LEAFLET ? null : L.divIcon({
+  className: 'published-marker',
+  html: '<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8.5" fill="#66d34f" stroke="#0d1a08" stroke-width="2"/><path d="M7 11.3 l2.8 2.8 l5.2 -5.6" fill="none" stroke="#0d1a08" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  iconSize: [22, 22], iconAnchor: [11, 11]
+});
+
 let robotMarker = null;
+let publishedMarker = null;
+let publishedGoal = null;   // {lat, lng} of the most recent successful publish
 let accuracyCircle = null;
 let goalMarker = null;
-let trail = L.polyline([], { color: '#57c4ad', weight: 2, opacity: 0.65 }).addTo(map);
+// Trail cost is what grows without bound if left alone: a stationary robot at
+// 5 Hz still appends 18k vertices an hour, and every one of them is re-projected
+// on each pan. Gate on real movement and cap the total.
+const TRAIL_MAX_POINTS = 1500;
+const TRAIL_MIN_MOVE_M = 0.4;
+let trailPts = [];
+let trail = HAS_LEAFLET ? L.polyline([], { color: '#57c4ad', weight: 2, opacity: 0.65 }).addTo(map) : null;
 let firstFix = true;
+let mapShown = HAS_LEAFLET;   // hiding the map also stops its per-fix redraw work
 
 // ---------------------------------------------------------------- state
 const $ = id => document.getElementById(id);
@@ -233,7 +345,52 @@ let fixSub = null;
 let goalPub = null;
 let lastFixTime = null;
 let fixCount = 0;
+let fixTimes = [];        // recent arrival times, for the rate readout
+let lastFix = null;       // newest position, painted by the ticker
 let pendingGoal = null;   // {lat, lng}
+
+// ---------------------------------------------------------------- map visibility
+// Hidden is a real mode, not just display:none — the per-fix marker, trail and
+// follow work is skipped entirely, leaving a text-only console. Trail points
+// keep accumulating in memory so unhiding shows an unbroken path.
+function setMapVisible(show) {
+  mapShown = show && HAS_LEAFLET && !!map;
+  $('map').style.display = mapShown ? '' : 'none';
+  $('centerBtn').disabled = !mapShown;
+  $('goalHint').textContent = mapShown
+    ? 'Click the map to place a goal, or type coordinates below.'
+    : 'Map hidden \u2014 type coordinates below to set a goal.';
+  if (!mapShown) return;
+
+  map.invalidateSize();        // Leaflet cannot measure a display:none container
+  if (trail) trail.setLatLngs(trailPts);
+  syncPublishedMarker();
+  if (lastFix) {
+    const ll = [lastFix.lat, lastFix.lon];
+    if (robotMarker) { robotMarker.setLatLng(ll); }
+    else { robotMarker = L.marker(ll, { icon: robotIcon, zIndexOffset: 500 }).addTo(map); }
+    if (firstFix) { map.setView(ll, 18); firstFix = false; }
+    else if ($('followChk').checked) followRobot(ll);
+  }
+}
+$('mapChk').addEventListener('change', (e) => setMapVisible(e.target.checked));
+
+// ---------------------------------------------------------------- notices
+function showNote(text) {
+  const n = $('offlineNote');
+  n.textContent = text;
+  n.style.display = 'block';
+}
+if (!HAS_LEAFLET) {
+  showNote('Map library failed to load, so there is no map. Everything else still works: ' +
+           'connect to rosbridge and enter goal coordinates by hand below.');
+  $('mapChk').checked = false;
+  $('mapChk').disabled = true;
+  setMapVisible(false);
+}
+if (typeof ROSLIB === 'undefined') {
+  showNote('roslib failed to load \u2014 cannot talk to rosbridge. Check gps_goal_map_assets/.');
+}
 
 // ---------------------------------------------------------------- panel collapse
 $('panelHeader').addEventListener('click', () => $('panel').classList.toggle('collapsed'));
@@ -252,6 +409,10 @@ function teardownTopics() {
 }
 
 function connect() {
+  if (typeof ROSLIB === 'undefined') {
+    setStatus('', 'roslib not loaded \u2014 check gps_goal_map_assets/roslib.min.js');
+    return;
+  }
   if (ros) { ros.close(); return; }            // button doubles as disconnect
   setStatus('connecting', '');
   ros = new ROSLIB.Ros({ url: $('rosUrl').value.trim() });
@@ -278,23 +439,20 @@ function setupTopics() {
 
   fixSub = new ROSLIB.Topic({
     ros: ros,
-    name: $('fixTopic').value.trim(),
+    name: FIX_TOPIC,
     messageType: 'sensor_msgs/msg/NavSatFix',
-    throttle_rate: 200
+    throttle_rate: 200,
+    queue_length: 1      // drop stale fixes rather than buffering a backlog
   });
   fixSub.subscribe(onFix);
 
   goalPub = new ROSLIB.Topic({
     ros: ros,
-    name: $('goalTopic').value.trim(),
-    messageType: $('goalType').value
+    name: GOAL_TOPIC,
+    messageType: GOAL_TYPE
   });
   goalPub.advertise();
 }
-$('applyTopicsBtn').addEventListener('click', () => {
-  setupTopics();
-  flash('Topics applied.');
-});
 
 // ---------------------------------------------------------------- fix handling
 function onFix(msg) {
@@ -304,15 +462,19 @@ function onFix(msg) {
   const ll = [msg.latitude, msg.longitude];
   fixCount++;
   lastFixTime = Date.now();
+  fixTimes.push(lastFixTime);
+  if (fixTimes.length > 50) fixTimes.shift();
 
-  if (!robotMarker) {
-    robotMarker = L.marker(ll, { icon: robotIcon, zIndexOffset: 500 }).addTo(map);
-  } else {
-    robotMarker.setLatLng(ll);
+  if (mapShown) {
+    if (!robotMarker) {
+      robotMarker = L.marker(ll, { icon: robotIcon, zIndexOffset: 500 }).addTo(map);
+    } else {
+      robotMarker.setLatLng(ll);
+    }
   }
 
   // horizontal accuracy from covariance diagonal, if provided
-  if (msg.position_covariance_type > 0) {
+  if (mapShown && msg.position_covariance_type > 0) {
     const r = Math.sqrt(Math.max(msg.position_covariance[0], msg.position_covariance[4]));
     if (isFinite(r) && r > 0) {
       if (!accuracyCircle) {
@@ -323,52 +485,117 @@ function onFix(msg) {
     }
   }
 
-  if ($('trailChk').checked) trail.addLatLng(ll);
+  if (trail && $('trailChk').checked) addTrailPoint(msg.latitude, msg.longitude);
 
-  if (firstFix) {
-    map.setView(ll, 18);
-    firstFix = false;
-  } else if ($('followChk').checked) {
-    map.panTo(ll, { animate: true });
+  if (mapShown) {
+    if (firstFix) {
+      map.setView(ll, 18);
+      firstFix = false;
+    } else if ($('followChk').checked) {
+      followRobot(ll);
+    }
   }
 
-  $('roLat').textContent = msg.latitude.toFixed(7);
-  $('roLon').textContent = msg.longitude.toFixed(7);
-  $('roAlt').textContent = isFinite(msg.altitude) ? msg.altitude.toFixed(1) + ' m' : '—';
-  $('roCount').textContent = fixCount;
+  // Readouts are painted by the ticker, not here: the DOM does not need to be
+  // touched once per message to stay legible.
+  lastFix = { lat: msg.latitude, lon: msg.longitude };
 }
 
-// fix age ticker
+// Append only if the robot actually moved, and keep the vertex count bounded.
+function addTrailPoint(lat, lon) {
+  const prev = trailPts.length ? trailPts[trailPts.length - 1] : null;
+  if (prev && map && map.distance(prev, [lat, lon]) < TRAIL_MIN_MOVE_M) return;
+  trailPts.push([lat, lon]);
+  if (trailPts.length > TRAIL_MAX_POINTS) trailPts.splice(0, trailPts.length - TRAIL_MAX_POINTS);
+  if (!mapShown) return;                       // redrawn on unhide
+  if (trailPts.length >= TRAIL_MAX_POINTS) trail.setLatLngs(trailPts);
+  else trail.addLatLng([lat, lon]);
+}
+
+// Recenter only when the robot leaves the middle of the viewport, and do it
+// without animation. panTo({animate:true}) at fix rate never lets the map idle:
+// each call restarts a multi-frame transform plus a tile reflow.
+function followRobot(ll) {
+  const size = map.getSize();
+  const p = map.latLngToContainerPoint(ll);
+  const mx = size.x * 0.25, my = size.y * 0.25;
+  if (p.x < mx || p.x > size.x - mx || p.y < my || p.y > size.y - my) {
+    map.setView(ll, map.getZoom(), { animate: false });
+  }
+}
+
+// Rate over a trailing window: intervals / span, which is exact while fixes are
+// flowing. A stalled stream reports 0.0 rather than holding the last good value
+// — "the GPS stopped" is the failure worth seeing in the field.
+// Prunes fixTimes as a side effect; returns Hz.
+const RATE_WINDOW_MS = 10000;   // long enough to time a 1 Hz or slower fix
+function fixRateHz(now) {
+  fixTimes = fixTimes.filter(t => now - t <= RATE_WINDOW_MS);
+  const n = fixTimes.length;
+  if (n < 2) return 0;
+  const span = (fixTimes[n - 1] - fixTimes[0]) / 1000;
+  if (span <= 0) return 0;
+  const silence = (now - fixTimes[n - 1]) / 1000;
+  const dead = Math.max(2, 3 * span / (n - 1));   // 3 missed intervals, min 2 s
+  return silence < dead ? (n - 1) / span : 0;
+}
+
+// fix age + rate ticker
 setInterval(() => {
   if (lastFixTime === null) return;
-  const age = (Date.now() - lastFixTime) / 1000;
+  const now = Date.now();
+
+  if (lastFix) {
+    $('roLat').textContent = lastFix.lat.toFixed(7);
+    $('roLon').textContent = lastFix.lon.toFixed(7);
+    $('roCount').textContent = fixCount;
+  }
+
+  const age = (now - lastFixTime) / 1000;
   $('roAge').textContent = age < 1 ? '<1 s' : age.toFixed(0) + ' s';
   $('roAge').style.color = age > 5 ? 'var(--danger)' : 'var(--text)';
+
+  const hz = fixRateHz(now);
+  $('roRate').textContent = hz.toFixed(1) + ' Hz';
+  $('roRate').style.color = hz > 0 ? 'var(--text)' : 'var(--danger)';
 }, 500);
 
 $('centerBtn').addEventListener('click', () => {
-  if (robotMarker) map.setView(robotMarker.getLatLng(), Math.max(map.getZoom(), 17));
+  if (map && robotMarker) map.setView(robotMarker.getLatLng(), Math.max(map.getZoom(), 17));
 });
-$('clearTrailBtn').addEventListener('click', () => trail.setLatLngs([]));
+$('clearTrailBtn').addEventListener('click', () => {
+  trailPts = [];
+  if (trail) trail.setLatLngs([]);
+});
 $('trailChk').addEventListener('change', (e) => {
-  trail.setStyle({ opacity: e.target.checked ? 0.65 : 0 });
+  if (trail) trail.setStyle({ opacity: e.target.checked ? 0.65 : 0 });
 });
+if (!map) { $('centerBtn').disabled = true; $('clearTrailBtn').disabled = true; }
 
 // ---------------------------------------------------------------- goal placement
-map.on('click', (e) => {
-  pendingGoal = { lat: e.latlng.lat, lng: e.latlng.lng };
-  if (!goalMarker) {
-    goalMarker = L.marker(e.latlng, { icon: goalIcon, draggable: true, zIndexOffset: 600 }).addTo(map);
-    goalMarker.on('dragend', () => {
-      const p = goalMarker.getLatLng();
-      pendingGoal = { lat: p.lat, lng: p.lng };
-      renderGoal();
-    });
-  } else {
-    goalMarker.setLatLng(e.latlng);
+// setGoal() is the single entry point: map clicks, marker drags and typed
+// coordinates all funnel through it, so the manual path needs no map at all.
+function setGoal(lat, lng, opts) {
+  pendingGoal = { lat: lat, lng: lng };
+  if (map) {
+    const ll = L.latLng(lat, lng);
+    if (!goalMarker) {
+      goalMarker = L.marker(ll, { icon: goalIcon, draggable: true, zIndexOffset: 600 }).addTo(map);
+      goalMarker.on('dragend', () => {
+        const p = goalMarker.getLatLng();
+        setGoal(p.lat, p.lng, { recenter: false });
+      });
+    } else {
+      goalMarker.setLatLng(ll);
+    }
+    if (opts && opts.recenter) map.setView(ll, Math.max(map.getZoom(), 18));
   }
   renderGoal();
-});
+}
+
+if (map) {
+  map.on('click', (e) => setGoal(e.latlng.lat, e.latlng.lng, { recenter: false }));
+}
 
 function renderGoal() {
   if (!pendingGoal) return;
@@ -376,17 +603,60 @@ function renderGoal() {
   $('goalDetails').style.display = 'block';
   $('goalCoords').textContent = pendingGoal.lat.toFixed(7) + ', ' + pendingGoal.lng.toFixed(7);
   $('publishGoalBtn').disabled = !goalPub;
+  $('publishGoalBtn').title = goalPub ? '' : 'Connect to rosbridge first';
+  $('manLat').value = pendingGoal.lat.toFixed(7);
+  $('manLon').value = pendingGoal.lng.toFixed(7);
+  $('manualErr').textContent = '';
   $('pubFlash').textContent = '';
 }
 
 function clearGoal() {
   pendingGoal = null;
-  if (goalMarker) { map.removeLayer(goalMarker); goalMarker = null; }
+  if (map && goalMarker) { map.removeLayer(goalMarker); }
+  goalMarker = null;
   $('goalDetails').style.display = 'none';
   $('goalHint').style.display = 'block';
+  $('manLat').value = '';
+  $('manLon').value = '';
+  $('manualErr').textContent = '';
   $('pubFlash').textContent = '';
 }
 $('clearGoalBtn').addEventListener('click', clearGoal);
+
+// ---------------------------------------------------------------- manual entry
+// Accepts plain decimal degrees. Pasting "37.545358, -77.448637" into either
+// box splits it across both, which is what you get from Google Maps.
+function parseCoordPair() {
+  let latRaw = $('manLat').value.trim();
+  let lonRaw = $('manLon').value.trim();
+
+  const combined = (latRaw.match(/,/) ? latRaw : (lonRaw.match(/,/) ? lonRaw : null));
+  if (combined) {
+    const parts = combined.split(',').map(t => t.trim()).filter(t => t.length);
+    if (parts.length === 2) { latRaw = parts[0]; lonRaw = parts[1]; }
+  }
+
+  if (!latRaw || !lonRaw) return { err: 'Enter both latitude and longitude.' };
+
+  const lat = Number(latRaw), lon = Number(lonRaw);
+  if (!isFinite(lat) || !isFinite(lon)) return { err: 'Coordinates must be decimal degrees, e.g. 37.545358, -77.448637' };
+  if (lat < -90 || lat > 90)   return { err: 'Latitude must be between -90 and 90.' };
+  if (lon < -180 || lon > 180) return { err: 'Longitude must be between -180 and 180.' };
+  return { lat: lat, lng: lon };
+}
+
+function applyManual() {
+  const r = parseCoordPair();
+  if (r.err) {
+    $('manualErr').textContent = r.err;
+    return;
+  }
+  setGoal(r.lat, r.lng, { recenter: true });
+}
+$('setManualBtn').addEventListener('click', applyManual);
+['manLat', 'manLon'].forEach(id => {
+  $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') applyManual(); });
+});
 
 // ---------------------------------------------------------------- goal publish
 function rosTimeNow() {
@@ -426,10 +696,31 @@ function flash(text) {
 
 $('publishGoalBtn').addEventListener('click', () => {
   if (!pendingGoal || !goalPub) return;
-  const msg = buildGoalMessage($('goalType').value, pendingGoal.lat, pendingGoal.lng);
+  const msg = buildGoalMessage(GOAL_TYPE, pendingGoal.lat, pendingGoal.lng);
   goalPub.publish(new ROSLIB.Message(msg));
+  markPublished(pendingGoal.lat, pendingGoal.lng);
   flash('Published to ' + goalPub.name);
 });
+
+// Remembers where the last goal was actually sent. Survives Clear: the staged
+// goal is what you are about to send, this is what the robot was already given.
+function markPublished(lat, lng) {
+  publishedGoal = { lat: lat, lng: lng };
+  $('publishedCoords').textContent = lat.toFixed(7) + ', ' + lng.toFixed(7);
+  $('publishedRow').style.display = 'block';
+  syncPublishedMarker();
+}
+
+function syncPublishedMarker() {
+  if (!map || !publishedGoal) return;
+  const ll = [publishedGoal.lat, publishedGoal.lng];
+  if (!publishedMarker) {
+    publishedMarker = L.marker(ll, { icon: publishedIcon, zIndexOffset: 400 }).addTo(map);
+    publishedMarker.bindTooltip('last published goal');
+  } else {
+    publishedMarker.setLatLng(ll);
+  }
+}
 </script>
 </body>
 </html>

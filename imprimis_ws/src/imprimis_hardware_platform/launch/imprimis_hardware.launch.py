@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch.substitutions import PythonExpression
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction, SetEnvironmentVariable, GroupAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -17,25 +17,10 @@ def generate_launch_description():
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
-            "show_sim",
-            default_value="true",
-            choices=("true", "false"),
-            description="If false, the simulation will run in headless mode (no GUI). If true, the gazebo GUI will run as usual. Only applicable when hardware_type is simulated."
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "publish_odom_tf",
             default_value="true",
+            choices=("true", "false"),
             description="If false, prevents the diff drive controller broadcasting the odom->base_link transform from wheel odometry. This MUST be false if there is another node broadcasting odom -> base_link (e.g. the local EKF).",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "hardware_type",
-            default_value="real",
-            choices=("real", "fake", "simulated"),
-            description="Choose between real hardware, completely faked hardware, or gazebo-simulated hardware.",
         )
     )
     declared_arguments.append(
@@ -48,25 +33,10 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "world",
-            default_value="warehouse",
-            description="World for gazebo simulation"
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "lidar_rpm",
             default_value="600.0",
             choices=("300.0", "600.0", "1200.0"),
-            description="Velodyne LIDAR RPM. Only works with real hardware, it's always 600.0 in simulation."
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "sim_real_gps",
-            default_value="false",
-            choices=("true", "false"),
-            description="If true, gazebo will not publish the GPS fix topic, and the GPS driver will be started. Used for specific testing scenarios only."
+            description="Velodyne LIDAR RPM. Keep at 600.0"
         )
     )
     declared_arguments.append(
@@ -74,7 +44,7 @@ def generate_launch_description():
             "use_cams",
             default_value="true",
             choices=("true", "false"),
-            description="Whether or not to start up the depth cameras. Only applicable for real hardware.",
+            description="Whether or not to start up the intel depth cameras.",
         )
     )
     declared_arguments.append(
@@ -82,26 +52,33 @@ def generate_launch_description():
             "use_lidar",
             default_value="true",
             choices=("true", "false"),
-            description="Whether or not to start up the nodes reading from the VLP16 lidar. Only applicable for real hardware.",
+            description="Whether or not to start up the nodes reading from the VLP16 lidar.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_gps",
-            default_value="false",
+            default_value="true",
             choices=("true", "false"),
-            description="Whether or not to start up the GPS driver. Only applicable for real hardware.",
+            description="Whether or not to start up the GPS driver.",
         )
     )
-    hardware_type = LaunchConfiguration("hardware_type")
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_imu",
+            default_value="true",
+            choices=("true", "false"),
+            description="Whether or not to start up the IMU driver.",
+        )
+    )
+    
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
     lidar_rpm = LaunchConfiguration("lidar_rpm")
-    show_sim = LaunchConfiguration("show_sim")
-    sim_real_gps = LaunchConfiguration("sim_real_gps")
     use_cams = LaunchConfiguration("use_cams")
     use_lidar = LaunchConfiguration("use_lidar")
     use_gps = LaunchConfiguration("use_gps")
+    use_imu = LaunchConfiguration("use_imu")
 
     # Get package directories from the workspace source folder
     # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
@@ -117,7 +94,7 @@ def generate_launch_description():
         PathJoinSubstitution([description_src_dir, "urdf", "diffbot.urdf.xacro"]),
         " ",
         "hardware_type:=",
-        hardware_type,
+        "real",
         " publish_odom_tf:=",
         publish_odom_tf
     ])
@@ -132,7 +109,6 @@ def generate_launch_description():
         parameters=[controllers_config, {"enable_odom_tf": publish_odom_tf}],
         output="both",
         remappings=[("~/robot_description", "/robot_description")],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"])),
         arguments=["--ros-args", "--log-level", "info"]
     )
 
@@ -141,7 +117,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[robot_description, {"use_sim_time": False}],
         arguments=["--ros-args", "--log-level", "warn"]
     )
 
@@ -153,14 +129,14 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file, "--ros-args", "--log-level", "warn"],
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[{"use_sim_time": False}],
     )
 
     # Joint state broadcaster spawner
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[{"use_sim_time": False}],
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
     )
 
@@ -168,7 +144,7 @@ def generate_launch_description():
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        parameters=[{"use_sim_time": False}],
         arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
     )
 
@@ -176,9 +152,8 @@ def generate_launch_description():
     gpio_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        arguments=["gpio_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'simulated'"]))
+        parameters=[{"use_sim_time": False}],
+        arguments=["gpio_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"]
     )
 
     # Velodyne LIDAR driver, parser, and republisher
@@ -193,7 +168,7 @@ def generate_launch_description():
         executable='velodyne_driver_node',
         output='both',
         parameters=[lidar_driver_config_file, {"rpm": lidar_rpm}],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_lidar, "' == 'true'"])),
+        condition=IfCondition(use_lidar),
         arguments=["--ros-args", "--log-level", "warn"]
     )
     velodyne_transform_node = Node(
@@ -201,13 +176,14 @@ def generate_launch_description():
         executable='velodyne_transform_node',
         output='log', # shut up
         parameters=[lidar_transform_config],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_lidar, "' == 'true'"])),
+        condition=IfCondition(use_lidar),
         arguments=["--ros-args", "--log-level", "error"]
     )
     lidar_delay_fixer = Node(
         package="utils",
         executable="fix_lidar_delay",
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+        parameters=[{"use_sim_time": False}],
+        condition=IfCondition(use_lidar)
     )
     
     # IMU driver, after a delay
@@ -221,7 +197,7 @@ def generate_launch_description():
                 arguments=["--ros-args", "--log-level", "warn"]
             )
         ],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        condition=IfCondition(use_imu)
     )
 
     # Calibrate IMU after a delay
@@ -238,105 +214,43 @@ def generate_launch_description():
                     output='screen'
                 )
         ],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
+        condition=IfCondition(use_imu)
     )
 
     # GPS driver
     gps_driver = Node(
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
-        condition=IfCondition(PythonExpression(["('", hardware_type, "' == 'real' and '", use_gps, "' == 'true') or ('", hardware_type, "' == 'simulated' and '", sim_real_gps, "' == 'true')"])),
+        condition=IfCondition(use_gps),
         arguments=["--ros-args", "--log-level", "warn"],
         parameters=[{
             'port': '/dev/ttyACM0',
             'baud': 9600,
             'frame_id': 'gps_link'
-        }, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
+        }, {"use_sim_time": False}],
         namespace="gps",
         remappings=[("fix", "fix_no_cov")]
     )
 
     # Camera driver
-    camera_launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
-        launch_arguments={
-            'pointcloud.enable': 'true',
-            'log_level': 'error',
-            'camera_namespace': 'cameras',
-            'camera_name': 'front'
-        }.items(),
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real' and '", use_cams, "' == 'true'"])),
+    # The GroupAction with forwarding=False and scoped=True prevents the camera launch file from seeing this launch file's arguments.
+    # We don't want to tell the camera "publish_odom_tf=false".
+    camera_launch_include = GroupAction(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
+                launch_arguments={
+                    'pointcloud.enable': 'true',
+                    'log_level': 'error',
+                    'camera_namespace': 'cameras',
+                    'camera_name': 'front'
+                }.items(),
+            )
+        ],
+        scoped=True,
+        forwarding=False,
+        condition=IfCondition(use_cams),
     )
-
-    # Gazebo simulation
-    gazebo_launch_include = IncludeLaunchDescription(PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
-        launch_arguments={
-            'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], 
-            "on_exit_shutdown": "true"
-        }.items(),
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", show_sim, "' == 'true'"]))
-    )
-    gazebo_no_gui_launch_include = IncludeLaunchDescription(
-        PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
-        launch_arguments={
-            'gz_args': ['--headless-rendering -s -v0 -r ', LaunchConfiguration("world"), '.sdf'], 
-            "on_exit_shutdown": "true"
-        }.items(),
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", show_sim, "' == 'false'"]))
-    )
-
-    # Spawn imprimis into Gazebo simulation
-    spawn_imprimis_gazebo = Node(
-        package="ros_gz_sim",
-        executable="create",
-        arguments=['-topic', 'robot_description', '-name', 'imprimis', '-z', '0.1', "--ros-args", "--log-level", "warn"],
-        output="screen",
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
-    )
-
-    # Bridge Gazebo topics and ROS topics
-    gzbridge_config_file = PathJoinSubstitution([hardware_src_dir, 'config', 'gz_bridge.yaml'])
-    gzbridge_no_gps_config_file = PathJoinSubstitution([hardware_src_dir, 'config', 'gz_bridge_no_gps.yaml'])
-    gzbridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=['--ros-args', '-p', ['config_file:=', gzbridge_config_file], "--ros-args", "--log-level", "warn"],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", sim_real_gps, "' == 'false'"])),
-    )
-    gzbridge_no_gps = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=['--ros-args', '-p', ['config_file:=', gzbridge_no_gps_config_file], "--ros-args", "--log-level", "warn"],
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated' and '", sim_real_gps, "' == 'true'"])),
-    )
-
-    # Add covariance to simulated GPS
-    gps_covariance_fixer = Node(
-        package="utils",
-        executable="gps_add_sim_covariance",
-        condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'fake'"])),
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
-    )
-
-    # Set gazebo resource path to include all sourced ros packages
-    packages_paths = [os.path.join(p, 'share') for p in os.getenv('AMENT_PREFIX_PATH').split(':')]
-    gz_sim_resource_path = SetEnvironmentVariable(
-        name='GZ_SIM_RESOURCE_PATH',
-        value=[
-            os.path.join(hardware_src_dir_os, 'worlds') + ':',
-            os.path.join(hardware_src_dir_os, 'meshes') + ':',
-            os.path.join(description_src_dir_os, 'meshes') + ':',
-            ':' + ':'.join(packages_paths)])
-    
-    # Do the same for old ignition variable
-    old_sim_resource_path = SetEnvironmentVariable(
-        name='IGN_GAZEBO_RESOURCE_PATH',
-        value=[
-            os.path.join(hardware_src_dir_os, 'worlds') + ':',
-            os.path.join(hardware_src_dir_os, 'meshes') + ':',
-            os.path.join(description_src_dir_os, 'meshes') + ':',
-            ':' + ':'.join(packages_paths)])
-    
 
     # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
@@ -365,33 +279,17 @@ def generate_launch_description():
         lidar_delay_fixer,
         rviz_node,
         rosbridge_launch_include,
+        controller_manager_node,
+        gpio_controller_spawner,
 
-        # If hardware_type == real
+        # Not always
         imu_driver,
         imu_calibrator,
-        gps_driver,  # OR, if hardware_type == simulated and sim_real_gps == true
+        gps_driver,
         velodyne_driver_node,
         velodyne_transform_node,
         camera_launch_include,
-
-        # If hardware type != simulated
-        controller_manager_node,
-        gpio_controller_spawner,
-        
-        # If hardware_type == simulated
-        gz_sim_resource_path,
-        old_sim_resource_path,
-        gazebo_launch_include,  # if show_sim == true
-        gazebo_no_gui_launch_include, # if show_sim == false
-        gzbridge,  # if sim_real_gps == false
-        gzbridge_no_gps,  # if sim_real_gps == true
-        spawn_imprimis_gazebo,
-
-        # If use_controller == true
         controller_input_launch_include,
-
-        # if hardware_type != fake
-        gps_covariance_fixer,
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
@@ -404,3 +302,13 @@ def generate_launch_description():
     #    condition=IfCondition(publish_odom_tf),
     #    parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
     #)
+
+
+# Add covariance to simulated GPS
+    # gps_covariance_fixer = Node(
+    #    package="utils",
+    #    executable="gps_add_sim_covariance",
+    #    condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'fake'"])),
+    #    parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
+    #)
+    
