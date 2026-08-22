@@ -43,6 +43,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_cams",
+            default_value="false",
+            description="Whether or not to use cameras for navigation.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_controller",
             default_value="false",
             description="Whether or not to start up the logitech controller input node.",
@@ -105,6 +112,7 @@ def generate_launch_description():
     
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
+    use_cams = LaunchConfiguration("use_cams")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
@@ -124,6 +132,7 @@ def generate_launch_description():
         launch_arguments={
             "hardware_type": hardware_type,
             "use_controller": use_controller,
+            "use_cams": use_cams,
             "disable_local_EKF": disable_local_EKF,
             "world": world,
             "map_type": PythonExpression(["'lidar' if '", nav_mode, "' == 'indoor' else 'gps'"]),

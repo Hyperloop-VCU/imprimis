@@ -229,7 +229,7 @@ def generate_launch_description():
             'frame_id': 'gps_link'
         }, {"use_sim_time": False}],
         namespace="gps",
-        remappings=[("fix", "fix_no_cov")]
+        remappings=[("fix", "gps/fix")]
     )
 
     # Camera driver
