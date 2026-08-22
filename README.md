@@ -89,9 +89,11 @@ To launch the robot hardware, localization system, and navigation system, run th
 We use ROS2 python launch files to handle robot startup. It is a hierarchical process:
 * Running the navigation launch file will start up navigation-specific nodes AND run the localization launch file.
 * Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file (or simulated hardware launch file)
-* 
+
 Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all hardware except the LiDAR and GPS:
+
 ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py use_lidar:=false use_gps:=false```
+
 View the source code for navigation, localization, real hardware, and simulated hardware launch files for more details on launch arguments.
 
 Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap (purple blobs where the obstacles are) appear in rviz, you can use rviz to give the navigation system a goal by using the "2D goal pose" tool in the top bar. 
