@@ -31,7 +31,7 @@ Both the **boardA** and **boardB** folders are **PlatformIO projects.** The Plat
 This folder contains some of the ROS packages required for Imprimis. Some are custom-made, and some are third-party. In addition to these packages, Imprimis depends on lots of other third-party packages (robot_localization, nav2, etc). The dependencies of each package are listed in each package's **package.xml** file, and can be automatically installed by running the ```rosdep``` command in the offboard computer setup instructions. Each package has a more detailed README in its respective folder.
 
 
-* **imprimis_hardware_platform**: Contains all configuration files for hardware and sensors, and implements the hardware interface. Has a launch file which starts up all the hardware, either real or simulated.
+* **imprimis_hardware_platform**: Contains all configuration files for hardware and sensors, and implements the hardware interface. Has launch files that start up all the hardware, either real or simulated.
 * **imprimis_description**: Describes the robot with URDF files. Has launch files to view the URDFs in rviz.
 * **imprimis_navigation**: Contains all configuration and launch files for localization and nav2.
 * **gps_nav_bridge**: Handles input navigation waypoints and GPS goal -> map goal conversion.
@@ -59,7 +59,7 @@ Following the below steps will get you ready to run the Imprimis simulation on y
 # Using the Simulated Robot
 ## Hardware
 To launch the simulated robot's hardware, run the following command: 
-* ```ros2 launch imprimis_hardware_platform imprimis_hardware.launch.py hardware_type:=simulated```  
+* ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py```  
 
 This will make two windows appear: the gazebo simulation and RVIZ. Gazebo is the actual physics simulator and manages world the robot exists in, and RVIZ is a GUI tool used to display all the ROS data in the system. 
 
@@ -73,10 +73,6 @@ The localization system is responsible for accurately determining where the robo
 * **Global localization** is responsible for providing a **globally consistent** position estimate of the robot. No matter how long the robot drives for, this position estimate will not drift over time and stay correct. However, it does tend to be jittery and jumpy, constantly dancing around the true position of the robot, which is why we have local localization as well. Global localization provides the map->odom and map->base_link transforms. It can be done either with a LiDAR (default, best in indoor environments) or by a GPS (add "map_type:=gps" to the launch command, only works outdoors)
 * **Local localization**, or "odometry", is responsible for providing a **locally accurate** position estimate of the robot. This position estimate is smooth and will not jump or jitter. However, it does drift over time as integration errors accumulate, which is why we have global localization as well. Local localization provides the odom->base_link transform. It is usually done by by fusing wheel odometry with an accurate IMU, but this IMU-fusion can be discarded by adding "disable_local_ekf:=true" to the launch command. This will provide a very inaccurate position estimate, but is useful for testing.
 
-**The localization launch has all the launch arguments of hardware launch**, in addition to the localization specific ones like map_type and disable_local_ekf.
-Many launch arguments can be passed in at a time, and the order of launch arguments does not matter. For example, if I wanted to drive the robot with a controller, use GPS-based global localization, and disable IMU fusion in local localization:
-* ```ros2 launch imprimis_navigation localization.launch.py hardware_type:=simulated map_type:=gps use_controller:=true disable_local_ekf:=true```
-
 ## Navigation system
 To launch the robot hardware, localization system, and navigation system, run the following command:
 * ```ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated nav2_params:=SmacHybrid_DWB_2```
@@ -89,7 +85,14 @@ To launch the robot hardware, localization system, and navigation system, run th
 
 **The launch argument "nav2_params" specifies the name of the nav2 params file to use (excluding the .yaml)**. The nav2 params file is a critical piece of the robot's software, as it determines the navigation behavior of the robot. All nav2 params files must be located in imprimis_ws/src/imprimis_navigation/config/nav2. Feel free to create your own and mess around with it!
 
-**The navigation launch has all the launch arguments of localization launch**, in addition to the navigation specific ones like nav2_params. You can still specify hardware and localization stuff like use_controller:=true and map_type:=gps when using the navigation launch. 
+## Launch Files
+We use ROS2 python launch files to handle robot startup. It is a hierarchical process:
+* Running the navigation launch file will start up navigation-specific nodes AND run the localization launch file.
+* Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file (or simulated hardware launch file)
+* 
+Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all hardware except the LiDAR and GPS:
+```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py use_lidar:=false use_gps:=false```
+View the source code for navigation, localization, real hardware, and simulated hardware launch files for more details on launch arguments.
 
 Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap (purple blobs where the obstacles are) appear in rviz, you can use rviz to give the navigation system a goal by using the "2D goal pose" tool in the top bar. 
 
