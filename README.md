@@ -1,7 +1,7 @@
 # Imprimis
 This repository contains necessary software for Imprimis, a fully autonomous ground vehicle developed by the HyperRobotics VIP at VCU. The ROS packages inside imprimis_ws run on the robot's main PC to process sensor information, make autonomous decisions, and communicate with the robot's onboard microcontrollers. The firmwares in EspFirmware run on the robot's microcontrollers which handle hardware connectivity and control.
 
-[Visual Software Diagram and Structure](https://drive.google.com/file/d/1ad0O14qcB_6zf1_6lL17tQPe5xx5yQ5I/view)
+[Visual Software Diagram and Structure](https://drive.google.com/file/d/14b34cyZjVn4FuwoEjJM1487I_e60O_WF/view)
 
 # Microcontroller Firmwares in EspFirmware
 ## Board A
