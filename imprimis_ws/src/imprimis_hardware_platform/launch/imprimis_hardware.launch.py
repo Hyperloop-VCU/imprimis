@@ -228,8 +228,8 @@ def generate_launch_description():
             'baud': 9600,
             'frame_id': 'gps_link'
         }, {"use_sim_time": False}],
-        namespace="gps",
-        remappings=[("fix", "gps/fix")]
+        namespace="gps"
+        #remappings=[("fix", "gps/fix")]
     )
 
     # Camera driver
