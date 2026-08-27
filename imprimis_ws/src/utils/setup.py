@@ -28,7 +28,7 @@ setup(
             'fix_lidar_delay = utils.fix_lidar_delay:main',
             'wait_for_tf = utils.wait_for_tf:main',
             'odom_remapper = utils.odom_remapper:main',
-            'gps_monitor = utils.gps_monitor:main'
+            'nmea_serial_reader = utils.nmea_serial_reader:main'
         ],
     },
 )

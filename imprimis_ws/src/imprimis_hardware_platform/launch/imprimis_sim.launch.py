@@ -270,7 +270,11 @@ def generate_launch_description():
     #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
     rosbridge_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
-        launch_arguments={'port': '9090'}.items()
+        launch_arguments={'port': '9091'}.items()
+    )
+
+    foxglove_launch_include = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('foxglove_bridge'), 'launch', 'foxglove_bridge_launch.xml'])]),
     )
 
     things_to_launch = [
@@ -279,8 +283,9 @@ def generate_launch_description():
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
         lidar_delay_fixer,
-        rviz_node,
-        rosbridge_launch_include,
+        #rviz_node,
+        #rosbridge_launch_include,
+        foxglove_launch_include,
         gz_sim_resource_path,
         old_sim_resource_path,
         gazebo_launch_include,  # if show_sim == true

@@ -167,13 +167,6 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
         )],
     ))
-    gps_monitor = Node(
-        package="utils",
-        executable="gps_monitor",
-        condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"])),
-        parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-    )
-
     return LaunchDescription(declared_arguments + [
         # always
         imprimis_hardware_launch,
@@ -187,7 +180,6 @@ def generate_launch_description():
         # If map_type is gps
         navsat_transform,
         global_ekf,
-        gps_monitor,
 
         # If map_type is fake
         map_faker

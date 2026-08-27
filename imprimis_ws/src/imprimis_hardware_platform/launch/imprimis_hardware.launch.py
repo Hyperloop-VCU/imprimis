@@ -216,9 +216,7 @@ def generate_launch_description():
         ],
         condition=IfCondition(use_imu)
     )
-
-    # GPS driver
-    gps_driver = Node(
+    gps_nmea_driver = Node(
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
         condition=IfCondition(use_gps),
@@ -229,7 +227,6 @@ def generate_launch_description():
             'frame_id': 'gps_link'
         }, {"use_sim_time": False}],
         namespace="gps"
-        #remappings=[("fix", "gps/fix")]
     )
 
     # Camera driver
@@ -241,6 +238,7 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
                 launch_arguments={
                     'pointcloud.enable': 'true',
+                    'diagnostics_period': '1.0',
                     'log_level': 'error',
                     'camera_namespace': 'cameras',
                     'camera_name': 'front'
@@ -268,7 +266,12 @@ def generate_launch_description():
     #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
     rosbridge_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
-        launch_arguments={'port': '9090'}.items()
+        launch_arguments={'port': '9091'}.items()
+    )
+
+    # foxglove bridge
+    foxglove_launch_include = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('foxglove_bridge'), 'launch', 'foxglove_bridge_launch.xml'])]),
     )
 
     things_to_launch = [
@@ -277,15 +280,16 @@ def generate_launch_description():
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
         lidar_delay_fixer,
-        rviz_node,
-        rosbridge_launch_include,
+        #rviz_node,
+        #rosbridge_launch_include,
+        foxglove_launch_include,
         controller_manager_node,
         gpio_controller_spawner,
 
         # Not always
         imu_driver,
         imu_calibrator,
-        gps_driver,
+        gps_nmea_driver,
         velodyne_driver_node,
         velodyne_transform_node,
         camera_launch_include,
