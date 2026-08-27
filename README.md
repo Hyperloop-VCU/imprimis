@@ -93,7 +93,7 @@ To launch the robot hardware, localization system, and navigation system, run th
 
 **The launch argument "nav2_params" specifies the name of the nav2 params file to use (excluding the .yaml)**. The nav2 params file is a critical piece of the robot's software, as it determines the navigation behavior of the robot. All nav2 params files must be located in imprimis_ws/src/imprimis_navigation/config/nav2. Feel free to create your own and mess around with it!
 
-### Launch Files
+# Launch Files
 We use ROS2 python launch files to handle robot startup. It is a hierarchical process:
 * Running the navigation launch file will start up navigation-specific nodes AND run the localization launch file.
 * Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file (or simulated hardware launch file)
@@ -106,7 +106,7 @@ Launching the navigation takes some time, since it needs to start the hardware a
 
 View the source code for navigation, localization, real hardware, and simulated hardware launch files for more details on launch arguments.
 
-### Aliases
+# Aliases
 There is a hidden file in imprimis_ws called ".bash_aliases" that defines shortcuts to all these long commands. You can add the following to your ~/.bashrc file to define all these aliases automatically:
 
 ```
