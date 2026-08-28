@@ -230,6 +230,7 @@ def generate_launch_description():
     )
 
     # Camera driver
+    """
     # The GroupAction with forwarding=False and scoped=True prevents the camera launch file from seeing this launch file's arguments.
     # We don't want to tell the camera "publish_odom_tf=false".
     camera_launch_include = GroupAction(
@@ -249,6 +250,19 @@ def generate_launch_description():
         forwarding=False,
         condition=IfCondition(use_cams),
     )
+    """
+
+    camera_launch_include = GroupAction(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('utils'), 'launch', 'multicam_test.launch.py'])]),
+            )
+        ],
+        scoped=True,
+        forwarding=False,
+        condition=IfCondition(use_cams),
+    )
+
 
     # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
