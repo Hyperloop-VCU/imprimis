@@ -41,8 +41,18 @@ This folder contains some of the ROS packages required for Imprimis. Some are cu
 
 * **SLAM_Packages**: A collection of third-party packages used for global localization with the Lidar. This folder contains many packages; there is no package named "SLAM_Packages".
 
-# Install instructions for Offboard Computer
-This software usually runs on the robot's main computer, but it is possible to run in a simulated mode on a different machine.
+# Install instructions for Foxglove Studio
+We use Foxglove Studio to interact with the robot in both real life and simulation, and it works on Windows, Mac, and Linux. It usually runs on the robot's PC, but you can also run it on your own computer to control / interact with the robot remotely. We previously used a different GUI called RVIZ, but this is much better and has more features, so we switched to it.
+
+1. Download the desktop app [here](https://foxglove.dev/download)
+2. Sign in or make an account.
+3. Join the VCU organization.
+4. Download this repository code, and drag-and-drop all the files in the foxglove_panels folder into the foxglove studio window.
+
+Now everything is ready to go. Connect to the same LAN as Imprimis, start up its code, and connect to its LAN IP using the foxglove GUI. You'll see a full control panel with lots of features. This also works with the robot simulation, detailed in the next section.
+
+# Install Instructions for Simulation on your own computer
+If you want to run a full simulation of the robot's software on your own computer, see these following steps. Follow the foxglove setup steps before this one if you plan to do this. This is not necessary to interact with the robot in real life - these steps are only for running the full simulation on your own computer.
 
 Following the below steps will get you ready to run the Imprimis simulation on your PC:
 
@@ -61,9 +71,7 @@ Following the below steps will get you ready to run the Imprimis simulation on y
 To launch the simulated robot's hardware, run the following command: 
 * ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py```  
 
-This will make two windows appear: the gazebo simulation and RVIZ. Gazebo is the actual physics simulator and manages world the robot exists in, and RVIZ is a GUI tool used to display all the ROS data in the system. 
-
-Once it's running, you can publish a TwistStamped message to the ROS topic "diffbot_base_controller/cmd_vel" to drive it via rqt, the command line, or another ROS node. You can also add "use_controller:=true" to the launch command to allow any joystick controller plugged into your PC to drive the robot.
+This will make the gazebo simulation appear. Open foxglove studio and connect to localhost on port 8765, and you can interact with the robot + see all ROS data from there. This works with both localization and navigation systems as well.
 
 ## Localization system
 To launch the simulated robot hardware and localization system, run the following command:
@@ -85,20 +93,31 @@ To launch the robot hardware, localization system, and navigation system, run th
 
 **The launch argument "nav2_params" specifies the name of the nav2 params file to use (excluding the .yaml)**. The nav2 params file is a critical piece of the robot's software, as it determines the navigation behavior of the robot. All nav2 params files must be located in imprimis_ws/src/imprimis_navigation/config/nav2. Feel free to create your own and mess around with it!
 
-## Launch Files
+# Launch Files
 We use ROS2 python launch files to handle robot startup. It is a hierarchical process:
 * Running the navigation launch file will start up navigation-specific nodes AND run the localization launch file.
 * Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file (or simulated hardware launch file)
 
-Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all hardware except the LiDAR and GPS:
+Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all simulated hardware except the LiDAR and GPS:
 
 ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py use_lidar:=false use_gps:=false```
 
+Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap appear in foxglove studio, you can use either the GPS waypoint input panel or the 3D view panel to give the robot navigation goals.
+
 View the source code for navigation, localization, real hardware, and simulated hardware launch files for more details on launch arguments.
 
-Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap (purple blobs where the obstacles are) appear in rviz, you can use rviz to give the navigation system a goal by using the "2D goal pose" tool in the top bar. 
+# Aliases
+There is a hidden file in imprimis_ws called ".bash_aliases" that defines shortcuts to all these long commands. You can add the following to your ~/.bashrc file to define all these aliases automatically:
 
-![rviz with navigation system up](.images/rviz.png)
+```
+if [ -f ~/Desktop/imprimis/imprimis_ws/.bash_aliases ]; then
+   . ~/Desktop/imprimis/imprimis_ws/.bash_aliases
+fi
+```
+
+Note the ~/Desktop/ path. If you downloaded this somewhere other than your desktop, you'll need to modify those paths. See the alias file for more details on those.
+
+![foxglove with navigation system up](.images/foxglove.png)
 ![gazebo](.images/gazebo.png)
 
 
