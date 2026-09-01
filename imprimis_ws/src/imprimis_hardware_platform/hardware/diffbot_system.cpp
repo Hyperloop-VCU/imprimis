@@ -108,8 +108,6 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   // try ports
   const char* ports[] =
   {
-    "/dev/ttyUSB1",
-    "/dev/ttyUSB2",
     "/dev/ttyUSB0"
   };
 

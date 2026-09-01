@@ -42,7 +42,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_cams",
-            default_value="true",
+            default_value="false",
             choices=("true", "false"),
             description="Whether or not to start up the intel depth cameras.",
         )
@@ -71,6 +71,14 @@ def generate_launch_description():
             description="Whether or not to start up the IMU driver.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "ui_type",
+            default_value="foxglove",
+            choices=("foxglove", "rviz", "none"),
+            description="Use foxglove_bridge + (separate) foxglove studio, rosbridge + (separate) gps goal input + rviz, or no bridges / UIs.",
+        )
+    )
     
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
@@ -79,6 +87,7 @@ def generate_launch_description():
     use_lidar = LaunchConfiguration("use_lidar")
     use_gps = LaunchConfiguration("use_gps")
     use_imu = LaunchConfiguration("use_imu")
+    ui_type = LaunchConfiguration("ui_type")
 
     # Get package directories from the workspace source folder
     # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
@@ -130,6 +139,7 @@ def generate_launch_description():
         output="log",
         arguments=["-d", rviz_config_file, "--ros-args", "--log-level", "warn"],
         parameters=[{"use_sim_time": False}],
+        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
     )
 
     # Joint state broadcaster spawner
@@ -280,12 +290,14 @@ def generate_launch_description():
     #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
     rosbridge_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
-        launch_arguments={'port': '9091'}.items()
+        launch_arguments={'port': '9091'}.items(),
+        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
     )
 
     # foxglove bridge
     foxglove_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('foxglove_bridge'), 'launch', 'foxglove_bridge_launch.xml'])]),
+        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'foxglove'"]))
     )
 
     things_to_launch = [
@@ -293,10 +305,6 @@ def generate_launch_description():
         robot_state_pub_node,
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
-        lidar_delay_fixer,
-        #rviz_node,
-        #rosbridge_launch_include,
-        foxglove_launch_include,
         controller_manager_node,
         gpio_controller_spawner,
 
@@ -308,6 +316,10 @@ def generate_launch_description():
         velodyne_transform_node,
         camera_launch_include,
         controller_input_launch_include,
+        lidar_delay_fixer,
+        rviz_node,
+        rosbridge_launch_include,
+        foxglove_launch_include,
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)

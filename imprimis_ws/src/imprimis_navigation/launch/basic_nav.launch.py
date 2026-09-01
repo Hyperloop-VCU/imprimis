@@ -21,6 +21,14 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "ui_type",
+            default_value="foxglove",
+            choices=("foxglove", "rviz", "none"),
+            description="Use foxglove_bridge + (separate) foxglove studio, rosbridge + (separate) gps goal input + rviz, or no bridges / UIs.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "nav_mode",
             default_value="outdoor",
             choices=("indoor", "outdoor"),
@@ -46,6 +54,13 @@ def generate_launch_description():
             "use_cams",
             default_value="false",
             description="Whether or not to use cameras for navigation.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_lidar",
+            default_value="true",
+            description="Whether or not to use the lidar for navigation. MUST be true if nav mode is indoor."
         )
     )
     declared_arguments.append(
@@ -119,6 +134,8 @@ def generate_launch_description():
     world = LaunchConfiguration("world")
     nav_mode = LaunchConfiguration("nav_mode")
     show_sim = LaunchConfiguration("show_sim")
+    ui_type = LaunchConfiguration("ui_type")
+    use_lidar = LaunchConfiguration("use_lidar")
 
     map_yaml = LaunchConfiguration("map_yaml")
     use_controller_switcher = LaunchConfiguration("use_controller_switcher")
@@ -136,7 +153,9 @@ def generate_launch_description():
             "disable_local_EKF": disable_local_EKF,
             "world": world,
             "map_type": PythonExpression(["'lidar' if '", nav_mode, "' == 'indoor' else 'gps'"]),
-            "show_sim": show_sim
+            "show_sim": show_sim,
+            "ui_type": ui_type,
+            'use_lidar': use_lidar
         }.items(),
     )
 
@@ -242,7 +261,7 @@ def generate_launch_description():
         parameters=[{"waypoints_file": waypoints_file}],
         condition=IfCondition(use_waypoints),
     )]
-))
+    ))
     return LaunchDescription(declared_arguments + [
         localization_launch_include,
 
@@ -256,7 +275,7 @@ def generate_launch_description():
         map_server_node,
         lifecycle_manager_map,
         nav2_navigation_launch,
-        controller_switcher,
-        velocity_tracker_node,
+        #controller_switcher,
+        #velocity_tracker_node,
         waypoint_sender
     ])

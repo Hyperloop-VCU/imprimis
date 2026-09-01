@@ -28,7 +28,6 @@ class GPSFixRepublisher(Node):
         for i in range(9):
             msg.position_covariance[i] = self.off_diagonal_covariance
         msg.position_covariance[0] = msg.position_covariance[4] = msg.position_covariance[8] = self.diagonal_variance
-        msg.header.stamp = self.get_clock().now().to_msg()
         self.fix_output_pub.publish(outputMsg)
     
 

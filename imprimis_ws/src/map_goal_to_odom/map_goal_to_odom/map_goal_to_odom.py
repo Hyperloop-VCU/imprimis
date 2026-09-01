@@ -48,7 +48,6 @@ class MapToOdomGoalConverter(Node):
         self.useGps = self.declare_parameter("useGps", True).value
 
         # ROS objects
-        self.cb_group = ReentrantCallbackGroup()
         self.outputPub = self.create_publisher(PoseStamped, self.outputTopic, 10)
         self.outputRvizPub = self.create_publisher(PoseStamped, self.outputRvizTopic, 10)
         self.inputSub = self.create_subscription(PoseStamped, self.inputTopic, self.new_global_goal_cb, 10)
@@ -94,7 +93,7 @@ class MapToOdomGoalConverter(Node):
         self.get_logger().info(f"\n\nService completed")
         if mapGoalCoords is None or mapGoalCoords.map_point.x == 0.0 or mapGoalCoords.map_point.y == 0.0:
             self.get_logger().error('Cannot follow GPS goal, zero or empty map-frame coordinate received from navsat_transform_node')
-        
+            return
 
         # convert service response to a PoseStamped message, then handle it the exact same as a regular map goal
         mapGoal = PoseStamped()
@@ -117,8 +116,7 @@ class MapToOdomGoalConverter(Node):
         self.get_logger().info(f"\n\nReceived new navigation goal in the {receivedFrame} frame: {receivedGoalMsg.pose.position.x}, {receivedGoalMsg.pose.position.y}")
         if receivedFrame != self.globalFrame:
             try:
-                if self.tfBuffer.can_transform(receivedFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout)):
-                    receivedToGlobalTransform = self.tfBuffer.lookup_transform(self.globalFrame, receivedFrame, Time(), Duration(seconds=self.tfTimeout))
+                receivedToGlobalTransform = self.tfBuffer.lookup_transform(self.globalFrame, receivedFrame, Time(), Duration(seconds=self.tfTimeout))
                 globalGoalMsg = tf2_geometry_msgs.do_transform_pose_stamped(receivedGoalMsg, receivedToGlobalTransform)
             except Exception as e:
                 self.get_logger().error(f"Transform exception ({receivedFrame} -> {self.globalFrame}): {e}")
@@ -128,8 +126,7 @@ class MapToOdomGoalConverter(Node):
 
         # Transform goal from global to local frame
         try:
-            if self.tfBuffer.can_transform(self.globalFrame, self.localFrame, Time(), Duration(seconds=self.tfTimeout)):
-                globalToLocalTransform = self.tfBuffer.lookup_transform(self.localFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout))
+            globalToLocalTransform = self.tfBuffer.lookup_transform(self.localFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout))
             localGoalMsg = tf2_geometry_msgs.do_transform_pose_stamped(globalGoalMsg, globalToLocalTransform)
         except Exception as e:
             self.get_logger().error(f"Transform exception ({self.globalFrame} -> {self.localFrame}): {e}")
@@ -154,8 +151,7 @@ class MapToOdomGoalConverter(Node):
 
             # Transform current global goal to local frame
             try:
-                if self.tfBuffer.can_transform(self.globalFrame, self.localFrame, Time(), Duration(seconds=self.tfTimeout)):
-                    transform = self.tfBuffer.lookup_transform(self.localFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout))
+                transform = self.tfBuffer.lookup_transform(self.localFrame, self.globalFrame, Time(), Duration(seconds=self.tfTimeout))
                 newLocalGoal = tf2_geometry_msgs.do_transform_pose_stamped(self.currGlobalGoal, transform)
             except Exception as e:
                 self.get_logger().warn(f"Transform exception ({self.globalFrame} -> {self.localFrame}): {e}")

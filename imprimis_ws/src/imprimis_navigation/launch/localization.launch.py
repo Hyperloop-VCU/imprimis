@@ -30,7 +30,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "map_type",
-            default_value="lidar",
+            default_value="gps",
             choices=("lidar", "gps", "fake"),
             description="If lidar, the map frame is generated from SLAM. If gps, the map frame is generated from fusing local odom with GPS. If fake, map is identical to odom."
         )
@@ -56,12 +56,37 @@ def generate_launch_description():
             description="World file used for simulation (excluding the .sdf). It must be located in imprimis_hardware_platform/worlds",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_cams",
+            default_value="false",
+            description="Whether or not to use the cameras in hardware launch, affecting navigation but not localization."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_lidar",
+            default_value="true",
+            description="MUST be true if map_type = lidar. If map type = gps, this can be disabled, affecting navigation but not localization."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "ui_type",
+            default_value="foxglove",
+            choices=("foxglove", "rviz", "none"),
+            description="Use foxglove_bridge + (separate) foxglove studio, rosbridge + (separate) gps goal input + rviz, or no bridges / UIs.",
+        )
+    )
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     disable_local_ekf = LaunchConfiguration("disable_local_ekf")
     world = LaunchConfiguration("world")
     map_type = LaunchConfiguration("map_type")
     show_sim = LaunchConfiguration("show_sim")
+    use_cams = LaunchConfiguration("use_cams")
+    use_lidar = LaunchConfiguration("use_lidar")
+    ui_type = LaunchConfiguration("ui_type")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
@@ -75,7 +100,9 @@ def generate_launch_description():
             'world': world,
             'show_sim:': show_sim,
             'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
-            'use_cams': "false"
+            'use_cams': use_cams,
+            'use_lidar': use_lidar,
+            'ui_type': ui_type
         }.items(),
         condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'simulated'"]))
     )
@@ -87,7 +114,9 @@ def generate_launch_description():
                 'use_controller': use_controller,
                 'publish_odom_tf': disable_local_ekf,
                 'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
-                'use_cams': "false"
+                'use_cams': use_cams,
+                'use_lidar': use_lidar,
+                'ui_type': ui_type
             }.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
         )

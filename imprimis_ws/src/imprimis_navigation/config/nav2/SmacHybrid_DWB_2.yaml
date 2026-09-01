@@ -190,10 +190,10 @@ global_costmap:
   global_costmap:
     ros__parameters:
       plugins: ["exact_layer", "inflation_layer"]
-      height: 10
-      width: 10
-      origin_x: -5.0
-      origin_y: -5.0
+      height: 50
+      width: 50
+      origin_x: -25.0
+      origin_y: -25.0
       publish_frequency: 10.0
       update_frequency: 10.0
       always_send_full_costmap: false

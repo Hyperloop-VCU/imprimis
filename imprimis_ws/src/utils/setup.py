@@ -28,8 +28,6 @@ setup(
             'gps_add_sim_covariance = utils.gps_add_sim_covariance:main',
             'fix_lidar_delay = utils.fix_lidar_delay:main',
             'wait_for_tf = utils.wait_for_tf:main',
-            'odom_remapper = utils.odom_remapper:main',
-            'nmea_serial_reader = utils.nmea_serial_reader:main'
         ],
     },
 )
