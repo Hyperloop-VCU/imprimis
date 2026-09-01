@@ -67,6 +67,7 @@ Following the below steps will get you ready to run the Imprimis simulation on y
   9. Run the gazebo fixer script: ```./fix_gazebo.bash```
 
 # Using the Simulated Robot
+
 ## Hardware
 To launch the simulated robot's hardware, run the following command: 
 * ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py```  
@@ -101,6 +102,8 @@ We use ROS2 python launch files to handle robot startup. It is a hierarchical pr
 Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all simulated hardware except the LiDAR and GPS:
 
 ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py use_lidar:=false use_gps:=false```
+
+Additionally, you can add "ui_type:=rviz" to any launch file to not use foxglove and use RVIZ instead. This also enables rosbridge publishing.
 
 Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap appear in foxglove studio, you can use either the GPS waypoint input panel or the 3D view panel to give the robot navigation goals.
 
