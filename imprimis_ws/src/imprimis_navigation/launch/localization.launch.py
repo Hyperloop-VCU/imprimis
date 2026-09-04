@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, RegisterEventHandler, ExecuteProcess
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -171,6 +171,19 @@ def generate_launch_description():
         )],
     ))
 
+    # Faked odom frame (used in early testing)
+    odom_faker = TimerAction(
+        period=5.0,
+        actions=[
+            Node(
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                arguments=["--frame-id", "odom", "--child-frame-id", "base_link", "--x", "0", "--y", "0", "--z", "0", "--roll", "0", "--pitch", "0", "--yaw", "0"],
+                output='screen'
+            )
+        ],
+    )
+
     # GPS-based map frame
     navsat_transform_config = PathJoinSubstitution([nav_config_src_dir, "navsat_transform.yaml"])
     global_ekf_config = PathJoinSubstitution([nav_config_src_dir, "Global_EKF.yaml"])
@@ -200,6 +213,7 @@ def generate_launch_description():
         # always
         imprimis_hardware_launch,
         imprimis_sim_launch,
+        #odom_faker,
         local_ekf,
         wait_for_odom_tf,
 

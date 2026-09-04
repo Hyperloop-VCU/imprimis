@@ -27,8 +27,14 @@
     </spherical_coordinates>
 
     <physics name="1ms" type="ODE">
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.017</max_step_size>
       <real_time_factor>1.0</real_time_factor>
+      <dart>
+    <collision_detector>bullet</collision_detector>
+    <solver>
+      <solver_type>pgs</solver_type>
+    </solver>
+  </dart>
     </physics>
 
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>

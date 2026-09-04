@@ -31,8 +31,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "nav_mode",
             default_value="outdoor",
-            choices=("indoor", "outdoor"),
-            description="If indoor mode, the map frame is generated from SLAM. If outdoor mode, the map frame is generated from fusing local odom with GPS."
+            choices=("indoor", "outdoor", "fake"),
+            description="If indoor mode, the map frame is generated from SLAM. If outdoor mode, the map frame is generated from fusing local odom with GPS. If fake, the map frame is exactly the same as the odom frame."
         )
     )
     declared_arguments.append(
@@ -152,7 +152,11 @@ def generate_launch_description():
             "use_cams": use_cams,
             "disable_local_EKF": disable_local_EKF,
             "world": world,
-            "map_type": PythonExpression(["'lidar' if '", nav_mode, "' == 'indoor' else 'gps'"]),
+            "map_type": PythonExpression([
+                "'lidar' if '", nav_mode, "' == 'indoor' else ",
+                "'fake' if '", nav_mode, "' == 'fake' else ",
+                "'gps'",
+            ]),
             "show_sim": show_sim,
             "ui_type": ui_type,
             'use_lidar': use_lidar
@@ -210,6 +214,7 @@ def generate_launch_description():
             launch_arguments={
                 "params_file": nav2_params_file_path,
                 "autostart": autostart_nav2,
+                "log_level": "info",
                 "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
             }.items(),
         )]

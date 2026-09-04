@@ -6,7 +6,7 @@ from pathlib import Path
 
 # Get absolute path to sdf
 script_dir = Path(__file__).parent.resolve()
-file_path = script_dir / 'src/imprimis_hardware_platform/worlds/igvc.sdf'
+file_path = script_dir / 'src/imprimis_hardware_platform/worlds/igvc2.sdf'
 
 # Line number of imprimis in the file
 remove_idx = None
@@ -21,7 +21,7 @@ for i, line in enumerate(lines):
     # Into <uri>model://igvc/blue_barrel.glb</uri>
     if line.strip().startswith("<uri>file:///"):
         lines[i] = "<uri>" + line.split("worlds/")[1]
-
+    
     
     # Remove this part:
     # <include>
