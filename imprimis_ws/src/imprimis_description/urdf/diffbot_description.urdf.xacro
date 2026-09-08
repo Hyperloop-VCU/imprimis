@@ -310,12 +310,18 @@
   <child link="velodyne"/>
 </joint>
 
-<!-- Camera joint and link -->
+<!-- Camera joint and link  -->
 <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
 <xacro:sensor_d435i parent="chassis" name="front">
-  <origin xyz="${base_length+0.01} 0 ${base_height-0.022}" rpy="0 0 0"/>
-  <!-- Camera is placed slightly off from where it's mounted without these magic numbers. -->
+  <origin xyz="${base_length+0.01} 0 ${base_height-0.022+0.065}" rpy="0 0.1047 0"/>
 </xacro:sensor_d435i>
+
+<!-- Connect camera link to the rest of the robot
+<joint name="front_camera_joint" type="fixed" >
+  <origin xyz="0 0 0.486" rpy="0 0 0" />
+  <parent link="base_link" />
+  <child link="camera_link"/>
+</joint> -->
 
 
 <!-- Lidar joint and link -->

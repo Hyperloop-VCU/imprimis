@@ -1,41 +1,3 @@
-### Changes from SmacHybrid_DWB_1 ###
-
-## Global costmap:
-  # Set always_send_full_costmap to true (was false)
-  # Set global frame to odom (was map)
-  # Set rolling window to true (was false)
-  # Decreased width and height to 100 (was 400)
-  # Obstacle detection max distance increased to 20.0 (was 5.0)
-  # Obstacle detection min distance decreased to 0.05 (was 0.1)
-  # Inflation layer cost scaling factor increased to 1.5 (was 1.25) - higher is less cost
-  # Changed min_obstacle_height to 0.5 (was 0.0)
-
-## Local costmap:
-  # Set always_send_full_costmap to true (was false)
-  # Inflation layer cost scaling factor increased to 1.5 (was 1.25) - higher is less cost
-  # Changed min_obstacle_height to 0.5 (was 0.0)
-
-## Planner:
-  # Increased max planning time to 2.0 (was 1.0)
-  # Increased goal tolerance to 2.5 (was 0.25)
-  # Decreased cost penalty to 3.5 (was 5.0)
-
-## Controller:
-  # Decreased max speed to 0.5 (was 0.8)
-  # Increased max acceleration/decceleration to 3.0 (was 2.5)
-  # Increased BaseObstacle weight to 1.0 (was 0.04)
-  # Increased goal checker tolerance to 0.5
-  # Increased vel and theta samples to 100 each (was 20 each)
-
-## Changed accel/vel limits in velocity smoother to match the controller
-
-## Changed all other global frames to odom
-
-
-# NEW CHANGES (4/20/26) - Changed obstacle layer to the SpatioTemporal Voxel Layer (SVTL).
-# The obstacle layer would never remove things outside of the lidar's view, and the SVTL allows us to do that.
-# We specify the duration of decay, i.e. how long an obstacle outside the view should persist on the costmap before dissapearing.
-
 map_server:
   ros__parameters:
     yaml_filename: "bigger_blank.yaml"
@@ -123,71 +85,136 @@ behavior_server:
 controller_server:
   ros__parameters:
     enable_stamped_cmd_vel: true 
-    controller_frequency: 20.0
-    min_x_velocity_threshold: 0.01 
-    min_theta_velocity_threshold: 0.01
+    controller_frequency: 10.0
+    costmap_update_timeout: 0.5
+    min_x_velocity_threshold: 0.005
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 1.0
     progress_checker_plugins: ["progress_checker"]
-    goal_checker_plugins: ["goal_checker"]
+    goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
     odom_topic: /odometry/filtered/local
 
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.05
-      movement_time_allowance: 15.0
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
 
-    goal_checker:
-      plugin: "nav2_controller::PositionGoalChecker"  # position only, no yaw
+    general_goal_checker:
       stateful: true
-      xy_goal_tolerance: 0.5
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.35
+      yaw_goal_tolerance: 3.15   # effectively ignore heading; you can't pivot to fix it
 
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
-      debug_trajectory_details: False
-      min_vel_x: 0.1
-      min_speed_xy: 0.1
-      max_vel_x: 0.5
-      max_speed_xy: 0.5
-      acc_lim_x: 3.0
-      decel_lim_x: -3.0
-      min_speed_theta: 0.0
-      max_vel_theta: 0.4
-      acc_lim_theta: 5.0
-      decel_lim_theta: -5.0
+      plugin: "nav2_mppi_controller::MPPIController"
+      
+      time_steps: 25 # depth. horizon = time_steps * model_dt
+      model_dt: 0.1 # size of each depth increment (should be 1/controller_frequency)
+      batch_size: 20000 # breadth
+      iteration_count: 1 # repetitions of the whole thing
 
-      vx_samples: 100
-      vtheta_samples: 100
+      vx_std: 0.2 # default 0.2
+      vy_std: 0.0 # we cannot move like that
+      wz_std: 0.8 # default 0.4
 
-      sim_time: 1.7
-      linear_granularity: 0.05
-      angular_granularity: 0.025
+      vx_max: 2.2352 # 5 mph
+      vx_min: 0.0 # we will not move backwards
+      vy_max: 0.0 # we cannot move like that
+      wz_max: 3.0
 
-      xy_goal_tolerance: 0.25
-      path_length_tolerance: 1.0
+      ax_max: 1.5
+      ax_min: -1.5
+      ay_max: 0.0 # we cannot move like that
+      az_max: 3.0
 
-      trans_stopped_velocity: 0.25
-      short_circuit_trajectory_evaluation: True
-      limit_vel_cmd_in_traj: False
-      stateful: True
+      temperature: 0.3  # if low, it just takes the best trajectory. if high, it averages over all sampled trajectories.
+      gamma: 0.015 # if low, trajectories that deviate significantly from the last iteration's output control sequence are not penalized. if high, they ARE penalized.
+      motion_model: "DiffDrive"
+      prune_distance: 2.0  # should be greater than the distance the robot can cover in one horizon. prune_distance > vx_max * horizon
+      transform_tolerance: 0.1
+      visualize: false
+      regenerate_noises: false
 
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.5
-      PathAlign.scale: 40.0
-      PathAlign.forward_point_distance: 0.2
-      GoalAlign.scale: 0.0
-      GoalAlign.forward_point_distance: 0.2
-      PathDist.scale: 40.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
-      RotateToGoal.lookahead_time: -1.0
+      TrajectoryVisualizer:
+        trajectory_step: 5
+        time_step: 3
 
-      # All zero unless we switch to a swerve or mecanum drivetrain
-      acc_lim_y: 0.0
-      vy_samples: 0
-      max_vel_y: 0.0
-      min_vel_y: 0.0
-      decel_lim_y: 0.0
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic",
+                "PathAlignCritic", "PathFollowCritic", "PathAngleCritic",
+                "PreferForwardCritic", "TwirlingCritic", "VelocityDeadbandCritic"]
+
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0
+
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 1.4
+
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 3.0
+        threshold_to_consider: 0.5
+
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 0.5
+
+      TwirlingCritic:
+        enabled: true
+        twirling_cost_power: 1
+        twirling_cost_weight: 10.0
+
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 1.0
+        critical_cost: 1000000.0
+        consider_footprint: false
+        collision_cost: 1000000.0
+        near_goal_distance: 1.0
+        near_collision_cost: 100
+        trajectory_point_step: 2
+
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 20.0
+        max_path_occupancy_ratio: 0.05
+        trajectory_point_step: 4
+        threshold_to_consider: 0.5
+        offset_from_furthest: 20
+        use_path_orientations: true   # Smac Hybrid emits meaningful headings
+
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        offset_from_furthest: 5
+        threshold_to_consider: 1.4
+
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.0
+        offset_from_furthest: 4
+        threshold_to_consider: 0.5
+        max_angle_to_furthest: 1.0
+        mode: 0                       # forward-preference
+
+      VelocityDeadbandCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 35.0
+        deadband_velocities: [0.05, 0.0, 0.05]
 
 global_costmap:
   global_costmap:
@@ -233,8 +260,8 @@ global_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.5
-        inflation_radius: 1.138 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
+        cost_scaling_factor: 0.1 # higher is more leniant
+        inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
       # Massive blank map, filled over time
       #static_layer:
@@ -285,8 +312,8 @@ local_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.5
-        inflation_radius: 1.138 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
+        cost_scaling_factor: 0.1 # higher is more leniant
+        inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
 
 velocity_smoother:

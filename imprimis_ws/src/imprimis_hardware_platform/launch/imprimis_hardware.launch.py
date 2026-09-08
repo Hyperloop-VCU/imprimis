@@ -286,7 +286,7 @@ def generate_launch_description():
         condition=IfCondition(use_controller)
     )
 
-    # rosbridge
+    # rosbridge, used for communication with the browser-based gps goal input GUI
     #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
     rosbridge_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
@@ -294,11 +294,13 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
     )
 
-    # foxglove bridge
+    # foxglove bridge, used for communication with foxglove studio
     foxglove_launch_include = IncludeLaunchDescription(
         XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('foxglove_bridge'), 'launch', 'foxglove_bridge_launch.xml'])]),
         condition=IfCondition(PythonExpression(["'", ui_type, "' == 'foxglove'"]))
     )
+
+    
 
     things_to_launch = [
         # Always

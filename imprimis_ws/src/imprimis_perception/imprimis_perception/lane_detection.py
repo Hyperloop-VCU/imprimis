@@ -18,14 +18,16 @@ class LaneDetection(Node):
         self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
-        self.declare_parameter('camera_height', 0.59) #meters
-        self.declare_parameter('camera_angle', 84) #0 = pointing straight down, 90 = looking out to the horizon
+        self.declare_parameter('camera_height', 0.675) #meters
+        self.declare_parameter('camera_angle', 84.5) #0 = pointing straight down, 90 = looking out to the horizon
+        self.declare_parameter('frame_id', 'front_link')
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
         image_topic = self.get_parameter('image_topic').value
         camera_info_topic = self.get_parameter('camera_info_topic').value
         self.process_period = 1.0 / self.get_parameter('process_rate_hz').value
+        self.frame_id = self.get_parameter('frame_id').value
 
         
 
@@ -178,7 +180,7 @@ class LaneDetection(Node):
             PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
             ]
         header = Header()
-        header.frame_id = 'camera_color_optical_frame'
+        header.frame_id = self.frame_id
         header.stamp = self.get_clock().now().to_msg()
 
         cloud_msg = point_cloud2.create_cloud(header, fields, lane_points)

@@ -80,7 +80,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "nav2_params",
-            default_value="SmacHybrid_DWB_2",
+            default_value="SmacHybrid_MPPI_5",
             description="Filename of the nav2 parameters YAML (excluding the .yaml). It must be located in imprimis_navigation/config/nav2",
         )
     )
@@ -220,6 +220,78 @@ def generate_launch_description():
         )]
     ))
 
+    # map_goal_to_odom
+    map_goal_to_odom_params = PathJoinSubstitution([nav_config_src_dir, "map_goal_to_odom.yaml"])
+    map_goal_to_odom = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="map_goal_to_odom",
+            executable="map_goal_to_odom",
+            name="map_goal_to_odom",
+            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]), "useGps": PythonExpression(["'", nav_mode, "' == 'outdoor'"])}]
+        )]
+    ))
+
+
+    # Convert 3D pointcloud data from lidar into 2D laserscan data so the costmap can process it easier
+    pc2ls_params = PathJoinSubstitution([nav_config_src_dir, "pointcloud_to_laserscan.yaml"])
+    pointcloud_to_laserscan = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package='pointcloud_to_laserscan',
+            executable='pointcloud_to_laserscan_node',
+            name="pointcloud_to_laserscan",
+            remappings=[
+                ('cloud_in', 'velodyne_points'),
+                ('scan', 'velodyne_scan')
+            ],
+            parameters=[
+                pc2ls_params, 
+                {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}
+            ]
+        )]
+    ))
+    return LaunchDescription(declared_arguments + [
+        # hardware and localization system
+        localization_launch_include,
+
+        # wait for map -> odom tf before starting anything else
+        wait_for_map_odom_tf,
+
+        # goal handler node
+        map_goal_to_odom,
+
+        # pointcloud to laserscan
+        #pointcloud_to_laserscan,
+
+        # nav2
+        map_server_node,
+        lifecycle_manager_map,
+        nav2_navigation_launch,
+    ])
+
+
+"""
+    velocity_tracker_node = Node(
+        package="imprimis_navigation",
+        executable="velocity_tracker.py",
+        name="velocity_tracker",
+        output="screen",
+        condition=IfCondition(track_velocity),
+    )
+    
+    waypoint_sender = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="imprimis_navigation",
+            executable="waypoint_sender.py",
+            name="waypoint_sender",
+            output="screen",
+            parameters=[{"waypoints_file": waypoints_file}],
+            condition=IfCondition(use_waypoints),
+        )]
+    ))
+
     # Controller_switcher
     controller_switcher = RegisterEventHandler(OnProcessExit(
         target_action=wait_for_map_odom_tf,
@@ -236,51 +308,5 @@ def generate_launch_description():
         )]
     ))
 
-    # map_goal_to_odom
-    map_goal_to_odom_params = PathJoinSubstitution([nav_config_src_dir, "map_goal_to_odom.yaml"])
-    map_goal_to_odom = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package="map_goal_to_odom",
-            executable="map_goal_to_odom",
-            name="map_goal_to_odom",
-            parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]), "useGps": PythonExpression(["'", nav_mode, "' == 'outdoor'"])}]
-        )]
-    ))
-    
-    velocity_tracker_node = Node(
-        package="imprimis_navigation",
-        executable="velocity_tracker.py",
-        name="velocity_tracker",
-        output="screen",
-        condition=IfCondition(track_velocity),
-    )
-    
-    waypoint_sender = RegisterEventHandler(OnProcessExit(
-    target_action=wait_for_map_odom_tf,
-    on_exit=[Node(
-        package="imprimis_navigation",
-        executable="waypoint_sender.py",
-        name="waypoint_sender",
-        output="screen",
-        parameters=[{"waypoints_file": waypoints_file}],
-        condition=IfCondition(use_waypoints),
-    )]
-    ))
-    return LaunchDescription(declared_arguments + [
-        localization_launch_include,
 
-        # wait for map -> odom tf before starting anything else
-        wait_for_map_odom_tf,
-
-        # goal converter node
-        map_goal_to_odom,
-
-        # nav2 stack
-        map_server_node,
-        lifecycle_manager_map,
-        nav2_navigation_launch,
-        #controller_switcher,
-        #velocity_tracker_node,
-        waypoint_sender
-    ])
+"""
