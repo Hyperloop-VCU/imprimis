@@ -1,10 +1,12 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import Image, CameraInfo, PointField, PointCloud2
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
 from rcl_interfaces.msg import SetParametersResult
+from std_msgs.msg import Header
+from sensor_msgs_py import point_cloud2
 
 
 class LaneDetection(Node):
@@ -17,7 +19,7 @@ class LaneDetection(Node):
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
         self.declare_parameter('camera_height', 0.59) #meters
-        self.declare_parameter('camera_angle', 0) #0 = pointing straight down, 90 = looking out to the horizon
+        self.declare_parameter('camera_angle', 84) #0 = pointing straight down, 90 = looking out to the horizon
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
@@ -70,7 +72,12 @@ class LaneDetection(Node):
         )
 
 
-        
+        self.lane_pointcloud = self.create_publisher(
+            PointCloud2,
+            'camera/lane_points',
+            1
+        )
+
         self.get_logger().info(
             f'Lane detector started. Waiting on {image_topic} and {camera_info_topic}'
         )
@@ -114,7 +121,8 @@ class LaneDetection(Node):
         if self.maskPublish == True:
             self.publishMask(mask)
         lane_points = self.raycast(mask,self.camera_matrix)
-        self.get_logger().info(f'LanePoints: {lane_points}')
+        self.publishPointCloud(lane_points)
+        #self.get_logger().info(f'LanePoints: {lane_points}')
         self.get_logger().info(f'Lane pixels detected: {lane_pixel_count}', throttle_duration_sec=1.0)# for testing
 
 
@@ -162,7 +170,19 @@ class LaneDetection(Node):
             lane_points.append(point)
 
         return lane_points
-        
+
+    def publishPointCloud(self, lane_points):
+        fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+            ]
+        header = Header()
+        header.frame_id = 'camera_color_optical_frame'
+        header.stamp = self.get_clock().now().to_msg()
+
+        cloud_msg = point_cloud2.create_cloud(header, fields, lane_points)
+        self.lane_pointcloud.publish(cloud_msg)        
         
 def main(args=None):
     rclpy.init(args=args)
