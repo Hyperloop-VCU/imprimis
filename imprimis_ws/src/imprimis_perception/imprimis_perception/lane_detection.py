@@ -7,7 +7,7 @@ import numpy as np
 from rcl_interfaces.msg import SetParametersResult
 from std_msgs.msg import Header
 from sensor_msgs_py import point_cloud2
-
+import math
 
 class LaneDetection(Node):
     def __init__(self):
@@ -19,8 +19,12 @@ class LaneDetection(Node):
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
         self.declare_parameter('camera_height', 0.675) #meters
+<<<<<<< HEAD
         self.declare_parameter('camera_angle', 84.5) #0 = pointing straight down, 90 = looking out to the horizon
         self.declare_parameter('frame_id', 'front_link')
+=======
+        self.declare_parameter('camera_angle', 84) #0 = pointing straight down, 90 = looking out to the horizon
+>>>>>>> b69315af349637daec35d86fec5d8c28c184164c
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
@@ -42,7 +46,8 @@ class LaneDetection(Node):
 
 
         #this is for inverse mapping, find a spot on the ground and then find that point in the image and check whether or not it is a white pixel
-        self.z_values = np.arange(0.5, 7.0, 0.05)   # 0.5m to 7m ahead, 5cm steps
+        self.zCalc = self.height * math.tan(math.radians(self.theta))
+        self.z_values = np.arange(0.5, self.zCalc, 0.05)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.05)  # 3m left to 3m right, 5cm steps
         self.X, self.Z = np.meshgrid(self.x_values,self.z_values)
 
