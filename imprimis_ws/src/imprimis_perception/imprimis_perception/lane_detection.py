@@ -19,12 +19,8 @@ class LaneDetection(Node):
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
         self.declare_parameter('camera_height', 0.675) #meters
-<<<<<<< HEAD
         self.declare_parameter('camera_angle', 84.5) #0 = pointing straight down, 90 = looking out to the horizon
         self.declare_parameter('frame_id', 'front_link')
-=======
-        self.declare_parameter('camera_angle', 84) #0 = pointing straight down, 90 = looking out to the horizon
->>>>>>> b69315af349637daec35d86fec5d8c28c184164c
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
