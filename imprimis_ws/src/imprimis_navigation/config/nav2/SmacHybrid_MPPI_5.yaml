@@ -177,8 +177,8 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 1.0
-        critical_cost: 1000000.0
-        consider_footprint: false
+        critical_cost: 100.0
+        consider_footprint: true
         collision_cost: 1000000.0
         near_goal_distance: 1.0
         near_collision_cost: 100
@@ -260,7 +260,7 @@ global_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 0.1 # higher is more leniant
+        cost_scaling_factor: 0.9 # higher is more leniant
         inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
       # Massive blank map, filled over time
@@ -312,7 +312,7 @@ local_costmap:
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 0.1 # higher is more leniant
+        cost_scaling_factor: 0.9 # higher is more leniant
         inflation_radius: 2.5 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
 
