@@ -10,6 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', ['launch/lane_detection.launch.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -17,11 +18,6 @@ setup(
     maintainer_email='mushtaqa@vcu.edu',
     description='TODO: Package description',
     license='TODO: License declaration',
-    extras_require={
-        'test': [
-            'pytest',
-        ],
-    },
     entry_points={
         'console_scripts': [
             'lane_detection = imprimis_perception.lane_detection:main'
