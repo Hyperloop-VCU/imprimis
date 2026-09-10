@@ -10,6 +10,9 @@
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
+  <depend>realsense2_camera</depend>          <!-- the driver node + rs_launch.py -->
+  <depend>realsense2_camera_msgs</depend>               <!-- Extrinsics, IMUInfo, Metadata, RGBD msgs -->
+  <depend>realsense2_description</depend>     <!-- D435i/D455 URDF xacros, meshes -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

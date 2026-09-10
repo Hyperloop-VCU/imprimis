@@ -9,7 +9,7 @@
 
   <license>Apache-2.0</license>
 
-  <author email="denis.stogl@stoglrobotics.de">Dr.-Ing. Denis Štogl</author>
+  <author email="nerallarn@vcu.edu">Ray Neralla</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>rmw_cyclonedds_cpp</depend>
@@ -47,6 +47,7 @@
   <exec_depend>rosbridge_msgs</exec_depend>
   <exec_depend>rosbridge_server</exec_depend>
   <exec_depend>rosbridge_suite</exec_depend>
+  <exec_depend>foxglove_bridge</exec_depend>
 
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>controller_manager</test_depend>
