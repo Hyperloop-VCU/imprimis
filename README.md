@@ -42,7 +42,7 @@ This folder contains some of the ROS packages required for Imprimis. Some are cu
 * **SLAM_Packages**: A collection of third-party packages used for global localization with the Lidar. This folder contains many packages; there is no package named "SLAM_Packages".
 
 # Install instructions for Foxglove Studio
-We use Foxglove Studio to interact with the robot in both real life and simulation, and it works on Windows, Mac, and Linux. It usually runs on the robot's PC, but you can also run it on your own computer to control / interact with the robot remotely. We previously used a different GUI called RVIZ, but this is much better and has more features, so we switched to it.
+We use Foxglove Studio to interact with the robot in both real life and simulation, and it works on Windows, Mac, and Linux. It usually runs on the robot's PC, but you can also run it on your own computer to control / interact with the robot remotely. We previously used a different GUI called RVIZ, but this is much better and has more features, so we switched to it. Rviz still works, and you just need to add "ui_type:=rviz" to any launch file detailed below to use it instead of foxglove.
 
 1. Download the desktop app [here](https://foxglove.dev/download)
 2. Sign in or make an account.
@@ -61,10 +61,11 @@ Following the below steps will get you ready to run the Imprimis simulation on y
   3. Clone this repository: ```git clone https://github.com/Hyperloop-VCU/imprimis.git```
   4. Navigate to workspace root: ```cd imprimis/imprimis_ws```
   5. Install ROS dependencies: ```rosdep install --from-paths src --ignore-src -r -y```
-  6. Build workspace: ```colcon build```
-  7. Source workspace: ```source install/setup.bash```
-  8. Change permissions for gazebo fixer script: ```chmod 777 ./fix_gazebo.bash```
-  9. Run the gazebo fixer script: ```./fix_gazebo.bash```
+  6. Add the following line to the file ~/.bashrc: ```export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp```
+  7. Build workspace: ```colcon build```
+  8. Source workspace: ```source install/setup.bash```
+  9. Change permissions for gazebo fixer script: ```chmod 777 ./fix_gazebo.bash```
+  10. Run the gazebo fixer script: ```./fix_gazebo.bash```
 
 # Using the Simulated Robot
 
