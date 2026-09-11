@@ -3,12 +3,12 @@
 # If map_type:=lidar, the lidar SLAM is in charge of the map frame
 ekf_global:
   ros__parameters:
-    frequency: 30.0
-    sensor_timeout: 0.1
+    frequency: 5.0
+    sensor_timeout: 1.0
     two_d_mode: true
     transform_time_offset: 0.0
-    transform_timeout: 0.0
-    print_diagnostics: true
+    transform_timeout: 0.02
+    print_diagnostics: false
     debug: false
 
     map_frame: map
