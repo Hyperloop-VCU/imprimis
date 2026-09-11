@@ -173,38 +173,6 @@ def generate_launch_description():
         }]
     )
 
-    # map server
-    map_yaml_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [map_yaml, '.yaml']])
-    map_server_node = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package="nav2_map_server",
-            executable="map_server",
-            name="map_server",
-            output="screen",
-            parameters=[{
-                "yaml_filename": map_yaml_path, 
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
-            }],
-        )]
-    ))
-
-    # lifecycle manager for map server
-    lifecycle_manager_map = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package="nav2_lifecycle_manager",
-            executable="lifecycle_manager",
-            name="lifecycle_manager_map",
-            output="screen",
-            parameters=[{
-                "autostart": True,
-                "node_names": ["map_server"],
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
-            }],
-        )]
-    ))
-
     # nav2 navigation stack (planner/controller/bt/costmaps)
     nav2_params_file_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [nav2_params, '.yaml']])
     nav2_navigation_launch = RegisterEventHandler(OnProcessExit(
@@ -231,26 +199,6 @@ def generate_launch_description():
             parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]), "useGps": PythonExpression(["'", nav_mode, "' == 'outdoor'"])}]
         )]
     ))
-
-
-    # Convert 3D pointcloud data from lidar into 2D laserscan data so the costmap can process it easier
-    pc2ls_params = PathJoinSubstitution([nav_config_src_dir, "pointcloud_to_laserscan.yaml"])
-    pointcloud_to_laserscan = RegisterEventHandler(OnProcessExit(
-        target_action=wait_for_map_odom_tf,
-        on_exit=[Node(
-            package='pointcloud_to_laserscan',
-            executable='pointcloud_to_laserscan_node',
-            name="pointcloud_to_laserscan",
-            remappings=[
-                ('cloud_in', 'velodyne_points'),
-                ('scan', 'velodyne_scan')
-            ],
-            parameters=[
-                pc2ls_params, 
-                {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}
-            ]
-        )]
-    ))
     return LaunchDescription(declared_arguments + [
         # hardware and localization system
         localization_launch_include,
@@ -261,12 +209,9 @@ def generate_launch_description():
         # goal handler node
         map_goal_to_odom,
 
-        # pointcloud to laserscan
-        #pointcloud_to_laserscan,
-
         # nav2
-        map_server_node,
-        lifecycle_manager_map,
+        #map_server_node,
+        #lifecycle_manager_map,
         nav2_navigation_launch,
     ])
 
@@ -305,6 +250,57 @@ def generate_launch_description():
                     "'", use_controller_switcher, "' == 'true' or '", nav2_params, "' == 'SmacHybrid_HybridRPPMPPI_1'"
                 ])
             ),
+        )]
+    ))
+
+    # map server
+    map_yaml_path = PathJoinSubstitution([nav_config_src_dir, 'nav2', [map_yaml, '.yaml']])
+    map_server_node = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_map_server",
+            executable="map_server",
+            name="map_server",
+            output="screen",
+            parameters=[{
+                "yaml_filename": map_yaml_path, 
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+            }],
+        )]
+    ))
+
+    # Convert 3D pointcloud data from lidar into 2D laserscan data so the costmap can process it easier
+    pc2ls_params = PathJoinSubstitution([nav_config_src_dir, "pointcloud_to_laserscan.yaml"])
+    pointcloud_to_laserscan = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package='pointcloud_to_laserscan',
+            executable='pointcloud_to_laserscan_node',
+            name="pointcloud_to_laserscan",
+            remappings=[
+                ('cloud_in', 'velodyne_points'),
+                ('scan', 'velodyne_scan')
+            ],
+            parameters=[
+                pc2ls_params, 
+                {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}
+            ]
+        )]
+    ))
+
+    # lifecycle manager for map server
+    lifecycle_manager_map = RegisterEventHandler(OnProcessExit(
+        target_action=wait_for_map_odom_tf,
+        on_exit=[Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_map",
+            output="screen",
+            parameters=[{
+                "autostart": True,
+                "node_names": ["map_server"],
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+            }],
         )]
     ))
 

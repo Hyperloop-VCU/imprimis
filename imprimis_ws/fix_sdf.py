@@ -6,7 +6,8 @@ from pathlib import Path
 
 # Get absolute path to sdf
 script_dir = Path(__file__).parent.resolve()
-file_path = script_dir / 'src/imprimis_hardware_platform/worlds/igvc2.sdf'
+worldname = input("World name: ")
+file_path = script_dir / f'src/imprimis_hardware_platform/worlds/{worldname}.sdf'
 
 # Line number of imprimis in the file
 remove_idx = None
@@ -40,3 +41,4 @@ if remove_idx is not None:
 # Overwrite file with new contents
 with open(file_path, 'w') as outfile:
     outfile.writelines(lines)
+print("Done")
