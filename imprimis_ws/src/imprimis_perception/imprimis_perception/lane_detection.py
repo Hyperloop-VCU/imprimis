@@ -135,15 +135,16 @@ class LaneDetection(Node):
         self.camera_mask.publish(cv_image)
 
     def segment_lane_pixels(self, cv_image:np.ndarray) -> np.ndarray:
-        gray = cv2.cvtColor(cv_image,cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
-        
+        hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
+        hue, sat, val = cv2.split(hsv) 
 
-
-
-        threshold_value = 200
-        _, mask = cv2.threshold(blurred, threshold_value, 255, cv2.THRESH_BINARY)
-        
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        val_enhanced = clahe.apply(val)
+        blurred = cv2.GaussianBlur(val_enhanced, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
+        lower_white = (0,0, 200)
+        upper_white = (179, 60, 255)
+        hsv_enhanced = cv2.merge([hue,sat, blurred])
+        mask = cv2.inRange(hsv_enhanced,lower_white, upper_white)
         return mask
 
 
