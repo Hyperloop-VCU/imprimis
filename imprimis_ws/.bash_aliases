@@ -16,6 +16,7 @@ alias launch_hardware='imp && source install/setup.bash && ros2 launch imprimis_
 alias launch_sim_hardware='imp && source install/setup.bash && ros2 launch imprimis_hardware_platform imprimis_sim.launch.py'
 alias launch_localization='imp && source install/setup.bash && ros2 launch imprimis_navigation localization.launch.py'
 alias launch_nav='imp && source install/setup.bash && ros2 launch imprimis_navigation basic_nav.launch.py'
+alias launch_ld='imp && source install/setup.bash && ros2 launch imprimis_perception lane_detection.launch.py'
 alias reset-build='imp && rm -rf build install log && rebuild'
 alias rebuild='imp && colcon build && source install/setup.bash && echo Rebuilt and resourced the imprimis workspace.'
 

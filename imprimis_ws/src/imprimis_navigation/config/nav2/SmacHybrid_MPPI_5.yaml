@@ -6,7 +6,7 @@ bt_navigator:
     navigators: ["navigate_to_pose"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
-    default_nav_to_pose_bt_xml: $(find-pkg-share imprimis_navigation)/../../../../src/imprimis_navigation/nav2_bt/imprimis_nav2pos_bt.xml
+    default_nav_to_pose_bt_xml: $(find-pkg-share imprimis_navigation)/../../../../src/imprimis_navigation/nav2_bt/default_nav2_bt.xml
 
 planner_server:
   ros__parameters:
@@ -78,31 +78,31 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       
-      time_steps: 30 # depth. horizon = time_steps * model_dt
+      time_steps: 20 # depth. horizon = time_steps * model_dt
       model_dt: 0.1 # size of each depth increment (should be 1/controller_frequency)
-      batch_size: 20000 # breadth
+      batch_size: 30000 # breadth
       iteration_count: 1 # repetitions of the whole thing
 
-      vx_std: 0.3 # default 0.2
+      vx_std: 1.0 # default 0.2
       vy_std: 0.0 # we cannot move like that
       wz_std: 0.6 # default 0.4
 
-      vx_max: 2.2352 # 5 mph
+      vx_max: 0.1 # 5 mph
       vx_min: 0.0 # we will not move backwards
       vy_max: 0.0 # we cannot move like that
       wz_max: 3.0
 
-      ax_max: 1.5
-      ax_min: -1.5
+      ax_max: 1.0 #1.5
+      ax_min: -1.0 #-1.5
       ay_max: 0.0 # we cannot move like that
       az_max: 2.0
 
-      temperature: 0.3  # if low, it just takes the best trajectory. if high, it averages over all sampled trajectories.
-      gamma: 0.015 # if low, trajectories that deviate significantly from the last iteration's output control sequence are not penalized. if high, they ARE penalized.
+      temperature: 0.03  #default 0.3, if low, it just takes the best trajectory. if high, it averages over all sampled trajectories.
+      gamma: 0.015 # default 0.015, if low, trajectories that deviate significantly from the last iteration's output control sequence are not penalized. if high, they ARE penalized.
       motion_model: "DiffDrive"
       prune_distance: 2.0  # should be greater than the distance the robot can cover in one horizon. prune_distance > vx_max * horizon
       transform_tolerance: 0.1
-      visualize: false
+      visualize: true
       regenerate_noises: false
 
       TrajectoryVisualizer:
@@ -144,13 +144,25 @@ controller_server:
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.0
-        critical_cost: 100.0
-        consider_footprint: false
-        collision_cost: 1000000.0
+        cost_weight: 0.001
+        critical_cost: 500.0
+        consider_footprint: true
+        collision_cost: 1.0
         near_goal_distance: 1.0
-        near_collision_cost: 100
+        near_collision_cost: 1
         trajectory_point_step: 2
+      
+      ObstaclesCritic:
+        enabled: false
+        cost_power: 1
+        repulsion_weight: 1.5
+        critical_weight: 20.0
+        consider_footprint: true
+        collision_cost: 10000.0
+        collision_margin_distance: 0.1
+        near_goal_distance: 0.5
+        #inflation_radius: 0.55 # (only in Humble)
+        #cost_scaling_factor: 10.0 # (only in Humble)
 
       PathAlignCritic:
         enabled: true
@@ -221,7 +233,7 @@ global_costmap:
           max_obstacle_height: 3.0
           min_obstacle_height: 0.2
           raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 10.0
           obstacle_max_range: 6.0
           obstacle_min_range: 0.2
 
@@ -253,9 +265,9 @@ local_costmap:
       robot_base_frame: base_link
       resolution: 0.1
 
-      #footprint_padding: 0.11
-      #footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
-      robot_radius: 0.54
+      footprint_padding: 0.11
+      footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
+      #robot_radius: 0.54
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -268,7 +280,7 @@ local_costmap:
         min_obstacle_height: -10.0
         velodyne_data:
           topic: /velodyne_points
-          clearing: True
+          clearing: False
           marking: True
           data_type: "PointCloud2"
           max_obstacle_height: 3.0

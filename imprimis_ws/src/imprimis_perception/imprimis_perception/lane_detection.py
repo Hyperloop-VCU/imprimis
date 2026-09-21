@@ -19,8 +19,8 @@ class LaneDetection(Node):
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
         self.declare_parameter('camera_height', 0.675) #meters
-        self.declare_parameter('camera_angle', 84.5) #0 = pointing straight down, 90 = looking out to the horizon
-        self.declare_parameter('frame_id', 'front_link')
+        self.declare_parameter('camera_angle', 77) #0 = pointing straight down, 90 = looking out to the horizon
+        self.declare_parameter('frame_id', 'camera_color_optical_frame')
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
@@ -155,7 +155,7 @@ class LaneDetection(Node):
         cx = camera_matrix[0][2] #principle point horizontal
         cy = camera_matrix[1][2] #principle point vertical
 
-        y_cam = -self.height * math.sin(math.radians(self.theta)) + self.Z *math.cos(math.radians(self.theta))
+        y_cam = self.height * math.sin(math.radians(self.theta)) - self.Z *math.cos(math.radians(self.theta))
         z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
 
         u = np.round(fx*(self.X/z_cam) + cx).astype(int)
@@ -167,10 +167,11 @@ class LaneDetection(Node):
         x = self.X[valid]
         z = self.Z[valid]
 
-        
+        # inverse mapping step
         valid_lane_points = cv_image[v_valid,u_valid] == 255
         x_lane = x[valid_lane_points]
         z_lane = z[valid_lane_points]
+
         for i in range(len(x[valid_lane_points])):
             x_point = x_lane[i]
             z_point = z_lane[i]
