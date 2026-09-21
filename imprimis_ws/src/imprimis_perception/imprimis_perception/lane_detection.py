@@ -100,7 +100,7 @@ class LaneDetection(Node):
         for param in params:
             if (param.name == 'process_rate_hz'):
                 if param.value <= 0:
-                    return SetParametersResult(sucessful = False, reason='process_rate_hz was 0 or lower')
+                    return SetParametersResult(successful = False, reason='process_rate_hz was 0 or lower')
                 self.process_period = 1.0/param.value
             
         return SetParametersResult(successful=True)
@@ -154,8 +154,12 @@ class LaneDetection(Node):
         fy = camera_matrix[1][1] #focal length vertical
         cx = camera_matrix[0][2] #principle point horizontal
         cy = camera_matrix[1][2] #principle point vertical
-        u = np.round(fx*(self.X/self.Z) + cx).astype(int)
-        v = np.round(fy * (self.height/self.Z) + cy).astype(int)
+
+        y_cam = -self.height * math.sin(math.radians(self.theta)) + self.Z *math.cos(math.radians(self.theta))
+        z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
+
+        u = np.round(fx*(self.X/z_cam) + cx).astype(int)
+        v = np.round(fy * (y_cam/z_cam) + cy).astype(int)
 
         valid = (u >= 0) & (u < cv_image.shape[1]) & (v >= 0) & (v <cv_image.shape[0])
         u_valid = u[valid]
