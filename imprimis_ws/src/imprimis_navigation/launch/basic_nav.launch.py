@@ -80,7 +80,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "nav2_params",
-            default_value="SmacHybrid_MPPI_5",
+            default_value="SmartPlannerSmartController",
             description="Filename of the nav2 parameters YAML (excluding the .yaml). It must be located in imprimis_navigation/config/nav2",
         )
     )
