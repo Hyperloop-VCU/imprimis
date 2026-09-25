@@ -52,45 +52,65 @@ planner_server:
 
 controller_server:
   ros__parameters:
+    odom_topic: "odometry/filtered/local"
     enable_stamped_cmd_vel: true
-    controller_frequency: 10.0
-    FollowPath:
-      plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 20
-      model_dt: 0.1
-      batch_size: 50000
+    controller_frequency: 20.0 # must be 1/model_dt
+    goal_checker_plugins: ["goal_checker"]
 
-      vx_std: 0.3
-      wz_std: 0.4
-      
-      vx_max: 0.5
-      vx_min: 0.0
-      wz_max: 1.9
+    # GOAL CHECKER
+    goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.3
+      yaw_goal_tolerance: 6.28 # I don't care about the yaw
+      stateful: True
+
+    # MPPI CONTROLLER
+    FollowPath:
+      plugin: "custom_mppi_controller::MPPIController"
+      motion_model: "DiffDrive"
+
+      # visualizer
+      visualize: false
+      TrajectoryVisualizer:
+        trajectory_step: 100
+        time_step: 5
+
+      # overall
+      time_steps: 40 # default 56
+      model_dt: 0.05 # default 0.05
+      batch_size: 5000 # default 2000
+      iteration_count: 1
+      temperature: 0.3 # default 0.3
+      gamma: 0.015 # default 0.015
+      prune_distance: 1.7
+      regenerate_noises: true # default false
+
+      # linear
+      vx_std: 0.2
+      vx_max: 0.3
+      vx_min: 0.0 # This should never be negative; this robot must not drive backwards
       ax_max: 3.0
       ax_min: -3.0
-      az_max: 3.5
 
+      # angular
+      wz_max: 1.9
+      wz_std: 0.6 # default 0.4
+      az_max: 3.5
+      
+      # lateral - these should all be zero;  diff drive robots can't move like that
+      vy_std: 0.0
+      vy_max: 0.0
       ay_min: 0.0
       ay_max: 0.0
-      vy_max: 0.0
-      vy_std: 0.0
 
-      iteration_count: 1
-      prune_distance: 1.7
-      transform_tolerance: 0.1
-      temperature: 0.03
-      gamma: 0.015
-      
-      motion_model: "DiffDrive"
-      visualize: false
-      reset_period: 1.0 # (only in Humble)
-      regenerate_noises: false
-      TrajectoryVisualizer:
-        trajectory_step: 5
-        time_step: 3
-      AckermannConstraints:
-        min_turning_r: 0.2
-      critics: ["ConstraintCritic", "CostCritic", "ObstaclesCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
+      #reset_period: 1.0 # (only in Humble)
+
+      # doesn't apply to us - we are diff drive
+      #AckermannConstraints:
+      #  min_turning_r: 0.2
+
+      # critics
+      critics: ["ObstaclesCritic", "ConstraintCritic", "CostCritic", "ObstaclesCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
       ConstraintCritic:
         enabled: true
         cost_power: 1
@@ -99,28 +119,28 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
-        threshold_to_consider: 1.4
+        threshold_to_consider: 1.0 # default 1.4
       GoalAngleCritic:
         enabled: true
         cost_power: 1
         cost_weight: 3.0
-        threshold_to_consider: 0.5
+        threshold_to_consider: 1.0 # default 0.5
       PreferForwardCritic:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
         threshold_to_consider: 0.5
       ObstaclesCritic:
-        enabled: true
+        enabled: false
         cost_power: 1
-        repulsion_weight: 10.0
+        repulsion_weight: 1.5
         critical_weight: 20.0
-        consider_footprint: false
+        consider_footprint: true
         collision_cost: 10000.0
-        collision_margin_distance: 0.1
+        collision_margin_distance: 0.01 # very important
         near_goal_distance: 0.5
-      #   inflation_radius: 0.55 # (only in Humble)
-      #   cost_scaling_factor: 10.0 # (only in Humble)
+        #inflation_radius: 0.55 # (only in Humble)
+        #cost_scaling_factor: 10.0 # (only in Humble)
       CostCritic:
         enabled: false
         cost_power: 1
@@ -194,7 +214,7 @@ global_costmap:
         min_obstacle_height: 0.3
         velodyne_data:
           topic: /velodyne_points
-          clearing: True      
+          clearing: False    
           marking: True
           data_type: "PointCloud2"
           max_obstacle_height: 3.0
@@ -234,6 +254,7 @@ local_costmap:
 
       footprint_padding: 0.02
       footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
+      #footprint: "[ [0.05, 0.125], [0.05, -0.125], [-0.2125, -0.125], [-0.2125, 0.125]]"
       #robot_radius: 0.54
 
       track_unknown_space: false

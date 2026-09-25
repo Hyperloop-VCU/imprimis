@@ -13,6 +13,8 @@ Panels:
         - /Odometry1/Covariance1/Orientation1
         - /Grid1
         - /LaserScan1/Topic1
+        - /MarkerArray1
+        - /MarkerArray1/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 1303
   - Class: rviz_common/Views
@@ -34,85 +36,20 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        caster_sphere:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        chassis:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        front_bottom_screw_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        gps_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        left_wheel:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        lidar_model_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        lidar_pole:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_wheel:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_section:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        velodyne:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -148,76 +85,21 @@ Visualization Manager:
       Use rainbow: true
       Value: false
     - Class: rviz_default_plugins/TF
-      Enabled: true
+      Enabled: false
       Filter (blacklist): ""
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_footprint:
-          Value: true
-        base_link:
-          Value: true
-        caster_sphere:
-          Value: false
-        chassis:
-          Value: false
-        front_bottom_screw_frame:
-          Value: true
-        front_link:
-          Value: true
-        gps_link:
-          Value: false
-        imu_link:
-          Value: false
-        left_wheel:
-          Value: true
-        lidar_model_link:
-          Value: false
-        lidar_pole:
-          Value: false
-        map:
-          Value: true
-        odom:
-          Value: true
-        right_wheel:
-          Value: true
-        top_section:
-          Value: true
-        velodyne:
-          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          {}
-        odom:
-          base_link:
-            base_footprint:
-              gps_link:
-                {}
-            chassis:
-              caster_sphere:
-                {}
-              front_bottom_screw_frame:
-                front_link:
-                  {}
-              top_section:
-                lidar_pole:
-                  lidar_model_link:
-                    velodyne:
-                      {}
-            imu_link:
-              {}
-            left_wheel:
-              {}
-            right_wheel:
-              {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.20000000298023224
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -252,7 +134,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: true
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic:
         Depth: 5
@@ -268,14 +150,14 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /global_costmap/costmap_updates
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 0.800000011920929
       Binary representation: false
       Binary threshold: 100
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map
       Topic:
         Depth: 5
@@ -291,7 +173,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /local_costmap/costmap_updates
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -464,6 +346,19 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        Candidate Trajectories: true
+        Optimal Trajectory: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /trajectories
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -510,7 +405,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 10
+      Distance: 5.9327006340026855
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -525,10 +420,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9203975200653076
+      Pitch: 1.2803971767425537
       Target Frame: base_footprint
       Value: ThirdPersonFollower (rviz_default_plugins)
-      Yaw: 3.0304174423217773
+      Yaw: 3.1254196166992188
     Saved: ~
 Window Geometry:
   Displays:
