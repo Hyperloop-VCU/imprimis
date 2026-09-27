@@ -278,7 +278,7 @@ def generate_launch_description():
     controller_input_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('teleop_twist_joy'), 'launch', 'teleop-launch.py'])]),
         launch_arguments={
-            'joy_config': 'ps3',
+            'joy_config': 'xbox',
             "publish_stamped_twist": 'true',
             'frame': 'base_link',
             'joy_vel': 'diffbot_base_controller/cmd_vel'
@@ -311,16 +311,16 @@ def generate_launch_description():
         gpio_controller_spawner,
 
         # Not always
-        imu_driver,
-        imu_calibrator,
-        gps_nmea_driver,
-        velodyne_driver_node,
-        velodyne_transform_node,
-        camera_launch_include,
+        #imu_driver,
+        #imu_calibrator,
+        #gps_nmea_driver,
+        #velodyne_driver_node,
+        #velodyne_transform_node,
+        #camera_launch_include,
         controller_input_launch_include,
-        lidar_delay_fixer,
-        rviz_node,
-        rosbridge_launch_include,
+        #lidar_delay_fixer,
+        #rviz_node,
+        #rosbridge_launch_include,
         foxglove_launch_include,
     ]
 

@@ -108,6 +108,8 @@ private:
   double mode_gpio;
   double boardBConnected_gpio;
   double dummy_gpio_cmd;
+  double latency_gpio;
+  double serial_latency_gpio;
 };
 
 }  // namespace imprimis_hardware_platform

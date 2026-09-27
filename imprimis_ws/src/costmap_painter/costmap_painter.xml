@@ -1,0 +1,5 @@
+<library path="costmap_painter_core">
+  <class type="costmap_painter::PaintedLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>Custom costmap layer</description>
+  </class>
+</library>

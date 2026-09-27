@@ -50,3 +50,5 @@ gpio_controller:
         - interfaces:
           - manualMode
           - boardBConnected
+          - latency
+          - serial_latency

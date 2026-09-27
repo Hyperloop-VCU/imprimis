@@ -67,7 +67,7 @@ SerialLink::Status SerialLink::initialize_link(const char* port_name)
 }
 
 
-SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode, bool& boardBConnected)
+SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& rightAngVel, float& latency, float& serialLatency, bool& manual_mode, bool& boardBConnected)
 {
     if (!is_connected()) return Status::NotConnected;
 
@@ -82,7 +82,7 @@ SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& righ
             g_ser->readline(bytes, 512); // clear bad data
             return Status::BadData;
         }
-        iss >> leftAngVel >> rightAngVel >> manual_mode >> boardBConnected;
+        iss >> leftAngVel >> rightAngVel >> latency >> serialLatency >> manual_mode >> boardBConnected;
         //g_ser->readline(bytes, 512); // clear backlog 
         return Status::Ok;
     } 

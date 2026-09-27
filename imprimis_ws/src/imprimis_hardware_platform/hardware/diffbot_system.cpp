@@ -54,6 +54,8 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   mode_gpio = 0.0;
   boardBConnected_gpio = 0.0;
+  latency_gpio = 0.0;
+  serial_latency_gpio = 0.0;
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -75,7 +77,8 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
   auto gpio = info_.gpios[0];
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manualMode", &mode_gpio));
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "boardBConnected", &boardBConnected_gpio));
-
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "latency", &latency_gpio));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "serial_latency", &serial_latency_gpio));
   return state_interfaces;
 }
 
@@ -122,9 +125,9 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
       std::this_thread::sleep_for(100ms);
       esp32->write_reset_encoders();
       std::this_thread::sleep_for(100ms);
-      float leftAngvel, rightAngvel;
+      float leftAngvel, rightAngvel, latency, serial_latency;
       bool read_mode, boardBConnected;
-      status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
+      status = esp32->read_current_state(leftAngvel, rightAngvel, latency, serial_latency, read_mode, boardBConnected);
 
       if (status != SerialLink::Status::Ok) {
         RCLCPP_INFO(get_logger(), "Non-boardA device found on port %s (%s)", ports[i], esp32->status_to_string(status));
@@ -174,9 +177,9 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_deactivate(const rc
 hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &, const rclcpp::Duration & period)
 {
   // read states from board A
-  float leftAngvel, rightAngvel;
+  float leftAngvel, rightAngvel, latency, serial_latency;
   bool read_mode, boardBConnected;
-  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, latency, serial_latency, read_mode, boardBConnected);
 
   // Check backlog
   size_t backlog = esp32->getAvailable();
@@ -200,6 +203,8 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
     RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
   mode_gpio = static_cast<double>(read_mode);
   boardBConnected_gpio = static_cast<double>(boardBConnected);
+  latency_gpio = static_cast<double>(latency);
+  serial_latency_gpio = static_cast<double>(serial_latency);
 
   // Board B and motors off, assume motors stopped
   if (!boardBConnected_gpio) {

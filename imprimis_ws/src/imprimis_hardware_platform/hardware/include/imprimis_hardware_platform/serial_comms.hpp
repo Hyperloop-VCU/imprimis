@@ -37,7 +37,7 @@ public:
     Status initialize_link(const char* port_name);
 
     // read the hardware state (list of values) written by the ESP32 as ASCII text
-    Status read_current_state(float& leftAngVel, float& rightAngVel, bool& manual_mode, bool& boardBConnected);
+    Status read_current_state(float& leftAngVel, float& rightAngVel, float& latency, float& serial_latency, bool& manual_mode, bool& boardBConnected);
 
     // send: s [leftAngvel] [rightAngvel]\n
     // example: "s 0.31 0.52\n"
