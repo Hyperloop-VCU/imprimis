@@ -19,8 +19,11 @@ class LaneDetection(Node):
         self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
         self.declare_parameter('process_rate_hz',10.0)
         self.declare_parameter('camera_height', 0.675) #meters
-        self.declare_parameter('camera_angle', 77) #0 = pointing straight down, 90 = looking out to the horizon
+        self.declare_parameter('camera_angle', 77.0) #0 = pointing straight down, 90 = looking out to the horizon
         self.declare_parameter('frame_id', 'camera_color_optical_frame')
+        self.declare_parameter('lower_white', (0,0, 200))
+        self.declare_parameter('upper_white', (179, 60, 255))
+
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
@@ -28,7 +31,8 @@ class LaneDetection(Node):
         camera_info_topic = self.get_parameter('camera_info_topic').value
         self.process_period = 1.0 / self.get_parameter('process_rate_hz').value
         self.frame_id = self.get_parameter('frame_id').value
-
+        self.lower_white = self.get_parameter('lower_white').value
+        self.upper_white = self.get_parameter('upper_white').value
         
 
 
@@ -90,20 +94,46 @@ class LaneDetection(Node):
 
     def camera_info_cb(self, msg: CameraInfo):
         if self.have_intrinsics:
+            
             return
 
         self.camera_matrix= np.array(msg.k).reshape(3,3)
+        self.image_width = msg.width
+        self.image_height = msg.height
         self.have_intrinsics = True
         self.get_logger().info(f'Cached Camera intrinsics:\n{self.camera_matrix}')
-
+        self.recompute()
     def parameter_callback(self, params):
         for param in params:
             if (param.name == 'process_rate_hz'):
                 if param.value <= 0:
                     return SetParametersResult(successful = False, reason='process_rate_hz was 0 or lower')
                 self.process_period = 1.0/param.value
-            
+           
+            if(param.name == 'camera_angle'):
+                if param.value == 90 or param.value <=0:
+                    return SetParametersResult(successful = False, reason='Angle cannot = 90 or 0')
+                self.theta = param.value
+                self.recompute()
+
+            if(param.name == 'camera_height'):
+                self.height = param.value
+                self.recompute()
+
+            if(param.name == 'lower_white'):
+                self.lower_white = param.value
+           
+            if (param.name == 'upper_white'):
+                self.upper_white = param.value
+                
         return SetParametersResult(successful=True)
+
+
+
+
+
+
+
 
     def image_cb(self, msg: Image):
         if not self.have_intrinsics:
@@ -117,20 +147,20 @@ class LaneDetection(Node):
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
-        mask = self.segment_lane_pixels(cv_image)
+        self.mask = self.segment_lane_pixels(cv_image)
 
 
-        lane_pixel_count = cv2.countNonZero(mask)
+        lane_pixel_count = cv2.countNonZero(self.mask)
         if self.maskPublish == True:
-            self.publishMask(mask)
-        lane_points = self.raycast(mask,self.camera_matrix)
+            self.publishMask(self.mask)
+        lane_points = self.raycast(self.mask,self.camera_matrix)
         self.publishPointCloud(lane_points)
         #self.get_logger().info(f'LanePoints: {lane_points}')
         self.get_logger().info(f'Lane pixels detected: {lane_pixel_count}', throttle_duration_sec=1.0)# for testing
 
 
 
-    def publishMask(self, cv_image: np.ndarray):
+    def publishMask(self, cv_image):
         cv_image = self.maskBridge.cv2_to_imgmsg(cv_image,encoding='mono8')
         self.camera_mask.publish(cv_image)
 
@@ -141,41 +171,23 @@ class LaneDetection(Node):
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         val_enhanced = clahe.apply(val)
         blurred = cv2.GaussianBlur(val_enhanced, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
-        lower_white = (0,0, 200)
-        upper_white = (179, 60, 255)
         hsv_enhanced = cv2.merge([hue,sat, blurred])
-        mask = cv2.inRange(hsv_enhanced,lower_white, upper_white)
+        mask = cv2.inRange(hsv_enhanced,self.lower_white, self.upper_white)
         return mask
 
 
     def raycast(self, cv_image: np.ndarray,camera_matrix):
         lane_points = []
-        fx = camera_matrix[0][0] #focal length horizontal
-        fy = camera_matrix[1][1] #focal length vertical
-        cx = camera_matrix[0][2] #principle point horizontal
-        cy = camera_matrix[1][2] #principle point vertical
+        
 
-        y_cam = self.height * math.sin(math.radians(self.theta)) - self.Z *math.cos(math.radians(self.theta))
-        z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
-
-        u = np.round(fx*(self.X/z_cam) + cx).astype(int)
-        v = np.round(fy * (y_cam/z_cam) + cy).astype(int)
-
-        valid = (u >= 0) & (u < cv_image.shape[1]) & (v >= 0) & (v <cv_image.shape[0])
-        u_valid = u[valid]
-        v_valid = v[valid]
-        x = self.X[valid]
-        z = self.Z[valid]
-
-        # inverse mapping step
-        valid_lane_points = cv_image[v_valid,u_valid] == 255
-        x_lane = x[valid_lane_points]
-        z_lane = z[valid_lane_points]
-
-        for i in range(len(x[valid_lane_points])):
-            x_point = x_lane[i]
-            z_point = z_lane[i]
-            point = (x_point, self.height, z_point)
+        
+        
+        valid_lane_points = cv_image[self.v_valid,self.u_valid] == 255
+        x_lane = self.x[valid_lane_points]
+        z_lane = self.z[valid_lane_points]
+        y_lane = self.y[valid_lane_points]
+        for i in range(len(x_lane)):
+            point = (x_lane[i], y_lane[i], z_lane[i])
             lane_points.append(point)
 
         return lane_points
@@ -192,7 +204,32 @@ class LaneDetection(Node):
 
         cloud_msg = point_cloud2.create_cloud(header, fields, lane_points)
         self.lane_pointcloud.publish(cloud_msg)        
+
+
+    def recompute(self):
+        if not self.have_intrinsics:
+            return
+
         
+        fx = self.camera_matrix[0][0] #focal length horizontal
+        fy = self.camera_matrix[1][1] #focal length vertical
+        cx = self.camera_matrix[0][2] #principle point horizontal
+        cy = self.camera_matrix[1][2] #principle point vertical
+        
+        y_cam = self.height * math.sin(math.radians(self.theta)) - self.Z *math.cos(math.radians(self.theta))
+        z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
+
+        u = np.round(fx*(self.X/z_cam) + cx).astype(int)
+        v = np.round(fy * (y_cam/z_cam) + cy).astype(int)
+
+        valid = (u >= 0) & (u < self.image_width) & (v >= 0) & (v <self.image_height)
+        self.u_valid = u[valid]
+        self.v_valid = v[valid]
+        self.x = self.X[valid]
+        self.z = z_cam[valid]
+        self.y = y_cam[valid]
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = LaneDetection()

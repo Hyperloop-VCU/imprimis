@@ -313,7 +313,7 @@
 <!-- Camera joint and link  -->
 <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
 <xacro:sensor_d435i parent="chassis" name="front">
-  <origin xyz="${base_length+0.01} 0 ${base_height-0.022+0.065}" rpy="0 0.1047 0"/>
+  <origin xyz="${base_length+0.01} 0 ${base_height-0.022+0.065}" rpy="0 0.2269 0"/>
 </xacro:sensor_d435i>
 
 <!-- Connect camera link to the rest of the robot
