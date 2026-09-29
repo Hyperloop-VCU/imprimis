@@ -69,7 +69,7 @@ install(
 )
 
 install(
-  DIRECTORY launch config worlds meshes
+  DIRECTORY launch config sim
   DESTINATION share/imprimis_hardware_platform
 )
 

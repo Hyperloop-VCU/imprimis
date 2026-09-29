@@ -1,0 +1,31 @@
+<vehicle:class name="imprimis">
+    <dynamics class="differential">
+        <!-- Define wheels -->
+        <l_wheel pos="0.0  0.3" mass="2.0" width="0.10" diameter="0.20" />
+        <r_wheel pos="0.0 -0.3" mass="2.0" width="0.10" diameter="0.20" />
+
+        <!-- Define chassis -->
+        <chassis mass="20.0" zmin="0.0" zmax="0.5">
+            <shape>
+                <pt>-0.3 -0.3</pt>
+                <pt>-0.3  0.3</pt>
+                <pt> 0.3  0.3</pt>
+                <pt> 0.3 -0.3</pt>
+            </shape>
+        </chassis>
+
+        <!-- Choose controller -->
+        <controller class="twist_pid">
+            <KP>10</KP>
+            <KI>5</KI>
+            <I_MAX>2</I_MAX>
+            <max_torque>50</max_torque>
+        </controller>
+    </dynamics>
+
+    <!-- Choose friction model -->
+    <friction class="default">
+        <mu>0.8</mu>
+        <C_damping>0.5</C_damping>
+    </friction>
+</vehicle:class>

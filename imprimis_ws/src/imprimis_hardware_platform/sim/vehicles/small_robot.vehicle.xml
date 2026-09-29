@@ -1,0 +1,57 @@
+<!--
+  Vehicle class definition file.
+  Intended to be included into world XML files.
+  Common sensors could be included here, but they are left to be included in 
+  class instantiations.
+  Refer to mvsim_tutorial example files.
+-->
+<vehicle:class name="small_robot">
+
+    <!--  Dynamical model -->
+    <dynamics class="differential">
+        <!-- Params -->
+        <l_wheel pos="0.0  0.5" mass="4.0" width="0.20" diameter="0.40" />
+        <r_wheel pos="0.0 -0.5" mass="4.0" width="0.20" diameter="0.40" />
+        <chassis mass="15.0" zmin="0.05" zmax="0.6">
+        </chassis>
+
+        <!--   Motor controller -->
+        <controller class="twist_pid">
+            <!-- Params -->
+            <KP>4.1543</KP>
+            <KI>1.9118</KI>
+            <KD>0.0000</KD>
+            <max_torque>14.44</max_torque>
+            <V>0.0</V><W>0</W>
+        </controller>
+
+    </dynamics>
+
+    <!-- Friction force simulation -->
+    <friction class="default">
+        <mu>0.7</mu>
+        <C_damping>0.1</C_damping>
+        <C_rr>0.01</C_rr>  <!-- Rolling resistance coefficient -->
+    </friction>
+
+
+    <!-- Noisy odometry parameters. These are multipliers to actual SE(2) increments -->
+    <odometry
+      x_multiplier="$f{1.0+0.02*randn()}"
+      y_multiplier="$f{1.0+0.01*randn()}"
+      yaw_multiplier="$f{1.0+0.03*randn()}"
+    />
+
+    <!--  Custom visualization model -->
+    <!-- 3D model filename to load (local or remote http://uri ) -->
+    <!--
+    <visual>
+        <model_uri>robot.obj</model_uri>
+        <model_scale>1e-3</model_scale>
+        <model_offset_x>0.0</model_offset_x>
+        <model_offset_y>0.0</model_offset_y>
+        <model_offset_z>0.0</model_offset_z>
+    </visual>
+    -->
+
+</vehicle:class>
