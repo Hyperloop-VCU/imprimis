@@ -76,9 +76,9 @@ controller_server:
         time_step: 5
 
       # overall
-      time_steps: 40 # default 56
+      time_steps: 20 # default 56
       model_dt: 0.05 # default 0.05
-      batch_size: 5000 # default 2000
+      batch_size: 10000 # default 2000
       iteration_count: 1
       temperature: 0.3 # default 0.3
       gamma: 0.015 # default 0.015
@@ -158,7 +158,7 @@ controller_server:
         trajectory_point_step: 4
         threshold_to_consider: 0.5
         offset_from_furthest: 20
-        use_path_orientations: false
+        use_path_orientations: true
       PathFollowCritic:
         enabled: true
         cost_power: 1

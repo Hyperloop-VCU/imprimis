@@ -103,7 +103,7 @@ def generate_launch_description():
         PathJoinSubstitution([description_src_dir, "urdf", "diffbot.urdf.xacro"]),
         " ",
         "hardware_type:=",
-        "real",
+        "fake",
         " publish_odom_tf:=",
         publish_odom_tf
     ])
@@ -138,8 +138,8 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file, "--ros-args", "--log-level", "warn"],
-        parameters=[{"use_sim_time": False}],
-        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
+        parameters=[{"use_sim_time": False}]
+        #condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
     )
 
     # Joint state broadcaster spawner
@@ -158,123 +158,6 @@ def generate_launch_description():
         arguments=["diffbot_base_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"],
     )
 
-    # GPIO controller spawner
-    gpio_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        parameters=[{"use_sim_time": False}],
-        arguments=["gpio_controller", "--controller-manager", "/controller_manager", "--ros-args", "--log-level", "warn"]
-    )
-
-    # Velodyne LIDAR driver, parser, and republisher
-    lidar_driver_config_file = PathJoinSubstitution([hardware_src_dir, "config", "VLP16-driver-params.yaml"])
-    lidar_transform_config_file = os.path.join(hardware_src_dir_os, 'config', 'VLP16-transform-params.yaml')
-    with open(lidar_transform_config_file, 'r') as f:
-        lidar_transform_config = yaml.safe_load(f)['velodyne_transform_node']['ros__parameters']
-    lidar_transform_config['calibration'] = os.path.join(hardware_src_dir_os, 'config', 'VLP16-transform-calibration.yaml')
-
-    velodyne_driver_node = Node(
-        package='velodyne_driver',
-        executable='velodyne_driver_node',
-        output='both',
-        parameters=[lidar_driver_config_file, {"rpm": lidar_rpm}],
-        condition=IfCondition(use_lidar),
-        arguments=["--ros-args", "--log-level", "warn"]
-    )
-    velodyne_transform_node = Node(
-        package='velodyne_pointcloud',
-        executable='velodyne_transform_node',
-        output='log', # shut up
-        parameters=[lidar_transform_config],
-        condition=IfCondition(use_lidar),
-        arguments=["--ros-args", "--log-level", "error"]
-    )
-    lidar_delay_fixer = Node(
-        package="utils",
-        executable="fix_lidar_delay",
-        parameters=[{"use_sim_time": False}],
-        condition=IfCondition(use_lidar)
-    )
-    
-    # IMU driver, after a delay
-    imu_driver = TimerAction(
-        period = 2.0,
-        actions = [
-            Node(
-                package="umx_driver",
-                executable="um7_driver",
-                parameters=[{"port": "/dev/ttyUSB1"}],
-                arguments=["--ros-args", "--log-level", "warn"]
-            )
-        ],
-        condition=IfCondition(use_imu)
-    )
-
-    # Calibrate IMU after a delay
-    imu_calibrator = TimerAction(
-        period=3.0,
-        actions=[
-            ExecuteProcess(
-                    cmd=[
-                        'ros2', 'service', 'call',
-                        '/imu/reset',
-                        'umx_driver/srv/Um7Reset',
-                        '{zero_gyros: true, reset_ekf: true, set_mag_ref: true}'
-                    ],
-                    output='screen'
-                )
-        ],
-        condition=IfCondition(use_imu)
-    )
-    gps_nmea_driver = Node(
-        package="nmea_navsat_driver",
-        executable="nmea_serial_driver",
-        condition=IfCondition(use_gps),
-        arguments=["--ros-args", "--log-level", "warn"],
-        parameters=[{
-            'port': '/dev/ttyACM0',
-            'baud': 9600,
-            'frame_id': 'gps_link'
-        }, {"use_sim_time": False}],
-        namespace="gps"
-    )
-
-    # Camera driver
-    """
-    # The GroupAction with forwarding=False and scoped=True prevents the camera launch file from seeing this launch file's arguments.
-    # We don't want to tell the camera "publish_odom_tf=false".
-    camera_launch_include = GroupAction(
-        [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
-                launch_arguments={
-                    'pointcloud.enable': 'true',
-                    'diagnostics_period': '1.0',
-                    'log_level': 'error',
-                    'camera_namespace': 'cameras',
-                    'camera_name': 'front'
-                }.items(),
-            )
-        ],
-        scoped=True,
-        forwarding=False,
-        condition=IfCondition(use_cams),
-    )
-    """
-
-    camera_launch_include = GroupAction(
-        [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('utils'), 'launch', 'multicam_test.launch.py'])]),
-            )
-        ],
-        scoped=True,
-        forwarding=False,
-        condition=IfCondition(use_cams),
-    )
-
-
-    # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('teleop_twist_joy'), 'launch', 'teleop-launch.py'])]),
         launch_arguments={
@@ -286,20 +169,6 @@ def generate_launch_description():
         condition=IfCondition(use_controller)
     )
 
-    # rosbridge, used for communication with the browser-based gps goal input GUI
-    #ros2 launch rosbridge_server rosbridge_websocket_launch.xml
-    rosbridge_launch_include = IncludeLaunchDescription(
-        XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('rosbridge_server'), 'launch', 'rosbridge_websocket_launch.xml'])]),
-        launch_arguments={'port': '9091'}.items(),
-        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'rviz'"]))
-    )
-
-    # foxglove bridge, used for communication with foxglove studio
-    foxglove_launch_include = IncludeLaunchDescription(
-        XMLLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('foxglove_bridge'), 'launch', 'foxglove_bridge_launch.xml'])]),
-        condition=IfCondition(PythonExpression(["'", ui_type, "' == 'foxglove'"]))
-    )
-
     
 
     things_to_launch = [
@@ -308,39 +177,8 @@ def generate_launch_description():
         robot_controller_spawner,
         joint_state_broadcaster_spawner,
         controller_manager_node,
-        gpio_controller_spawner,
-
-        # Not always
-        #imu_driver,
-        #imu_calibrator,
-        #gps_nmea_driver,
-        #velodyne_driver_node,
-        #velodyne_transform_node,
-        #camera_launch_include,
-        controller_input_launch_include,
-        #lidar_delay_fixer,
         rviz_node,
-        #rosbridge_launch_include,
-        #foxglove_launch_include,
+        controller_input_launch_include
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)
-
-
-# Remap wheel odometry topic to mirror ekf output if publish_odom_tf is false, so higher level stuff doesn't have to care
-    #odom_remapper = Node(
-    #    package="utils",
-    #    executable="odom_remapper",
-    #    condition=IfCondition(publish_odom_tf),
-    #    parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
-    #)
-
-
-# Add covariance to simulated GPS
-    # gps_covariance_fixer = Node(
-    #    package="utils",
-    #    executable="gps_add_sim_covariance",
-    #    condition=IfCondition(PythonExpression(["'", hardware_type, "' != 'fake'"])),
-    #    parameters=[{"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}]
-    #)
-    
