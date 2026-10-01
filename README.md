@@ -41,8 +41,8 @@ This folder contains some of the ROS packages required for Imprimis. Some are cu
 
 * **SLAM_Packages**: A collection of third-party packages used for global localization with the Lidar. This folder contains many packages; there is no package named "SLAM_Packages".
 
-# Install instructions for Foxglove Studio
-We use Foxglove Studio to interact with the robot in both real life and simulation, and it works on Windows, Mac, and Linux. It usually runs on the robot's PC, but you can also run it on your own computer to control / interact with the robot remotely. We previously used a different GUI called RVIZ, but this is much better and has more features, so we switched to it. Rviz still works, and you just need to add "ui_type:=rviz" to any launch file detailed below to use it instead of foxglove.
+# (OPTIONAL) Install instructions for Foxglove Studio
+Foxglove studio is a ROS visualization tool that has many more features and improvements over the default ROS visualizer (rviz). It can be used to visualize ROS computational data, interact with the robot through teleoperation, and can connect to the robot remotely while it is running.
 
 1. Download the desktop app [here](https://foxglove.dev/download)
 2. Sign in or make an account.
@@ -52,7 +52,7 @@ We use Foxglove Studio to interact with the robot in both real life and simulati
 Now everything is ready to go. Connect to the same LAN as Imprimis, start up its code, and connect to its LAN IP using the foxglove GUI. You'll see a full control panel with lots of features. This also works with the robot simulation, detailed in the next section.
 
 # Install Instructions for Simulation on your own computer
-If you want to run a full simulation of the robot's software on your own computer, see these following steps. Follow the foxglove setup steps before this one if you plan to do this. This is not necessary to interact with the robot in real life - these steps are only for running the full simulation on your own computer.
+If you want to run a full simulation of the robot's software on your own computer, see these following steps. This is not necessary to interact with the robot in real life - these steps are only for running the full simulation on your own computer.
 
 Following the below steps will get you ready to run the Imprimis simulation on your PC:
 
@@ -71,13 +71,13 @@ Following the below steps will get you ready to run the Imprimis simulation on y
 
 ## Hardware
 To launch the simulated robot's hardware, run the following command: 
-* ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py```  
+* ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py ui_type:=rviz```  
 
 This will make the gazebo simulation appear. Open foxglove studio and connect to localhost on port 8765, and you can interact with the robot + see all ROS data from there. This works with both localization and navigation systems as well.
 
 ## Localization system
 To launch the simulated robot hardware and localization system, run the following command:
-* ```ros2 launch imprimis_navigation localization.launch.py hardware_type:=simulated```
+* ```ros2 launch imprimis_navigation localization.launch.py hardware_type:=simulated ui_type:=rviz```
 
 The localization system is responsible for accurately determining where the robot is located relative to its surroundings. It has two main parts, **global** and **local** localization.
 * **Global localization** is responsible for providing a **globally consistent** position estimate of the robot. No matter how long the robot drives for, this position estimate will not drift over time and stay correct. However, it does tend to be jittery and jumpy, constantly dancing around the true position of the robot, which is why we have local localization as well. Global localization provides the map->odom and map->base_link transforms. It can be done either with a LiDAR (default, best in indoor environments) or by a GPS (add "map_type:=gps" to the launch command, only works outdoors)
@@ -85,7 +85,7 @@ The localization system is responsible for accurately determining where the robo
 
 ## Navigation system
 To launch the robot hardware, localization system, and navigation system, run the following command:
-* ```ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated nav2_params:=SmacHybrid_DWB_2```
+* ```ros2 launch imprimis_navigation basic_nav.launch.py hardware_type:=simulated ui_type:=rviz```
 
 **The navigation system is responsible for the following:**
 * **Managing goals**: Given navigation goals published on the "goal_pose" topic, convert them into the appropriate coordinate frame and feed them to the rest of the system
@@ -98,7 +98,7 @@ To launch the robot hardware, localization system, and navigation system, run th
 # Launch Files
 We use ROS2 python launch files to handle robot startup. It is a hierarchical process:
 * Running the navigation launch file will start up navigation-specific nodes AND run the localization launch file.
-* Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file (or simulated hardware launch file)
+* Running the localization launch file will start up localization-specific nodes AND run the real hardware launch file, or simulated hardware launch file.
 
 Both hardware and simulated launch files are the "lowest layer" of launching. These launch files both allow the disabling of LiDAR, IMU, GPS, and/or Cameras. You can disable any sensor with a "use_{sensor}=false". For example, to start up all simulated hardware except the LiDAR and GPS:
 
@@ -106,7 +106,7 @@ Both hardware and simulated launch files are the "lowest layer" of launching. Th
 
 Additionally, you can add "ui_type:=rviz" to any launch file to not use foxglove and use RVIZ instead. This also enables rosbridge publishing.
 
-Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap appear in foxglove studio, you can use either the GPS waypoint input panel or the 3D view panel to give the robot navigation goals.
+Launching the navigation takes some time, since it needs to start the hardware and localization systems first. Once you see the costmap appear in foxglove studio or rviz, you can use either the GPS waypoint input panel or the 3D view panel to give the robot navigation goals.
 
 View the source code for navigation, localization, real hardware, and simulated hardware launch files for more details on launch arguments.
 
