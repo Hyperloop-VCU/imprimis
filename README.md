@@ -56,7 +56,7 @@ If you want to run a full simulation of the robot's software on your own compute
 
 Following the below steps will get you ready to run the Imprimis simulation on your PC:
 
-  1. Ensure you are running Ubuntu 24.04 and [install ROS2 Jazzy.](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)
+  1. Ensure you are running Ubuntu 24.04 and [install ROS2 Jazzy.](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). Refer to the [ROS learning guide](https://docs.google.com/document/d/1P0E2MpprfE0GaCN3jhLeON7xKa2E6FdJSoLXZ9IfETE/edit?tab=t.0#heading=h.1g0v75y8rcuq) if you are unsure how to do this.
   2. Source ROS: ```source /opt/ros/jazzy/setup.bash``` 
   3. Clone this repository: ```git clone https://github.com/Hyperloop-VCU/imprimis.git```
   4. Navigate to workspace root: ```cd imprimis/imprimis_ws```
