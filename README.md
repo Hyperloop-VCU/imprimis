@@ -1,7 +1,6 @@
-# Imprimis
+# Overview
 This repository contains necessary software for Imprimis, a fully autonomous ground vehicle developed by the HyperRobotics VIP at VCU. The ROS packages inside imprimis_ws run on the robot's main PC to process sensor information, make autonomous decisions, and communicate with the robot's onboard microcontrollers. The firmwares in EspFirmware run on the robot's microcontrollers which handle hardware connectivity and control.
-
-[Visual Software Diagram and Structure](https://drive.google.com/file/d/14b34cyZjVn4FuwoEjJM1487I_e60O_WF/view)
+[Diagrams](https://drive.google.com/file/d/14b34cyZjVn4FuwoEjJM1487I_e60O_WF/view)
 
 # Using the real robot
 The real robot's laptop has everything already set up; you do not need to install anything on it. See the [guide](https://docs.google.com/document/d/1qO5M7a82_PlFDrOgXVI_bzZw0K6WJ0vdav_g9hEhckY/edit?tab=t.oms1ptj8oagv) for turn on + turn off procedures, manual + autonomous operation, and battery charging. If you have never used the real robot before, DM one of the IMPRIMIS team leads or experienced members in our discord server for help.
@@ -32,7 +31,6 @@ Both the **boardA** and **boardB** folders are **PlatformIO projects.** The Plat
 
 # ROS Packages in imprimis_ws/src
 This folder contains some of the ROS packages required for Imprimis. Some are custom-made, and some are third-party. In addition to these packages, Imprimis depends on lots of other third-party packages (robot_localization, nav2, etc). The dependencies of each package are listed in each package's **package.xml** file, and can be automatically installed by running the ```rosdep``` command in the offboard computer setup instructions. Each package has a more detailed README in its respective folder.
-
 
 * **imprimis_hardware_platform**: Contains all configuration files for hardware and sensors, and implements the hardware interface. Has launch files that start up all the hardware, either real or simulated.
 * **imprimis_description**: Describes the robot with URDF files. Has launch files to view the URDFs in rviz.
@@ -71,7 +69,6 @@ Following the below steps will get you ready to run the Imprimis simulation on y
   10. Run the gazebo fixer script: ```./fix_gazebo.bash```
 
 # Using the Simulated Robot
-
 ## Hardware
 To launch the simulated robot's hardware, run the following command: 
 * ```ros2 launch imprimis_hardware_platform imprimis_sim.launch.py ui_type:=rviz```  
