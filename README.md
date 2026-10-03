@@ -125,4 +125,5 @@ Note the ~/Desktop/ path. If you downloaded this somewhere other than your deskt
 ![gazebo](.images/gazebo.png)
 
 
-
+# Using the real robot
+The real robot's laptop has everything already set up; you do not need to install anything on it. See the [guide](https://docs.google.com/document/d/1qO5M7a82_PlFDrOgXVI_bzZw0K6WJ0vdav_g9hEhckY/edit?tab=t.oms1ptj8oagv) for turn on + turn off procedures, manual + autonomous operation, and battery charging:
