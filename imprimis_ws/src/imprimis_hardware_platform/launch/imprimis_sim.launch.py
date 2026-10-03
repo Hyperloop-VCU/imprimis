@@ -82,7 +82,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ui_type",
-            default_value="foxglove",
+            default_value="rviz",
             choices=("foxglove", "rviz", "none"),
             description="Use foxglove_bridge + (separate) foxglove studio, rosbridge + (separate) gps goal input + rviz, or no bridges / UIs.",
         )

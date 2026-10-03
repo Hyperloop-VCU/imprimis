@@ -123,6 +123,8 @@ void ObstaclesCritic::score(CriticData & data)
     return;
   }
 
+  //RCLCPP_INFO(logger_, "HELLO FROM CUSTOM OBSTACLES CRITIC SCORE METHOD");
+
   if (consider_footprint_) {
     // footprint may have changed since initialization if user has dynamic footprints
     possible_collision_cost_ = findCircumscribedCost(costmap_ros_);
@@ -188,8 +190,14 @@ void ObstaclesCritic::score(CriticData & data)
       (critical_weight_ * raw_cost) +
       (repulsion_weight_ * repulsive_cost_normalized),
       power_);
+    data.obstacle_critic_costs = xt::pow(
+      (critical_weight_ * raw_cost) +
+      (repulsion_weight_ * repulsive_cost_normalized),
+      power_);
   } else {
     data.costs += (critical_weight_ * raw_cost) +
+      (repulsion_weight_ * repulsive_cost_normalized);
+    data.obstacle_critic_costs = (critical_weight_ * raw_cost) +
       (repulsion_weight_ * repulsive_cost_normalized);
   }
 
@@ -234,6 +242,7 @@ CollisionCost ObstaclesCritic::costAtPose(float x, float y, float theta)
   if (consider_footprint_ &&
     (cost >= possible_collision_cost_ || possible_collision_cost_ < 1.0f))
   {
+    //RCLCPP_INFO(logger_, "Performing collision SE(2) collision check");
     cost = static_cast<float>(collision_checker_.footprintCostAtPose(
         x, y, theta, costmap_ros_->getRobotFootprint()));
     collision_cost.using_footprint = true;

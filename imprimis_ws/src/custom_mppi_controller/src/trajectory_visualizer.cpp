@@ -108,8 +108,7 @@ void TrajectoryVisualizer::add(
   }
 }
 
-void TrajectoryVisualizer::add(
-  const models::Trajectories & trajectories, const std::string & marker_namespace)
+void TrajectoryVisualizer::add(const xt::xtensor<float, 1> & softmaxes, const models::Trajectories & trajectories, const std::string & marker_namespace)
 {
   if (trajectories_publisher_->get_subscription_count() == 0) {
     return;
@@ -119,17 +118,18 @@ void TrajectoryVisualizer::add(
   const float shape_1 = static_cast<float>(shape[1]);
   points_->markers.reserve(floor(shape[0] / trajectory_step_) * floor(shape[1] * time_step_));
 
-  for (size_t i = 0; i < shape[0]; i += trajectory_step_) {
-    for (size_t j = 0; j < shape[1]; j += time_step_) {
+  for (size_t i = 0; i < shape[0]; i += trajectory_step_) { // i indexes into softmaxes to get the softmax weight for each trajectory
+    /*for (size_t j = 0; j < shape[1]; j += time_step_)*/ size_t j = shape[1]-1; {
       const float j_flt = static_cast<float>(j);
-      float blue_component = 1.0f - j_flt / shape_1;
+     // float blue_component = 1.0f - j_flt / shape_1;
       float green_component = j_flt / shape_1;
 
       auto pose = utils::createPose(trajectories.x(i, j), trajectories.y(i, j), 0.03);
-      auto scale = utils::createScale(0.03, 0.03, 0.03);
-      auto color = utils::createColor(0, green_component, blue_component, 1);
-      auto marker = utils::createMarker(
-        marker_id_++, pose, scale, color, frame_id_, marker_namespace);
+      auto scale = utils::createScale(0.03, 0.03, softmaxes(i)); // visualize the weights by changing the marker sizes
+     // RCLCPP_INFO(logger_, "%f", static_cast<float>(softmaxes(i)));
+     // RCLCPP_INFO(logger_, "%f", static_cast<float>(trajectories.yaws(i,j)));
+      auto color = utils::createColor(0, green_component, (trajectories.yaws(i,j) + 3.14) / 6.28, 1);
+      auto marker = utils::createMarker(marker_id_++, pose, scale, color, frame_id_, marker_namespace);
 
       points_->markers.push_back(marker);
     }

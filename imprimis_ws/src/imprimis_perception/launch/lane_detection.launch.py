@@ -36,7 +36,7 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
                 launch_arguments={
-                    #'pointcloud.enable': 'false',
+                    'pointcloud.enable': 'true',
                     #'diagnostics_period': '1.0',
                     #'log_level': 'error',
                     #'camera_namespace': 'cameras',

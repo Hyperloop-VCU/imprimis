@@ -153,6 +153,7 @@ void Optimizer::reset(bool reset_dynamic_speed_limits)
   }
 
   costs_ = xt::zeros<float>({settings_.batch_size});
+  obstacle_critic_costs_ = xt::zeros<float>({settings_.batch_size});
   generated_trajectories_.reset(settings_.batch_size, settings_.time_steps);
 
   noise_generator_.reset(settings_, isHolonomic());
@@ -230,6 +231,7 @@ void Optimizer::prepare(
   state_.speed = settings_.open_loop ? last_command_vel_ : robot_speed;
   path_ = utils::toTensor(plan);
   costs_.fill(0.0f);
+  obstacle_critic_costs_.fill(0.0f);
   goal_ = goal;
 
   critics_data_.fail_flag = false;
@@ -440,7 +442,11 @@ void Optimizer::updateControlSequence()
 
   auto && costs_normalized = costs_ - xt::amin(costs_, immediate);
   auto && exponents = xt::eval(xt::exp(-1 / settings_.temperature * costs_normalized));
-  auto && softmaxes = xt::eval(exponents / xt::sum(exponents, immediate));
+
+  // gotcha
+  //auto && softmaxes = xt::eval(exponents / xt::sum(exponents, immediate));
+  softmaxes = xt::eval(exponents / xt::sum(exponents, immediate));
+
   auto && softmaxes_extened = xt::eval(xt::view(softmaxes, xt::all(), xt::newaxis()));
 
   xt::noalias(control_sequence_.vx) = xt::sum(state_.cvx * softmaxes_extened, 0, immediate);
@@ -516,6 +522,29 @@ void Optimizer::setSpeedLimit(double speed_limit, bool percentage)
 models::Trajectories & Optimizer::getGeneratedTrajectories()
 {
   return generated_trajectories_;
+}
+
+xt::xtensor<float, 1> & Optimizer::getTrajectoryCosts()
+{
+  return costs_;
+}
+
+xt::xtensor<float, 1> & Optimizer::getSoftmaxes()
+{
+  return softmaxes;
+}
+
+xt::xtensor<float, 1> & Optimizer::getSoftmaxedObstacleCriticCosts()
+{
+  auto && costs_normalized = costs_ - xt::amin(obstacle_critic_costs_, immediate);
+  auto && exponents = xt::eval(xt::exp(-1 / settings_.temperature * costs_normalized));
+  obstacle_critic_softmaxes_ = xt::eval(exponents / xt::sum(exponents, immediate));
+  return obstacle_critic_softmaxes_;
+}
+
+xt::xtensor<float, 1> & Optimizer::getObstacleCriticCosts()
+{
+  return obstacle_critic_costs_;
 }
 
 }  // namespace mppi

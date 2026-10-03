@@ -33,6 +33,9 @@ class LaneDetection(Node):
         self.frame_id = self.get_parameter('frame_id').value
         self.lower_white = self.get_parameter('lower_white').value
         self.upper_white = self.get_parameter('upper_white').value
+
+        # change
+        #change whatever
         
 
 
@@ -47,8 +50,8 @@ class LaneDetection(Node):
 
         #this is for inverse mapping, find a spot on the ground and then find that point in the image and check whether or not it is a white pixel
         self.zCalc = self.height * math.tan(math.radians(self.theta))
-        self.z_values = np.arange(0.5, self.zCalc, 0.05)   # 0.5m to 7m ahead, 5cm steps
-        self.x_values = np.arange(-3.0, 3.0, 0.05)  # 3m left to 3m right, 5cm steps
+        self.z_values = np.arange(0.5, self.zCalc, 0.01)   # 0.5m to 7m ahead, 5cm steps
+        self.x_values = np.arange(-3.0, 3.0, 0.01)  # 3m left to 3m right, 5cm steps
         self.X, self.Z = np.meshgrid(self.x_values,self.z_values)
 
 

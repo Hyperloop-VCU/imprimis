@@ -104,6 +104,31 @@ public:
    */
   models::Trajectories & getGeneratedTrajectories();
 
+
+  /**
+   * @brief ADDED BY RAY Get the trajectory weights (costs) generated in a cycle for visualization
+   * @return Costs corresponding to each trajectory in the cycle
+   */
+  xt::xtensor<float, 1> & getTrajectoryCosts();
+
+  /**
+   * @brief ADDED BY RAY Get the softmaxes (weights) generated in a cycle for visualization
+   * @return Weights corresponding to each trajectory in the cycle, normalized via softmax
+   */
+  xt::xtensor<float, 1> & getSoftmaxes();
+
+  /**
+   * @brief ADDED BY RAY Get the costs in a cycle for visualization according to obstacle critic / cost critic only
+   * @return Weights from ObstacleCritic corresponding to each trajectory in the cycle, normalized via softmax
+   */
+  xt::xtensor<float, 1> & getSoftmaxedObstacleCriticCosts();
+
+  /**
+   * @brief ADDED BY RAY Get the costs in a cycle for visualization according to obstacle critic / cost critic only
+   * @return Weights from ObstacleCritic corresponding to each trajectory in the cycle
+   */
+  xt::xtensor<float, 1> & getObstacleCriticCosts();
+
   /**
    * @brief Get the optimal trajectory for a cycle for visualization
    * @return Optimal trajectory
@@ -260,10 +285,13 @@ protected:
   models::Path path_;
   geometry_msgs::msg::Pose goal_;
   xt::xtensor<float, 1> costs_;
+  xt::xtensor<float, 1> obstacle_critic_costs_; // made to specifically monitor the obstacle critic
+  xt::xtensor<float, 1> softmaxes; // made a state variable so I can see it in the trajectory visualizer
+  xt::xtensor<float, 1> obstacle_critic_softmaxes_;
 
   CriticData critics_data_ = {
     state_, generated_trajectories_, path_, goal_,
-    costs_, settings_.model_dt, false, nullptr, nullptr,
+    costs_, obstacle_critic_costs_, settings_.model_dt, false, nullptr, nullptr,
     std::nullopt, std::nullopt};  /// Caution, keep references
 
   rclcpp::Logger logger_{rclcpp::get_logger("MPPIController")};

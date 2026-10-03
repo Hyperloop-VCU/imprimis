@@ -49,6 +49,7 @@ struct CriticData
   const geometry_msgs::msg::Pose & goal;
 
   xt::xtensor<float, 1> & costs;
+  xt::xtensor<float, 1> & obstacle_critic_costs;
   float & model_dt;
 
   bool fail_flag;

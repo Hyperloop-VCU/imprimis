@@ -163,7 +163,8 @@ void CostCritic::score(CriticData & data)
     xt::view(data.trajectories.y, xt::all(), xt::range(0, _, trajectory_point_step_));
   const auto traj_yaw = xt::view(
     data.trajectories.yaws, xt::all(), xt::range(0, _, trajectory_point_step_));
-
+  
+  int ics = 0;
   for (size_t i = 0; i < data.trajectories.x.shape(0); ++i) {
     bool trajectory_collide = false;
     float pose_cost = 0.0f;
@@ -186,8 +187,10 @@ void CostCritic::score(CriticData & data)
           continue;  // In free space
         }
       }
-
-      if (inCollision(pose_cost, Tx, Ty, traj_yaw(i, j))) {
+      bool ic = inCollision(pose_cost, Tx, Ty, traj_yaw(i, j));
+      if (ic) {
+        //RCLCPP_INFO(logger_, "Step %d of trajectory %d in collision", j, i);
+        ics++;
         traj_cost = collision_cost_;
         trajectory_collide = true;
         break;
@@ -207,15 +210,20 @@ void CostCritic::score(CriticData & data)
       all_trajectories_collide = false;
     }
   }
-
+  data.obstacle_critic_costs.fill(0.0f);
   if (power_ > 1u) {
     data.costs += xt::pow(
       (std::move(repulsive_cost) * (weight_ / static_cast<float>(traj_len))), power_);
   } else {
+    data.obstacle_critic_costs = repulsive_cost * (weight_ / static_cast<float>(traj_len));
     data.costs += std::move(repulsive_cost) * (weight_ / static_cast<float>(traj_len));
+    //RCLCPP_INFO(logger_, "%ld %ld", data.costs.size(), data.obstacle_critic_costs.size());
   }
 
   data.fail_flag = all_trajectories_collide;
+  if (ics > 0) {
+    RCLCPP_INFO(logger_, "%d, ", ics);
+  }
 }
 
 }  // namespace mppi::critics

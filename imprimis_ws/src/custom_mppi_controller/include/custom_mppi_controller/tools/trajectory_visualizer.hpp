@@ -87,7 +87,7 @@ public:
     * @brief Add candidate trajectories to visualize
     * @param trajectories Candidate trajectories
     */
-  void add(const models::Trajectories & trajectories, const std::string & marker_namespace);
+  void add(const xt::xtensor<float, 1> & softmaxes, const models::Trajectories & trajectories, const std::string & marker_namespace);
 
   /**
     * @brief Visualize the plan
