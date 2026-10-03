@@ -3,6 +3,9 @@ This repository contains necessary software for Imprimis, a fully autonomous gro
 
 [Visual Software Diagram and Structure](https://drive.google.com/file/d/14b34cyZjVn4FuwoEjJM1487I_e60O_WF/view)
 
+# Using the real robot
+The real robot's laptop has everything already set up; you do not need to install anything on it. See the [guide](https://docs.google.com/document/d/1qO5M7a82_PlFDrOgXVI_bzZw0K6WJ0vdav_g9hEhckY/edit?tab=t.oms1ptj8oagv) for turn on + turn off procedures, manual + autonomous operation, and battery charging. If you have never used the real robot before, DM one of the IMPRIMIS team leads or experienced members in our discord server for help.
+
 # Microcontroller Firmwares in EspFirmware
 ## Board A
 Board A is the interface between the robot's main PC and non USB or ethernet enabled hardware. It's wirelessly connected to Board B via ESP-NOW, USB-connected to the robot's main PC, UART-connected to the FlySky I-BUS Radio Receiver, and GPIO-connected to the yellow and green status lights.
@@ -123,7 +126,3 @@ Note the ~/Desktop/ path. If you downloaded this somewhere other than your deskt
 
 ![foxglove with navigation system up](.images/foxglove.png)
 ![gazebo](.images/gazebo.png)
-
-
-# Using the real robot
-The real robot's laptop has everything already set up; you do not need to install anything on it. See the [guide](https://docs.google.com/document/d/1qO5M7a82_PlFDrOgXVI_bzZw0K6WJ0vdav_g9hEhckY/edit?tab=t.oms1ptj8oagv) for turn on + turn off procedures, manual + autonomous operation, and battery charging:
