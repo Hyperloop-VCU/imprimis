@@ -35,22 +35,14 @@ class LaneDetection(Node):
         self.frame_id = self.get_parameter('frame_id').value
         self.lower_white = self.get_parameter('lower_white').value
         self.upper_white = self.get_parameter('upper_white').value
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
-        # change
-        #change whatever
-        
-=======
         self.min_area = self.get_parameter("min_area").value
         self.max_area = self.get_parameter("max_area").value
         self.kernel = np.ones((3, 3), np.uint8)
->>>>>>> Stashed changes
-=======
+
         self.min_area = self.get_parameter("min_area").value
         self.max_area = self.get_parameter("max_area").value
         self.kernel = np.ones((3, 3), np.uint8)
->>>>>>> Stashed changes
 
 
         self.bridge = CvBridge() #converts Ros message into OpenCv numpy matrix
@@ -64,18 +56,16 @@ class LaneDetection(Node):
 
         #this is for inverse mapping, find a spot on the ground and then find that point in the image and check whether or not it is a white pixel
         self.zCalc = self.height * math.tan(math.radians(self.theta))
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
         self.z_values = np.arange(0.5, self.zCalc, 0.01)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.01)  # 3m left to 3m right, 5cm steps
-=======
+
         self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
->>>>>>> Stashed changes
-=======
+
         self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
->>>>>>> Stashed changes
+
         self.X, self.Z = np.meshgrid(self.x_values,self.z_values)
 
 
@@ -94,6 +84,9 @@ class LaneDetection(Node):
         self.image_sub = self.create_subscription( 
             Image, 
             image_topic,
+        )
+
+        self.raw_mask_pub = self.create_publisher(
             self.image_cb,
             1  # 1 is queue size, should stay at 1 to stay real time
         )
@@ -165,6 +158,9 @@ class LaneDetection(Node):
             return #need to have intrinsics before we can really do much
 
         now = self.get_clock().now()
+            self.raw_mask_pub.publish(raw_msg)
+        
+        lane_points = self.raycast(self.mask,self.camera_matrix)
         elapsed = (now - self.last_process_time).nanoseconds / 1e9
         if elapsed < self.process_period:
             return
@@ -193,6 +189,14 @@ class LaneDetection(Node):
         cv_image = self.maskBridge.cv2_to_imgmsg(cv_image,encoding='mono8')
         self.camera_mask.publish(cv_image)
 
+
+        cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernel)
+        filter_bin_mask = np.zeros_like(mask)
+
+        
+
+        contours, _ = cv2.findContours(
+            mask, 
     def segment_lane_pixels(self, cv_image:np.ndarray) -> np.ndarray:
         hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
         hue, sat, val = cv2.split(hsv) 
@@ -265,7 +269,7 @@ class LaneDetection(Node):
         
         y_cam = self.height * math.sin(math.radians(self.theta)) - self.Z *math.cos(math.radians(self.theta))
         z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
-
+>>>>>>> Stashed changes
         u = np.round(fx*(self.X/z_cam) + cx).astype(int)
         v = np.round(fy * (y_cam/z_cam) + cy).astype(int)
 
@@ -294,3 +298,4 @@ if __name__ == '__main__':
 
             
 
+>>>>>>> Stashed changes
