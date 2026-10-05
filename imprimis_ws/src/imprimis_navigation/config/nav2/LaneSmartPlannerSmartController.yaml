@@ -182,9 +182,10 @@ controller_server:
       #   enabled: true
       #   twirling_cost_power: 1
       #   twirling_cost_weight:src/imprimis_navigation/config/nav2/SmartPlannerSmartController.yaml
+global_costmap:
   global_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "lane_layer" ,"inflation_layer"]
       height: 100
       width: 100
       origin_x: -50.0
@@ -206,7 +207,7 @@ controller_server:
 
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: False
         observation_sources: velodyne_data
         max_obstacle_height: 1.8
         min_obstacle_height: 0.3
@@ -222,6 +223,22 @@ controller_server:
           obstacle_max_range: 6.0
           obstacle_min_range: 0.2
 
+      #add a costmap layer for lane points
+      lane_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        min_obstacle_height: -0.3     
+        max_obstacle_height: 0.1
+        observation_sources: lane_points
+        lane_points:
+          topic: /camera/lane_points
+          data_type: "PointCloud2"
+          sensor_frame: camera_color_optical_frame
+          marking: True
+          clearing: False
+          min_obstacle_height: -0.3
+          max_obstacle_height: 0.1
+          obstacle_max_range: 6.0
 
       # Add a "danger zone" around obstacles
       inflation_layer:
@@ -237,14 +254,14 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "inflation_layer", "lane_layer"]
+      plugins: ["obstacle_layer", "lane_layer", "inflation_layer"]
       height: 5
       width: 5
       origin_x: -2.5
       origin_y: -2.5
       publish_frequency: 5.0
       update_frequency: 50.0
-      always_send_full_costmap: false
+      always_send_full_costmap: true
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
@@ -260,7 +277,7 @@ local_costmap:
 
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: false
         observation_sources: velodyne_data
         max_obstacle_height: 10.0
         min_obstacle_height: -10.0
@@ -276,6 +293,23 @@ local_costmap:
           obstacle_max_range: 3.0
           obstacle_min_range: 0.2
 
+      #add a costmap layer for lane points
+      lane_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        min_obstacle_height: -0.3     
+        max_obstacle_height: 0.1
+        observation_sources: lane_points
+        lane_points:
+          topic: /camera/lane_points
+          data_type: "PointCloud2"
+          sensor_frame: camera_color_optical_frame
+          marking: True
+          clearing: False
+          min_obstacle_height: -0.3
+          max_obstacle_height: 0.1
+          obstacle_max_range: 6.0
+
 
       # Add a "danger zone" around obstacles
       inflation_layer:
@@ -283,20 +317,7 @@ local_costmap:
         cost_scaling_factor: 1.7 # higher is more leniant
         inflation_radius: 1.3 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
-      #add a costmap layer for lane points
-      lane_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: lane_points
-        lane_points:
-          topic: /lane_points
-          data_type: "PointCloud2"
-          sensor_frame: camera_color_optical_frame
-          marking: True
-          clearing: False
-          min_obstacle_height: -0.05
-          max_obstacle_height: 0.1
-          obstacle_max_range: 6.0
+      
           
 velocity_smoother:
   ros__parameters:

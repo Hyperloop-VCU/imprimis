@@ -35,23 +35,16 @@ class LaneDetection(Node):
         self.frame_id = self.get_parameter('frame_id').value
         self.lower_white = self.get_parameter('lower_white').value
         self.upper_white = self.get_parameter('upper_white').value
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
-        # change
-        #change whatever
-        
-=======
+
+
         self.min_area = self.get_parameter("min_area").value
         self.max_area = self.get_parameter("max_area").value
         self.kernel = np.ones((3, 3), np.uint8)
->>>>>>> Stashed changes
-=======
+
         self.min_area = self.get_parameter("min_area").value
         self.max_area = self.get_parameter("max_area").value
         self.kernel = np.ones((3, 3), np.uint8)
->>>>>>> Stashed changes
-
 
         self.bridge = CvBridge() #converts Ros message into OpenCv numpy matrix
         self.maskBridge = CvBridge()
@@ -64,18 +57,16 @@ class LaneDetection(Node):
 
         #this is for inverse mapping, find a spot on the ground and then find that point in the image and check whether or not it is a white pixel
         self.zCalc = self.height * math.tan(math.radians(self.theta))
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
         self.z_values = np.arange(0.5, self.zCalc, 0.01)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.01)  # 3m left to 3m right, 5cm steps
-=======
+
         self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
->>>>>>> Stashed changes
-=======
+
         self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
->>>>>>> Stashed changes
+
         self.X, self.Z = np.meshgrid(self.x_values,self.z_values)
 
 
@@ -200,8 +191,7 @@ class LaneDetection(Node):
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         val_enhanced = clahe.apply(val)
         blurred = cv2.GaussianBlur(val_enhanced, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
-        doubleBlur = cv2.GaussianBlur(blurred, (5,5), 0)
-        hsv_enhanced = cv2.merge([hue,sat, doubleBlur])
+        hsv_enhanced = cv2.merge([hue,sat, blurred])
         mask = cv2.inRange(hsv_enhanced,self.lower_white, self.upper_white)
 
         self.raw_mask = mask.copy()
