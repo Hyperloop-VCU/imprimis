@@ -159,7 +159,7 @@ class LaneDetection(Node):
             return #need to have intrinsics before we can really do much
 
         now = self.get_clock().now()
-            self.raw_mask_pub.publish(raw_msg)
+        self.raw_mask_pub.publish(raw_msg)
         
         lane_points = self.raycast(self.mask,self.camera_matrix)
         elapsed = (now - self.last_process_time).nanoseconds / 1e9
@@ -191,13 +191,11 @@ class LaneDetection(Node):
         self.camera_mask.publish(cv_image)
 
 
-        cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernel)
-        filter_bin_mask = np.zeros_like(mask)
+        cv2.morphologyEx(self.mask, cv2.MORPH_OPEN, self.kernel)
+        filter_bin_mask = np.zeros_like(self.mask)
 
         
 
-        contours, _ = cv2.findContours(
-            mask, 
     def segment_lane_pixels(self, cv_image:np.ndarray) -> np.ndarray:
         hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
         hue, sat, val = cv2.split(hsv) 
@@ -269,7 +267,7 @@ class LaneDetection(Node):
         
         y_cam = self.height * math.sin(math.radians(self.theta)) - self.Z *math.cos(math.radians(self.theta))
         z_cam = self.height * math.cos(math.radians(self.theta)) + self.Z * math.sin(math.radians(self.theta))
->>>>>>> Stashed changes
+
         u = np.round(fx*(self.X/z_cam) + cx).astype(int)
         v = np.round(fy * (y_cam/z_cam) + cy).astype(int)
 
@@ -297,5 +295,3 @@ if __name__ == '__main__':
     main() 
 
             
-
->>>>>>> Stashed changes

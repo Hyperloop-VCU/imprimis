@@ -62,6 +62,8 @@ def generate_launch_description():
             default_value="true",
             description="Whether or not to use the lidar for navigation. MUST be true if nav mode is indoor."
         )
+
+        
     )
     declared_arguments.append(
         DeclareLaunchArgument(
