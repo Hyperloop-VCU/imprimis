@@ -162,7 +162,7 @@ def generate_launch_description():
     # Gazebo simulation
     gazebo_launch_include = IncludeLaunchDescription(PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
         launch_arguments={
-            'gz_args': ['-v0 -r ', LaunchConfiguration("world"), '.sdf'], 
+            'gz_args': ['-v4 -r ', LaunchConfiguration("world"), '.sdf'], 
             "on_exit_shutdown": "true"
         }.items(),
         condition=IfCondition(show_sim)
@@ -201,7 +201,12 @@ def generate_launch_description():
         with open(source_config) as f:
             all_entries = yaml.safe_load(f) or []
 
+        # Camera topics go to a bridge process of their own. Images are megabytes each; when they
+        # shared one bridge with the clock, the clock reached ROS late and in bunches, the diff drive
+        # controller's speed estimate (distance over time step) came out about double, and the
+        # robot's odometry ran at twice its true motion.
         entries = []
+        camera_entries = []
         for entry in all_entries:
             entry = dict(entry)
             sensor = entry.pop("sensor", None)  # strip, ros_gz_bridge doesn't know this key
@@ -213,26 +218,41 @@ def generate_launch_description():
                     f"'{entry.get('ros_topic_name')}'. Expected one of {sorted(sensor_enabled)}."
                 )
             elif sensor_enabled[sensor]:
-                entries.append(entry)
+                (camera_entries if sensor == "cams" else entries).append(entry)
 
-        fd, filtered_config = tempfile.mkstemp(prefix='imprimis_gz_bridge_', suffix='.yaml')
-        with os.fdopen(fd, 'w') as f:
-            yaml.safe_dump(entries, f, sort_keys=False)
+        # One bridge process per camera topic: a single process could not convert the color image
+        # and the depth image fast enough once two programs were reading them, and the frames
+        # arrived many seconds late.
+        configs = []
+        for group in [entries] + [[entry] for entry in camera_entries]:
+            fd, path = tempfile.mkstemp(prefix='imprimis_gz_bridge_', suffix='.yaml')
+            with os.fdopen(fd, 'w') as f:
+                yaml.safe_dump(group, f, sort_keys=False)
+            configs.append(path)
 
         def remove_filtered_config(*_args, **_kwargs):
-            try:
-                os.remove(filtered_config)
-            except OSError:
-                pass
+            for path in configs:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
-        return [
+        bridges = [
             Node(
                 package="ros_gz_bridge",
                 executable="parameter_bridge",
-                arguments=['--ros-args', '-p', ['config_file:=', filtered_config], "--ros-args", "--log-level", "warn"]
+                arguments=['--ros-args', '-p', ['config_file:=', configs[0]], "--ros-args", "--log-level", "warn"]
             ),
             RegisterEventHandler(OnShutdown(on_shutdown=remove_filtered_config)),
         ]
+        for i, config in enumerate(configs[1:], 1):
+            bridges.append(Node(
+                package="ros_gz_bridge",
+                executable="parameter_bridge",
+                name="ros_gz_bridge_camera_%d" % i,
+                arguments=['--ros-args', '-p', ['config_file:=', config], "--ros-args", "--log-level", "warn"]
+            ))
+        return bridges
 
     gzbridge = OpaqueFunction(function=make_gzbridge)
 

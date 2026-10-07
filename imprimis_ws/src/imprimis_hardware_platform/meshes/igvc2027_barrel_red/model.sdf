@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="igvc2027_barrel_red">
+    <link name="link">
+      <inertial>
+        <pose>0 0 0.336 0 0 0</pose>
+        <mass>5.0</mass>
+        <inertia><ixx>0.53</ixx><iyy>0.53</iyy><izz>0.22</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>0 0 0.504 0 0 0</pose>
+        <geometry><cylinder><radius>0.298</radius><length>1.008</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><mesh><uri>model://igvc2027_barrel_red/meshes/barrel.obj</uri></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,27 @@
+{
+  "name": "real_course_template",
+  "description": "TEMPLATE for a course file of a real place. Copy it, rename it, and replace every number: none of them is real. Coordinates are in meters in the course frame: the origin is the middle of the start line, +X is the direction of travel at the start, +Y is to the left. The robot must be switched on standing on the start line, facing along +X, because its odometry starts at zero there.",
+  "layout_id": "site-1",
+  "length": 150.0,
+  "finish_line": [[0.0, -2.5], [0.0, 2.5]],
+  "travel_direction": [1.0, 0.0],
+  "checkpoints": [
+    {"name": "First straight", "x": 12.0, "y": 0.0, "radius": 3.0},
+    {"name": "Far side", "x": 12.0, "y": -30.0, "radius": 4.5},
+    {"name": "Last straight", "x": -12.0, "y": 0.0, "radius": 3.0}
+  ],
+  "centerline": [[0.0, 0.0], [15.0, 0.0], [15.0, -30.0], [-15.0, -30.0], [-15.0, 0.0]],
+  "lane_lines": [],
+  "barrels": [],
+  "barrel_radius": 0.3,
+  "potholes": [],
+  "ramp": null,
+  "gps": {
+    "datum_lat": 0.0,
+    "datum_lon": 0.0,
+    "x_axis_bearing_deg": 90.0,
+    "start_box": [-4.0, 14.0, 3.0],
+    "boundary_half_width_m": 6.0,
+    "how_to_fill": "datum_lat and datum_lon: stand the robot on the middle of the start line and read gps/fix for a minute; use the average. x_axis_bearing_deg: the compass bearing of the first straight (north 0, east 90). start_box: from how far behind the line to how far ahead of it, and how far to each side, the robot may stand when a run is armed. boundary_half_width_m: how far from the centerline the robot may be before the run is stopped; with a plain GPS fix allow for 2 m of error. centerline: a closed line around the course, a point every few meters; the boundary is measured from it. Without a centerline the boundary is a circle of that radius around the start line."
+  }
+}

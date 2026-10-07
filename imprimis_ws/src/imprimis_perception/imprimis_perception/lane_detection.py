@@ -23,9 +23,7 @@ class LaneDetection(Node):
         self.declare_parameter('frame_id', 'camera_color_optical_frame')
         self.declare_parameter('lower_white', (0,0, 200))
         self.declare_parameter('upper_white', (179, 60, 255))
-        self.declare_parameter("min_area", 100)
-        self.declare_parameter("max_area", 8000)
-    
+
 
         self.theta = self.get_parameter('camera_angle').value # remember to use to calculate the distance in z and x ranges
         self.height = self.get_parameter('camera_height').value
@@ -36,15 +34,10 @@ class LaneDetection(Node):
         self.lower_white = self.get_parameter('lower_white').value
         self.upper_white = self.get_parameter('upper_white').value
 
+        # change
+        #change whatever
+        
 
-
-        self.min_area = self.get_parameter("min_area").value
-        self.max_area = self.get_parameter("max_area").value
-        self.kernel = np.ones((3, 3), np.uint8)
-
-        self.min_area = self.get_parameter("min_area").value
-        self.max_area = self.get_parameter("max_area").value
-        self.kernel = np.ones((3, 3), np.uint8)
 
         self.bridge = CvBridge() #converts Ros message into OpenCv numpy matrix
         self.maskBridge = CvBridge()
@@ -57,16 +50,8 @@ class LaneDetection(Node):
 
         #this is for inverse mapping, find a spot on the ground and then find that point in the image and check whether or not it is a white pixel
         self.zCalc = self.height * math.tan(math.radians(self.theta))
-
         self.z_values = np.arange(0.5, self.zCalc, 0.01)   # 0.5m to 7m ahead, 5cm steps
         self.x_values = np.arange(-3.0, 3.0, 0.01)  # 3m left to 3m right, 5cm steps
-
-        self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
-        self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
-
-        self.z_values = np.arange(0.5, self.zCalc, 0.02)   # 0.5m to 7m ahead, 5cm steps
-        self.x_values = np.arange(-3.0, 3.0, 0.02)  # 3m left to 3m right, 5cm steps
-
         self.X, self.Z = np.meshgrid(self.x_values,self.z_values)
 
 
@@ -85,9 +70,6 @@ class LaneDetection(Node):
         self.image_sub = self.create_subscription( 
             Image, 
             image_topic,
-        )
-
-        self.raw_mask_pub = self.create_publisher(
             self.image_cb,
             1  # 1 is queue size, should stay at 1 to stay real time
         )
@@ -105,11 +87,6 @@ class LaneDetection(Node):
             'camera/lane_points',
             1
         )
-
-        self.raw_mask_pub = self.create_publisher(
-            Image, 
-            'lane_mask_raw',
-            1)
 
         self.get_logger().info(
             f'Lane detector started. Waiting on {image_topic} and {camera_info_topic}'
@@ -154,14 +131,18 @@ class LaneDetection(Node):
                 
         return SetParametersResult(successful=True)
 
+
+
+
+
+
+
+
     def image_cb(self, msg: Image):
         if not self.have_intrinsics:
             return #need to have intrinsics before we can really do much
 
         now = self.get_clock().now()
-        self.raw_mask_pub.publish(raw_msg)
-        
-        lane_points = self.raycast(self.mask,self.camera_matrix)
         elapsed = (now - self.last_process_time).nanoseconds / 1e9
         if elapsed < self.process_period:
             return
@@ -175,10 +156,6 @@ class LaneDetection(Node):
         lane_pixel_count = cv2.countNonZero(self.mask)
         if self.maskPublish == True:
             self.publishMask(self.mask)
-            raw_msg = self.bridge.cv2_to_imgmsg(self.raw_mask, encoding='mono8')
-            raw_msg.header = msg.header
-            self.raw_mask_pub.publish(raw_msg)
-        
         lane_points = self.raycast(self.mask,self.camera_matrix)
         self.publishPointCloud(lane_points)
         #self.get_logger().info(f'LanePoints: {lane_points}')
@@ -190,12 +167,6 @@ class LaneDetection(Node):
         cv_image = self.maskBridge.cv2_to_imgmsg(cv_image,encoding='mono8')
         self.camera_mask.publish(cv_image)
 
-
-        cv2.morphologyEx(self.mask, cv2.MORPH_OPEN, self.kernel)
-        filter_bin_mask = np.zeros_like(self.mask)
-
-        
-
     def segment_lane_pixels(self, cv_image:np.ndarray) -> np.ndarray:
         hsv = cv2.cvtColor(cv_image,cv2.COLOR_BGR2HSV)
         hue, sat, val = cv2.split(hsv) 
@@ -205,32 +176,15 @@ class LaneDetection(Node):
         blurred = cv2.GaussianBlur(val_enhanced, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
         hsv_enhanced = cv2.merge([hue,sat, blurred])
         mask = cv2.inRange(hsv_enhanced,self.lower_white, self.upper_white)
-
-        self.raw_mask = mask.copy()
-
-
-        cv2.morphologyEx(mask, cv2.MORPH_OPEN, self.kernel)
-        filter_bin_mask = np.zeros_like(mask)
-
-        
-
-        contours, _ = cv2.findContours(
-            mask, 
-            cv2.RETR_EXTERNAL, 
-            cv2.CHAIN_APPROX_SIMPLE
-        )
-
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if self.min_area <= area <= self.max_area:
-                cv2.drawContours(filter_bin_mask, [contour], 0, 255, cv2.FILLED)
-
-
-        return filter_bin_mask
+        return mask
 
 
     def raycast(self, cv_image: np.ndarray,camera_matrix):
         lane_points = []
+        
+
+        
+        
         valid_lane_points = cv_image[self.v_valid,self.u_valid] == 255
         x_lane = self.x[valid_lane_points]
         z_lane = self.z[valid_lane_points]
@@ -295,3 +249,4 @@ if __name__ == '__main__':
     main() 
 
             
+

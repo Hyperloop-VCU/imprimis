@@ -62,8 +62,6 @@ def generate_launch_description():
             default_value="true",
             description="Whether or not to use the lidar for navigation. MUST be true if nav mode is indoor."
         )
-
-        
     )
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -98,6 +96,14 @@ def generate_launch_description():
             "autostart_nav2",
             default_value="true",
             description="Autostart Nav2 lifecycle nodes.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_recoveries",
+            default_value="false",
+            description="Start the Nav2 behavior server so the robot can back up when it is stuck. Needs a nav2_params file with a behavior_server section (Course2027, FullFootprint).",
         )
     )
 
@@ -185,7 +191,8 @@ def generate_launch_description():
                 "params_file": nav2_params_file_path,
                 "autostart": autostart_nav2,
                 "log_level": "info",
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+                "use_recoveries": LaunchConfiguration("use_recoveries")
             }.items(),
         )]
     ))

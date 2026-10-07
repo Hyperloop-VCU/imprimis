@@ -14,8 +14,13 @@
     <mu2 value="6.0"/>
   </gazebo>
 
-  <!-- Make the caster wheel white and have no friction -->
-  <gazebo reference="caster_sphere">
+  <!-- Make the caster wheels white and have no friction -->
+  <gazebo reference="caster_left">
+    <material>Gazebo/White</material>
+    <mu1 value="0.0001"/>
+    <mu2 value="0.0001"/>
+  </gazebo>
+  <gazebo reference="caster_right">
     <material>Gazebo/White</material>
     <mu1 value="0.0001"/>
     <mu2 value="0.0001"/>
@@ -158,12 +163,53 @@
   </sensor>
 </gazebo>
   
+<!-- View camera of the IMPRIMIS Control window. It sees 60 m, where the front camera sees 10 m. -->
+<gazebo reference="view_camera">
+  <sensor name="view_rgb_camera" type="camera">
+    <gz_frame_id>view_camera</gz_frame_id>
+    <topic>/cameras/view/gzrgb/image_raw</topic>
+    <update_rate>20</update_rate>
+    <camera>
+      <horizontal_fov>1.52</horizontal_fov>
+      <image>
+        <width>960</width>
+        <height>540</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>60.0</far>
+      </clip>
+    </camera>
+  </sensor>
+</gazebo>
+
   <gazebo>
     <!-- Joint state publisher plugin-->
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
       <topic>joint_states</topic>
       <joint_name>left_wheel_joint</joint_name>
       <joint_name>right_wheel_joint</joint_name>
+      <joint_name>view_pan_joint</joint_name>
+      <joint_name>view_tilt_joint</joint_name>
+    </plugin>
+
+    <!-- Pan and tilt of the view camera. The angle wanted arrives on a topic and the joint is moved
+         to it by velocity, at up to 12 rad/s, so the tiny links need no tuning. -->
+    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
+      <joint_name>view_pan_joint</joint_name>
+      <topic>/view/pan_cmd</topic>
+      <use_velocity_commands>true</use_velocity_commands>
+      <cmd_max>12.0</cmd_max>
+      <cmd_min>-12.0</cmd_min>
+    </plugin>
+    <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
+      <joint_name>view_tilt_joint</joint_name>
+      <topic>/view/tilt_cmd</topic>
+      <use_velocity_commands>true</use_velocity_commands>
+      <cmd_max>12.0</cmd_max>
+      <cmd_min>-12.0</cmd_min>
+      <initial_position>0.2</initial_position>
     </plugin>
 
   <!-- ros2 control plugin -->

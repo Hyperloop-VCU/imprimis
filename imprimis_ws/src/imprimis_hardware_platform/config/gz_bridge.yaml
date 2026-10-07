@@ -2,6 +2,9 @@
 # launch argument is true (see imprimis_sim.launch.py). The key is stripped
 # before the filtered config is handed to ros_gz_bridge. Valid values:
 # lidar, imu, gps, cams. Entries without the key are always bridged.
+# Camera entries run in a second bridge process (see imprimis_sim.launch.py) and are lazy:
+# a camera topic is converted only while some ROS node subscribes to it. The depth point
+# cloud alone is about 13 MB per message.
 
 - ros_topic_name: "clock"
   gz_topic_name: "clock"
@@ -63,6 +66,7 @@
 
 # Camera
 - sensor: cams
+  lazy: true
   ros_topic_name: "cameras/front/color/image_raw"
   gz_topic_name:  "cameras/front/gzrgb/image_raw"
   ros_type_name: sensor_msgs/msg/Image
@@ -71,6 +75,7 @@
 
 
 - sensor: cams
+  lazy: true
   ros_topic_name: "cameras/front/depth/color/points"
   gz_topic_name: "cameras/front/gzdepth/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
@@ -79,8 +84,41 @@
 
 
 - sensor: cams
+  lazy: true
   ros_topic_name: "cameras/front/color/camera_info"
   gz_topic_name: "cameras/front/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: ignition.msgs.CameraInfo
-  direction: GZ_TO_ROS 
+  direction: GZ_TO_ROS
+
+# Depth image (32FC1, meters). Added for the ramp detector, which reads the image
+# instead of the much heavier depth point cloud.
+- sensor: cams
+  lazy: true
+  ros_topic_name: "cameras/front/depth/image_raw"
+  gz_topic_name: "cameras/front/gzdepth"
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: ignition.msgs.Image
+  direction: GZ_TO_ROS
+
+# View camera of the IMPRIMIS Control window (a simulator aid on a pan and tilt head; navigation does not use it).
+- sensor: cams
+  lazy: true
+  ros_topic_name: "cameras/view/image_raw"
+  gz_topic_name:  "cameras/view/gzrgb/image_raw"
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: ignition.msgs.Image
+  direction: GZ_TO_ROS
+
+# Where the view camera should point, in radians. Pan is counted to the left, tilt downward.
+- ros_topic_name: "view/pan_cmd"
+  gz_topic_name: "view/pan_cmd"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+- ros_topic_name: "view/tilt_cmd"
+  gz_topic_name: "view/tilt_cmd"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ

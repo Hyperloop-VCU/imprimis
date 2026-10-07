@@ -10,7 +10,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/lane_detection.launch.py'])
+        ('share/' + package_name + '/launch', ['launch/lane_detection.launch.py',
+                                                'launch/course_perception.launch.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,7 +21,9 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            'lane_detection = imprimis_perception.lane_detection:main'
+            'lane_detection = imprimis_perception.lane_detection:main',
+            'lane_mapper = imprimis_perception.lane_mapper:main',
+            'ramp_detector = imprimis_perception.ramp_detector:main'
         ],
     },
 )

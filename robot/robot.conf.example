@@ -1,0 +1,40 @@
+# Settings for run_robot.sh. The first run copies this file to robot.conf; edit robot.conf, not this file.
+# Plain  NAME="value"  lines. No spaces around the equal sign.
+
+# The course file of the place the rover is at: finish line, checkpoints and GPS datum.
+# Full path. Start from imprimis_ws/src/imprimis_mission/courses/real_course_template.json.
+# Empty means: mode switching only, no laps, no automatic runs.
+COURSE_FILE=""
+
+# Where the lap records of the REAL rover are kept. Do not point this at the simulator's lap memory.
+MEMORY_DIR="$HOME/imprimis_lap_memory_robot"
+
+# Speed on clear stretches, meters per second. 0.5 is walking pace. Raise it only after laps at this speed are boring.
+TOP_SPEED="0.5"
+
+# How the IMU is turned inside the rover, in radians. NOT MEASURED YET: 0.0 is a placeholder.
+IMU_YAW_IN_BASE="0.0"
+
+# The RealSense camera to use. The serial number has a leading underscore. The default is the D435i.
+USE_CAMERA="true"
+CAMERA_SERIAL="_923322073287"
+# Horizontal field of view of its color picture, radians (1.204 = 69 degrees, the published figure for a D435i).
+COLOR_FOV="1.204"
+
+# Open the IMPRIMIS Control window on this computer's screen. Set to false if it runs on another laptop.
+CONTROL_WINDOW="true"
+# rviz, foxglove or none.
+UI_TYPE="none"
+
+# The two guards. Leave them on.
+ARMING_CHECK="true"
+BOUNDARY_CHECK="true"
+
+# Where the devices are expected. These are the names in the team's hardware launch file; they are only
+# used here for the check before the start. Changing them here does not change where the drivers look.
+BOARD_A_PORT="/dev/ttyUSB0"
+IMU_PORT="/dev/ttyUSB1"
+GPS_PORT="/dev/ttyACM0"
+LIDAR_IP="192.168.100.201"
+
+NAV2_PARAMS="Course2027"

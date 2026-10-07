@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="igvc2027_course">
+    <static>true</static>
+    <link name="link">
+      <collision name="ground">
+        <geometry><plane><normal>0 0 1</normal><size>200 200</size></plane></geometry>
+        <surface><friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction></surface>
+      </collision>
+      <visual name="surface">
+        <cast_shadows>false</cast_shadows>
+        <geometry><mesh><uri>model://igvc2027_course/meshes/course.obj</uri></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

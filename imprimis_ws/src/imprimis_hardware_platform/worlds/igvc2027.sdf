@@ -1,0 +1,639 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <world name="default">
+    <!-- IGVC 2027 AutoNav course. Written by course_sync.py from the Blender map "IGVC- IMPRIMIS Training Ground.blend".
+         Do not edit by hand: move things in Blender and save; the simulator follows.
+         Frame: origin at the South Start line, +X is the direction of travel (course south), +Y is course east.
+         The robot spawns at the origin facing +X. All barrels are static (see the note in igvc2.sdf). -->
+    <scene>
+      <ambient>0.8 0.8 0.8 1</ambient>
+      <background>0.6 0.75 0.9 1</background>
+      <grid>false</grid>
+      <shadows>1</shadows>
+    </scene>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>42.66791</latitude_deg>
+      <longitude_deg>-83.21958</longitude_deg>
+      <elevation>286</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <physics name="1ms" type="ODE">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <include>
+      <uri>model://igvc2027_course</uri>
+      <name>course</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://igvc2027_ramp</uri>
+      <name>ramp</name>
+      <pose>-6.386 0.000 0 0 0 0.0000</pose>
+    </include>
+
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_001_orange</name>
+      <pose>-28.789 -28.298 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_002_orange</name>
+      <pose>-28.642 -29.047 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_003_orange</name>
+      <pose>-28.584 -24.643 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_004_orange</name>
+      <pose>-28.291 -23.682 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_005_orange</name>
+      <pose>-28.219 -29.931 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_006_orange</name>
+      <pose>-28.142 -6.797 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_007_orange</name>
+      <pose>-27.805 -22.890 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_008_orange</name>
+      <pose>-27.726 -28.994 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_009_orange</name>
+      <pose>-27.398 -23.693 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_010_orange</name>
+      <pose>-27.142 -26.393 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_011_orange</name>
+      <pose>-26.815 -3.697 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_012_orange</name>
+      <pose>-26.890 -28.923 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_013_orange</name>
+      <pose>-26.756 1.197 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_014_orange</name>
+      <pose>-26.582 -23.741 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_015_orange</name>
+      <pose>-26.567 -20.486 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_016_orange</name>
+      <pose>-26.358 -26.411 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_017_orange</name>
+      <pose>-25.668 -7.488 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_018_orange</name>
+      <pose>-25.329 -26.398 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_019_orange</name>
+      <pose>-25.255 -27.473 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_020_orange</name>
+      <pose>-25.009 -25.555 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_021_orange</name>
+      <pose>-24.921 -31.730 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_022_orange</name>
+      <pose>-24.619 -18.291 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_023_orange</name>
+      <pose>-24.621 -12.947 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_024_orange</name>
+      <pose>-24.315 -21.492 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_025_orange</name>
+      <pose>-24.139 -15.559 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_026_orange</name>
+      <pose>-22.295 -37.294 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_027_orange</name>
+      <pose>-22.241 -35.149 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_028_orange</name>
+      <pose>-18.360 -36.776 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_029_orange</name>
+      <pose>-16.321 -38.735 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_030_orange</name>
+      <pose>-16.037 -35.136 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_031_orange</name>
+      <pose>-13.978 -36.876 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_032_orange</name>
+      <pose>-10.137 -2.143 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_033_orange</name>
+      <pose>-10.028 1.916 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_034_orange</name>
+      <pose>-9.524 -37.331 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_035_orange</name>
+      <pose>-9.454 -36.629 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_036_orange</name>
+      <pose>-9.452 -35.869 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_037_orange</name>
+      <pose>-5.842 -37.853 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_038_orange</name>
+      <pose>-5.841 -36.882 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_039_orange</name>
+      <pose>-5.669 -35.964 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_040_orange</name>
+      <pose>-2.991 -1.966 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_041_orange</name>
+      <pose>-2.857 2.140 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_042_orange</name>
+      <pose>-1.725 -37.671 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_043_orange</name>
+      <pose>-1.668 -36.862 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_044_orange</name>
+      <pose>-1.709 -35.956 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_045_orange</name>
+      <pose>0.749 -36.864 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_046_orange</name>
+      <pose>3.427 -38.494 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_047_orange</name>
+      <pose>3.572 -35.456 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_048_orange</name>
+      <pose>6.900 -37.035 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_049_orange</name>
+      <pose>10.711 -37.338 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_050_orange</name>
+      <pose>10.777 -35.074 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_051_orange</name>
+      <pose>13.311 -15.863 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_052_orange</name>
+      <pose>13.404 -21.158 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_053_orange</name>
+      <pose>13.357 -13.846 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_054_orange</name>
+      <pose>13.643 -17.682 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_055_orange</name>
+      <pose>14.082 -32.949 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_056_orange</name>
+      <pose>14.498 -27.799 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_057_orange</name>
+      <pose>14.471 -25.700 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_058_orange</name>
+      <pose>14.648 -26.745 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_059_orange</name>
+      <pose>14.904 -7.307 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_060_orange</name>
+      <pose>15.064 1.503 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_061_orange</name>
+      <pose>15.521 -26.723 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_062_orange</name>
+      <pose>16.137 -3.352 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_063_orange</name>
+      <pose>16.407 -24.267 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_064_orange</name>
+      <pose>16.403 -20.653 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_065_orange</name>
+      <pose>16.483 -29.448 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_066_orange</name>
+      <pose>16.170 -26.962 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_067_orange</name>
+      <pose>17.285 -29.744 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_068_orange</name>
+      <pose>17.494 -30.782 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_069_orange</name>
+      <pose>17.489 -24.362 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_070_orange</name>
+      <pose>17.491 -6.523 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_orange</uri>
+      <static>true</static>
+      <name>barrel_071_orange</name>
+      <pose>17.721 -23.392 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_072_yellow</name>
+      <pose>-20.496 -34.233 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_073_yellow</name>
+      <pose>-11.024 -40.081 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_074_yellow</name>
+      <pose>-10.965 -33.660 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_075_yellow</name>
+      <pose>-0.596 -40.150 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_076_yellow</name>
+      <pose>0.167 -33.890 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_yellow</uri>
+      <static>true</static>
+      <name>barrel_077_yellow</name>
+      <pose>10.048 -39.253 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_078_red</name>
+      <pose>-20.151 -39.498 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_079_red</name>
+      <pose>-13.330 -33.818 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_080_red</name>
+      <pose>-8.547 -40.084 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_081_red</name>
+      <pose>-2.547 -33.566 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_082_red</name>
+      <pose>1.634 -40.330 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_red</uri>
+      <static>true</static>
+      <name>barrel_083_red</name>
+      <pose>8.138 -34.383 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_084_green</name>
+      <pose>-17.376 -39.809 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_085_green</name>
+      <pose>-15.969 -33.793 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_086_green</name>
+      <pose>-5.832 -40.222 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_087_green</name>
+      <pose>-5.402 -33.734 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_088_green</name>
+      <pose>4.634 -40.089 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_green</uri>
+      <static>true</static>
+      <name>barrel_089_green</name>
+      <pose>5.758 -34.137 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_090_black</name>
+      <pose>-18.343 -33.799 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_091_black</name>
+      <pose>-14.234 -39.985 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_092_black</name>
+      <pose>-8.209 -33.496 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_093_black</name>
+      <pose>-2.965 -40.077 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_094_black</name>
+      <pose>2.953 -34.066 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://igvc2027_barrel_black</uri>
+      <static>true</static>
+      <name>barrel_095_black</name>
+      <pose>7.099 -39.818 0 0 0 0</pose>
+    </include>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>43.2 20.0 45 0 0.75 2.6</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>
