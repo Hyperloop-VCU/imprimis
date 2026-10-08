@@ -52,15 +52,8 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
-            default_value="warehouse",
+            default_value="igvc2027",
             description="World file used for simulation (excluding the .sdf). It must be located in imprimis_hardware_platform/worlds",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_cams",
-            default_value="false",
-            description="Whether or not to use the cameras in hardware launch, affecting navigation but not localization."
         )
     )
     declared_arguments.append(
@@ -84,7 +77,6 @@ def generate_launch_description():
     world = LaunchConfiguration("world")
     map_type = LaunchConfiguration("map_type")
     show_sim = LaunchConfiguration("show_sim")
-    use_cams = LaunchConfiguration("use_cams")
     use_lidar = LaunchConfiguration("use_lidar")
     ui_type = LaunchConfiguration("ui_type")
 
@@ -100,7 +92,6 @@ def generate_launch_description():
             'world': world,
             'show_sim:': show_sim,
             'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
-            'use_cams': use_cams,
             'use_lidar': use_lidar,
             'ui_type': ui_type
         }.items(),
@@ -114,7 +105,6 @@ def generate_launch_description():
                 'use_controller': use_controller,
                 'publish_odom_tf': disable_local_ekf,
                 'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
-                'use_cams': use_cams,
                 'use_lidar': use_lidar,
                 'ui_type': ui_type
             }.items(),
@@ -129,7 +119,9 @@ def generate_launch_description():
         executable="ekf_node",
         name="ekf_local",
         parameters=[local_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-        remappings=[('/odometry/filtered', '/odometry/filtered/local')],
+        # set_pose is both a topic and a service, and robot_localization names it relative to the
+        # namespace, so without this both EKFs would answer on the same /set_pose.
+        remappings=[('/odometry/filtered', '/odometry/filtered/local'), ('set_pose', 'ekf_local/set_pose')],
         arguments=["--ros-args", "--log-level", "warn"],
         condition=UnlessCondition(disable_local_ekf)
     )
@@ -204,7 +196,7 @@ def generate_launch_description():
             executable="ekf_node",
             name="ekf_global",
             parameters=[global_ekf_config, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])}],
-            remappings=[('/odometry/filtered', '/odometry/filtered/global')],
+            remappings=[('/odometry/filtered', '/odometry/filtered/global'), ('set_pose', 'ekf_global/set_pose')],
             arguments=["--ros-args", "--log-level", "warn"],
             condition=IfCondition(PythonExpression(["'", map_type, "' == 'gps'"]))
         )],

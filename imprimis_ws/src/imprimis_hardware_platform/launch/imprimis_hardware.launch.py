@@ -41,14 +41,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_cams",
-            default_value="false",
-            choices=("true", "false"),
-            description="Whether or not to start up the intel depth cameras.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "use_lidar",
             default_value="true",
             choices=("true", "false"),
@@ -83,7 +75,6 @@ def generate_launch_description():
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
     lidar_rpm = LaunchConfiguration("lidar_rpm")
-    use_cams = LaunchConfiguration("use_cams")
     use_lidar = LaunchConfiguration("use_lidar")
     use_gps = LaunchConfiguration("use_gps")
     use_imu = LaunchConfiguration("use_imu")
@@ -238,29 +229,6 @@ def generate_launch_description():
         }, {"use_sim_time": False}],
         namespace="gps"
     )
-
-    # Camera driver
-    """
-    # The GroupAction with forwarding=False and scoped=True prevents the camera launch file from seeing this launch file's arguments.
-    # We don't want to tell the camera "publish_odom_tf=false".
-    camera_launch_include = GroupAction(
-        [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
-                launch_arguments={
-                    'pointcloud.enable': 'true',
-                    'diagnostics_period': '1.0',
-                    'log_level': 'error',
-                    'camera_namespace': 'cameras',
-                    'camera_name': 'front'
-                }.items(),
-            )
-        ],
-        scoped=True,
-        forwarding=False,
-        condition=IfCondition(use_cams),
-    )
-    """
 
     camera_launch_include = GroupAction(
         [

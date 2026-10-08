@@ -1,3 +1,35 @@
+# Course2027.yaml
+# Update of 4 October 2026 (search for SPEED): top speed 2.2 m/s, controller look-ahead 5 m. The node speed_governor
+#   publishes speed_limit, so the top speed is only used where the path ahead is clear.
+# Update of 3 October 2026 (search for REVERSE, LANE, RAMP):
+#   REVERSE  slow reverse in the controller, the behavior server, and the recovery behavior tree
+#   LANE     the lane mapper's points are a second obstacle source in both cost maps
+#   RAMP     the cost maps read the ramp detector's filtered LiDAR cloud
+# Launch with use_cams:=true use_recoveries:=true and the two perception nodes running
+# (imprimis_mission sim_mission.launch.py does all of this). Without ramp_detector running the
+# cost maps receive no LiDAR points at all.
+# FullFootprint.yaml adjusted for the IGVC 2027 course world (igvc2027.sdf): tighter turns, lower speed,
+# with the same inflation as FullFootprint.yaml. Select with nav2_params:=Course2027
+# Changes from FullFootprint.yaml are marked COURSE.
+#
+# (header of FullFootprint.yaml follows)
+# A copy of SmartPlannerSmartController.yaml in which the planner AND the controller both use the
+# robot's real rectangular outline, so the long tail behind the drive axle is accounted for.
+# Select it with:  nav2_params:=FullFootprint
+#
+# Outline, measured from base_link (the drive axle), from diffbot_description.urdf.xacro:
+#   front +0.215 m, rear -0.842 m, half width 0.486 m at the wheels and 0.311 m along the tail.
+#   The six-point outline below follows that shape and adds 10 to 20 mm.
+#
+# Changes from SmartPlannerSmartController.yaml (search for "CHANGED"):
+#   1. global costmap: robot_radius 0.54 replaced by the six-point footprint polygon
+#   2. local costmap: same polygon, and the map grows from 5 m to 10 m square
+#   3. planner: minimum_turning_radius 0.2 -> 1.0 (the tail swings 0.30 m outside the wheel track at 0.2 m,
+#      and 0.07 m at 1.0 m)
+#   4. MPPI: vx_max 10.0 -> 2.2 (5 mph is 2.235 m/s), CostCritic enabled with the footprint
+#   5. velocity smoother: 3.0 -> 2.2 m/s
+# NOT YET RUN in simulation or on the robot. Compare against the original file before trusting it.
+
 bt_navigator:
   ros__parameters:
     global_frame: odom
@@ -6,7 +38,7 @@ bt_navigator:
     navigators: ["navigate_to_pose"]
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
-    default_nav_to_pose_bt_xml: $(find-pkg-share imprimis_navigation)/../../../../src/imprimis_navigation/nav2_bt/default_nav2_bt.xml
+    default_nav_to_pose_bt_xml: $(find-pkg-share imprimis_navigation)/../../../../src/imprimis_navigation/nav2_bt/recovery_nav_bt.xml # REVERSE: was default_nav2_bt.xml, which has no recovery
 
 planner_server:
   ros__parameters:
@@ -27,7 +59,7 @@ planner_server:
       analytic_expansion_max_length: 2.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
       analytic_expansion_max_cost: 100.0  #  The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
       analytic_expansion_max_cost_override: True  #  (Prev false)Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
-      minimum_turning_radius: 0.2      # (previously 0.3) minimum turning radius in m of path / vehicle
+      minimum_turning_radius: 0.5      # COURSE: 1.0 was too wide for No Man's Land. CHANGED from 0.2. Keeps the tail inside the wheel track. The IGVC course radius is 1.52 m or more.
       reverse_penalty: 2.5             # Penalty to apply if motion is reversing, must be => 1
       change_penalty: 2.5                 # (Previously 0.0) Penalty to apply if motion is changing directions (L to R), must be >= 0
       non_straight_penalty: 2.0          # Penalty to apply if motion is non-straight, must be => 1
@@ -84,13 +116,13 @@ controller_server:
       iteration_count: 1
       temperature: 0.3 # default 0.3
       gamma: 0.015 # default 0.015
-      prune_distance: 1.7
+      prune_distance: 5.0 # SPEED: was 1.7. The controller only looks this far along the path; 1.7 m held the robot near 1 m/s whatever vx_max said. Needs vx_max x 2 s.
       regenerate_noises: true # default false
 
       # linear
       vx_std: 0.4
-      vx_max: 10.0
-      vx_min: 0.0 # This should never be negative; this robot must not drive backwards
+      vx_max: 2.2 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
+      vx_min: -0.35 # REVERSE: was 0.0 ("must not drive backwards"). Slow reverse lets the robot free itself; PreferForwardCritic keeps it driving forward otherwise.
       ax_max: 3.0
       ax_min: -3.0
 
@@ -144,15 +176,15 @@ controller_server:
         #inflation_radius: 0.55 # (only in Humble)
         #cost_scaling_factor: 10.0 # (only in Humble)
       CostCritic:
-        enabled: false
+        enabled: true # CHANGED from false: the controller now checks the outline too
         cost_power: 1
         cost_weight: 3.81
         critical_cost: 300.0
         consider_footprint: true
-        near_collision_cost: 254
-        collision_cost: 400.0
+        near_collision_cost: 253 # CHANGED from 254 (Nav2 default)
+        collision_cost: 1000000.0 # CHANGED from 400.0 (Nav2 default)
         near_goal_distance: 1.0
-        trajectory_point_step: 2
+        trajectory_point_step: 1 # MARGIN: was 2. Check the outline at every step of a sampled path, not every second one.
       PathAlignCritic:
         enabled: true
         cost_power: 1
@@ -202,9 +234,9 @@ global_costmap:
       robot_base_frame: base_link
       resolution: 0.1
 
-      #footprint_padding: 0.11
-      robot_radius: 0.54
-      #footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
+      # CHANGED: the real outline instead of a 0.54 m circle around the drive axle
+      footprint_padding: 0.08 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
+      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -212,11 +244,11 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data
+        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 1.8
         min_obstacle_height: 0.3
         velodyne_data:
-          topic: /velodyne_points
+          topic: /velodyne_points_nav # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
           clearing: False    
           marking: True
           data_type: "PointCloud2"
@@ -227,11 +259,39 @@ global_costmap:
           obstacle_max_range: 6.0
           obstacle_min_range: 0.2
 
+        # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
+        # so that they pass the height limits of this layer.
+        lane_data:
+          topic: /perception/lane_points
+          clearing: False
+          marking: True
+          data_type: "PointCloud2"
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.0
+        
+        # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
+        # The robot's outline must stay off them, so they are marked like any other obstacle.
+        pothole_data:
+          topic: /perception/pothole_points
+          clearing: False
+          marking: True
+          data_type: "PointCloud2"
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.0
+
 
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.7 # higher is more leniant
+        cost_scaling_factor: 1.7 # higher is more leniant (3.0 was tried on the course: the robot brushed barrels)
         inflation_radius: 3.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
       # Massive blank map, filled over time
@@ -243,10 +303,12 @@ local_costmap:
   local_costmap:
     ros__parameters:
       plugins: ["obstacle_layer", "inflation_layer"]
-      height: 5
-      width: 5
-      origin_x: -2.5
-      origin_y: -2.5
+      # CHANGED: 10 m square. MPPI looks 2 s ahead; at 2.2 m/s that is 4.4 m, and any rollout
+      # that leaves the local costmap is scored as a collision.
+      height: 10
+      width: 10
+      origin_x: -5.0
+      origin_y: -5.0
       publish_frequency: 5.0
       update_frequency: 50.0
       always_send_full_costmap: false
@@ -255,10 +317,9 @@ local_costmap:
       robot_base_frame: base_link
       resolution: 0.1
 
-      footprint_padding: 0.02
-      footprint: "[ [0.2, 0.5], [0.2, -0.5], [-0.85, -0.5], [-0.85, 0.5] ]"
-      #footprint: "[ [0.05, 0.125], [0.05, -0.125], [-0.2125, -0.125], [-0.2125, 0.125]]"
-      #robot_radius: 0.54
+      footprint_padding: 0.08 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
+      # CHANGED: same outline as the global costmap
+      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -266,26 +327,53 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data
+        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 10.0
         min_obstacle_height: -10.0
         velodyne_data:
-          topic: /velodyne_points
+          topic: /velodyne_points_nav # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
           clearing: False
           marking: True
           data_type: "PointCloud2"
           max_obstacle_height: 3.0
           min_obstacle_height: 0.2
-          raytrace_max_range: 3.0
+          raytrace_max_range: 6.0 # CHANGED with the larger local costmap
           raytrace_min_range: 0.0
-          obstacle_max_range: 3.0
+          obstacle_max_range: 6.0 # CHANGED with the larger local costmap
           obstacle_min_range: 0.2
+        # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
+        # so that they pass the height limits of this layer.
+        lane_data:
+          topic: /perception/lane_points
+          clearing: False
+          marking: True
+          data_type: "PointCloud2"
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.0
+
+        # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
+        # The robot's outline must stay off them, so they are marked like any other obstacle.
+        pothole_data:
+          topic: /perception/pothole_points
+          clearing: False
+          marking: True
+          data_type: "PointCloud2"
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 6.0
+          obstacle_min_range: 0.0
 
 
       # Add a "danger zone" around obstacles
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 1.7 # higher is more leniant
+        cost_scaling_factor: 1.7 # higher is more leniant (3.0 was tried on the course: the robot brushed barrels)
         inflation_radius: 1.3 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
 
 
@@ -295,8 +383,8 @@ velocity_smoother:
     smoothing_frequency: 10.0
     feedback: "OPEN_LOOP"
     scale_velocities: false
-    max_velocity: [3.0, 0.0, 1.0]    # was [2.0, 0.0, 1.0]
-    min_velocity: [-3.0, 0.0, -1.0]  # was [-2.0, 0.0, -1.0]
+    max_velocity: [2.2, 0.0, 1.5]    # CHANGED from [3.0, 0.0, 1.0]: 5 mph, and wz_max of the controller
+    min_velocity: [-2.2, 0.0, -1.5]  # CHANGED from [-3.0, 0.0, -1.0]
     max_accel: [3.0, 0.0, 2.0]       # was [2.0, 0.0, 1.0]
     max_decel: [-3.0, 0.0, -2.0]     # was [-2.0, 0.0, -1.0]
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -333,30 +421,29 @@ smoother_server:
 #      polygon_pub_topic: "polygon_stop"
 #      enabled: false
 
-#behavior_server:
-#  ros__parameters:
-#    local_costmap_topic: local_costmap/costmap_raw
-#    local_footprint_topic: local_costmap/published_footprint
-#    global_costmap_topic: global_costmap/costmap_raw
-#    global_footprint_topic: global_costmap/published_footprint
-#    cycle_frequency: 10.0
-#    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
-#    spin:
-#      plugin: "nav2_behaviors::Spin" # In Iron and older versions, "/" was used instead of "::"
-#    backup:
-#      plugin: "nav2_behaviors::BackUp" # In Iron and older versions, "/" was used instead of "::"
-#    drive_on_heading:
-#      plugin: "nav2_behaviors::DriveOnHeading" # In Iron and older versions, "/" was used instead of "::"
-#    wait:
-#      plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
-#    assisted_teleop:
-#      plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
-#    local_frame: odom
-#    global_frame: odom
-#    robot_base_frame: base_link
-#    transform_tolerance: 0.1
-#    simulate_ahead_time: 2.0
-#    max_rotational_vel: 1.0
-#    min_rotational_vel: 0.4
-#    rotational_acc_lim: 3.2
-#    enable_stamped_cmd_vel: true
+# REVERSE: the behavior server, switched on with use_recoveries:=true. It gives the behavior tree
+# a BackUp action (reverse a set distance, checking the cost map behind the robot) and a Wait action.
+# Spin is left out on purpose: the tail sweeps a 1.8 m circle.
+behavior_server:
+  ros__parameters:
+    local_costmap_topic: local_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["backup", "drive_on_heading", "wait"]
+    backup:
+      plugin: "nav2_behaviors::BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors::DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors::Wait"
+    local_frame: odom
+    global_frame: odom
+    robot_base_frame: base_link
+    transform_tolerance: 0.2
+    simulate_ahead_time: 1.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+    enable_stamped_cmd_vel: true

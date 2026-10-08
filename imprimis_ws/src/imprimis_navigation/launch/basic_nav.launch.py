@@ -51,19 +51,10 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_cams",
-            default_value="false",
-            description="Whether or not to use cameras for navigation.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "use_lidar",
             default_value="true",
             description="Whether or not to use the lidar for navigation. MUST be true if nav mode is indoor."
         )
-
-        
     )
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -82,7 +73,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "nav2_params",
-            default_value="SmartPlannerSmartController",
+            default_value="Course2027",
             description="Filename of the nav2 parameters YAML (excluding the .yaml). It must be located in imprimis_navigation/config/nav2",
         )
     )
@@ -103,33 +94,14 @@ def generate_launch_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_controller_switcher",
+            "use_recoveries",
             default_value="false",
-            description="Enable automatic RPP/MPPI controller switching based on obstacle proximity.",
+            description="Start the Nav2 behavior server so the robot can back up when it is stuck. Needs a nav2_params file with a behavior_server section (Course2027, FullFootprint).",
         )
-)
-    
-
-    declared_arguments.append(
-    DeclareLaunchArgument(
-        "track_velocity",
-        default_value="false",
-        description="Enable velocity tracker node.",
     )
-)
-    
-    
-    declared_arguments.append(
-    DeclareLaunchArgument(
-        "use_waypoints",
-        default_value="false",
-        description="Send waypoints automatically on launch.",
-    )
-)
     
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
-    use_cams = LaunchConfiguration("use_cams")
     autostart_nav2 = LaunchConfiguration("autostart_nav2")
     disable_local_EKF = LaunchConfiguration("disable_local_ekf")
     nav2_params = LaunchConfiguration("nav2_params")
@@ -139,19 +111,13 @@ def generate_launch_description():
     ui_type = LaunchConfiguration("ui_type")
     use_lidar = LaunchConfiguration("use_lidar")
 
-    map_yaml = LaunchConfiguration("map_yaml")
-    use_controller_switcher = LaunchConfiguration("use_controller_switcher")
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
-    track_velocity = LaunchConfiguration("track_velocity")
-    waypoints_file = PathJoinSubstitution([nav_config_src_dir, 'waypoints.yaml'])
-    use_waypoints = LaunchConfiguration("use_waypoints")
     # hardware and localization (real or simulated)
     localization_launch_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "localization.launch.py"])]),
         launch_arguments={
             "hardware_type": hardware_type,
             "use_controller": use_controller,
-            "use_cams": use_cams,
             "disable_local_EKF": disable_local_EKF,
             "world": world,
             "map_type": PythonExpression([
@@ -185,7 +151,8 @@ def generate_launch_description():
                 "params_file": nav2_params_file_path,
                 "autostart": autostart_nav2,
                 "log_level": "info",
-                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"])
+                "use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]),
+                "use_recoveries": LaunchConfiguration("use_recoveries")
             }.items(),
         )]
     ))
@@ -195,7 +162,7 @@ def generate_launch_description():
     map_goal_to_odom = RegisterEventHandler(OnProcessExit(
         target_action=wait_for_map_odom_tf,
         on_exit=[Node(
-            package="map_goal_to_odom",
+            package="imprimis_navigation",
             executable="map_goal_to_odom",
             name="map_goal_to_odom",
             parameters=[map_goal_to_odom_params, {"use_sim_time": PythonExpression(["'", hardware_type, "' == 'simulated'"]), "useGps": PythonExpression(["'", nav_mode, "' == 'outdoor'"])}]

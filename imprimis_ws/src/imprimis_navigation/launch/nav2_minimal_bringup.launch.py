@@ -17,7 +17,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import LoadComposableNodes, SetParameter
@@ -33,7 +33,7 @@ def generate_launch_description():
         'smoother_server',
         'planner_server',
         #'route_server',
-        #'behavior_server',
+        'behavior_server',
         'velocity_smoother',
         #'collision_monitor',
         'bt_navigator',
@@ -55,6 +55,7 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
+    use_recoveries = LaunchConfiguration('use_recoveries')
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {'autostart': autostart}
@@ -100,6 +101,27 @@ def generate_launch_description():
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info', description='log level'
     )
+    declare_use_recoveries_cmd = DeclareLaunchArgument(
+        'use_recoveries',
+        default_value='false',
+        description='Start the behavior server (back up, wait). The parameter file must then have a '
+                    'behavior_server section and name a behavior tree that uses it, such as recovery_nav_bt.xml.',
+    )
+
+    # The lifecycle manager brings the nodes up in list order. The behavior server has to be up
+    # before bt_navigator, which looks for its actions when it loads the behavior tree.
+    def make_lifecycle_manager(context):
+        node_names = list(lifecycle_nodes)
+        if use_recoveries.perform(context) == 'true':
+            node_names.insert(node_names.index('bt_navigator'), 'behavior_server')
+        return [Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_navigation',
+            output='screen',
+            arguments=['--ros-args', '--log-level', log_level],
+            parameters=[{'autostart': autostart}, {'node_names': node_names}, {'use_sim_time': use_sim_time}],
+        )]
 
     load_nodes = GroupAction(
         actions=[
@@ -147,17 +169,18 @@ def generate_launch_description():
             #    arguments=['--ros-args', '--log-level', log_level],
             #    remappings=remappings,
             #),
-            #Node(
-            #    package='nav2_behaviors',
-            #    executable='behavior_server',
-            #    name='behavior_server',
-            #    output='screen',
-            #    respawn=use_respawn,
-            #    respawn_delay=2.0,
-            #    parameters=[configured_params],
-            #    arguments=['--ros-args', '--log-level', log_level],
-            #    remappings=remappings + [('cmd_vel', 'cmd_vel_raw')],
-            #),
+            Node(
+                package='nav2_behaviors',
+                executable='behavior_server',
+                name='behavior_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings + [('cmd_vel', 'cmd_vel_raw')],
+                condition=IfCondition(use_recoveries),
+            ),
             Node(
                 package='nav2_bt_navigator',
                 executable='bt_navigator',
@@ -214,14 +237,7 @@ def generate_launch_description():
             #    arguments=['--ros-args', '--log-level', log_level],
             #    remappings=remappings,
             #),
-            Node(
-                package='nav2_lifecycle_manager',
-                executable='lifecycle_manager',
-                name='lifecycle_manager_navigation',
-                output='screen',
-                arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
-            ),
+            OpaqueFunction(function=make_lifecycle_manager),
         ],
     )
 
@@ -238,6 +254,7 @@ def generate_launch_description():
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
+    ld.add_action(declare_use_recoveries_cmd)
 
     # Add the actions to launch all of the navigation nodes
     ld.add_action(load_nodes)

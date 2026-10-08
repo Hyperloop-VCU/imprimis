@@ -1,0 +1,22 @@
+# Blender 5.2.2 LTS MTL File: 'IGVC- IMPRIMIS Training Ground.blend'
+# www.blender.org
+
+newmtl asphalt
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd asphalt_texture.jpg
+
+newmtl white_tape
+Ns 422.499969
+Ka 0.950000 0.950000 0.950000
+Kd 0.950000 0.950000 0.950000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2

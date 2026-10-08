@@ -26,15 +26,25 @@
 <xacro:property name="lidar_pole_height" value="0.300"/> <!-- 11.810" --> <!-- Top of top plane to top of the pole -->
 <xacro:property name="lidar_pole_xoff" value="0.483"/>   <!-- 19.000" --> <!-- Back of robot to center of lidar pole-->
 <xacro:property name="lidar_pole_angle" value="0.033"/>                   <!-- Slight tilt of the lidar pole along the x-axis-->
-<xacro:property name="top_section_length" value="0.75"/> <!-- 25.560" --> <!-- Back of the robot to the end of the top section -->
+<xacro:property name="top_section_length" value="0.711"/> <!-- 28.000" --> <!-- Back of the robot to the end of the top section. Was 0.75 with a 25.56" comment; 0.711 is the SolidWorks value (Top_Panel_Glass). VERIFY WITH A TAPE MEASURE. -->
 <!-- Top section width is the same as base_width -->
 <xacro:property name="top_section_height" value="0.279"/> <!-- 11.000" --> <!-- Top of middle plane to top of top plane-->
 
 <!-- TOTAL ROBOT HEIGHT: 1.1173 m-->
-<!-- Simulated caster wheel-->
+<!-- Simulated caster wheels: two swivel casters at the rear corners, as on the real robot.
+     Positions are from the SolidWorks assembly HyperLabs Robot(07-03-25). Each is a low-friction
+     sphere whose lowest point touches the ground, so the deck sits level. -->
+<!-- Outline of the whole robot seen from above, measured from base_link (the drive axle).
+     The Nav2 footprint in config/nav2/FullFootprint.yaml must match these numbers.
+     Front edge +0.215 m (wheel_radius plus the camera). Rear edge -0.842 m (base_length minus wheel_radius).
+     Half width 0.486 m at the outer face of the tires (base_width/2 + wheel_yoff + wheel_len/2).
+     KEEP THESE COMMENTS DIRECTLY ABOVE AN XACRO TAG AND FREE OF COLONS. A comment that reaches the
+     generated URDF with a colon in it stops the launch (robot_description fails to parse as YAML). -->
 <xacro:property name="caster_mass" value="0.1"/>
-<xacro:property name="caster_radius" value="${wheel_radius - wheel_zoff}"/>
-<xacro:property name="caster_xoff" value="0.15"/>
+<xacro:property name="caster_radius" value="0.0445"/>  <!-- 03.500" diameter wheel -->
+<xacro:property name="caster_xoff" value="0.07"/>      <!-- 02.750" --> <!-- Back of robot to caster wheel center -->
+<xacro:property name="caster_yoff" value="0.272"/>     <!-- 10.700" --> <!-- Robot centerline to caster wheel center -->
+<xacro:property name="caster_zoff" value="${-(wheel_radius - wheel_zoff) + caster_radius}"/> <!-- Top of bottom plane down to caster center -->
 
 
 
@@ -153,15 +163,43 @@
   </inertial> <!-- for some reason, the inertial cylinder macro was not parsing -->
 </link>
 
-  <!-- Caster joint -->
-<joint name="caster_joint" type="fixed">
+<!-- Left caster joint -->
+<joint name="caster_left_joint" type="fixed">
   <parent link="chassis"/>
-  <child link="caster_sphere"/>
-  <origin xyz="${caster_xoff} 0 0"/>
+  <child link="caster_left"/>
+  <origin xyz="${caster_xoff} ${caster_yoff} ${caster_zoff}"/>
 </joint>
 
-<!-- Caster link -->
-<link name="caster_sphere">
+<!-- Left caster link -->
+<link name="caster_left">
+  <visual>
+    <geometry>
+      <sphere radius="${caster_radius}"/>
+    </geometry>
+    <material name="white"/>
+  </visual>
+  <collision>
+    <geometry>
+      <sphere radius="${caster_radius}"/>
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="${caster_mass}" />
+    <inertia ixx="${(2/5) * caster_mass * (caster_radius*caster_radius)}" ixy="0.0" ixz="0.0"
+            iyy="${(2/5) * caster_mass * (caster_radius*caster_radius)}" iyz="0.0"
+            izz="${(2/5) * caster_mass * (caster_radius*caster_radius)}" />
+  </inertial>
+</link>
+
+<!-- Right caster joint -->
+<joint name="caster_right_joint" type="fixed">
+  <parent link="chassis"/>
+  <child link="caster_right"/>
+  <origin xyz="${caster_xoff} ${-caster_yoff} ${caster_zoff}"/>
+</joint>
+
+<!-- Right caster link -->
+<link name="caster_right">
   <visual>
     <geometry>
       <sphere radius="${caster_radius}"/>
@@ -323,6 +361,36 @@
   <child link="camera_link"/>
 </joint> -->
 
+
+<!-- View camera for the IMPRIMIS Control window, on a pan and tilt head.
+     It is a simulator aid and not a part of the real robot. Navigation does not use it.
+     The head stands on the front edge of the top section, 0.97 m above the ground.
+     Pan turns without limit. Tilt is limited to a quarter circle up and a quarter circle down.
+     Positive tilt looks down. The links have no shape, so the LiDAR does not see them. -->
+<joint name="view_pan_joint" type="continuous">
+  <parent link="chassis"/>
+  <child link="view_pan"/>
+  <origin xyz="${top_section_length + 0.02} 0 ${base_height + top_section_height + 0.08}" rpy="0 0 0"/>
+  <axis xyz="0 0 1"/>
+  <limit effort="5.0" velocity="20.0"/>
+</joint>
+<link name="view_pan">
+  <xacro:inertial_sphere mass="0.02" radius="0.02">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:inertial_sphere>
+</link>
+<joint name="view_tilt_joint" type="revolute">
+  <parent link="view_pan"/>
+  <child link="view_camera"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <axis xyz="0 1 0"/>
+  <limit lower="-1.5708" upper="1.5708" effort="5.0" velocity="20.0"/>
+</joint>
+<link name="view_camera">
+  <xacro:inertial_sphere mass="0.02" radius="0.02">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:inertial_sphere>
+</link>
 
 <!-- Lidar joint and link -->
 <!--xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>

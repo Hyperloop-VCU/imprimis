@@ -1,0 +1,64 @@
+<!--
+  Navigate to a pose, replanning once a second, with recovery.
+
+  default_nav2_bt.xml plans once and has no way out when the robot is wedged. This tree is the
+  stock Nav2 "navigate to pose with replanning and recovery" tree with two changes:
+    - the Spin recovery is removed. The robot's tail reaches 0.9 m behind the drive axle and
+      sweeps a 1.8 m circle when it spins, so spinning in a 1.5 m passage hits things.
+    - the recovery steps are: take a fresh look (clear both cost maps and wait a second, so that the
+      LiDAR, the lane points and the route corridor are marked again), reverse 0.6 m, wait, reverse
+      0.8 m, clear the local cost map, wait, take a fresh look again.
+      The cost maps never forget a mark on their own. Barrels grow in them by a cell or two as they are
+      seen from different sides, and that closes a passage of 1.5 m. Laps stalled in the chicane of the
+      north arm until the global cost map was cleared, so the fresh look now comes first. For a while
+      it came last, because a robot facing a truly closed passage forgot the dead end and drove into
+      it again; the lap manager now stops such a lap (no ground gained along the route for 75 s).
+
+  It needs the behavior server (launch with use_recoveries:=true).
+-->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+        <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+        <RateController hz="1.0">
+          <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
+          <Sequence>
+            <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          </Sequence>
+        </RecoveryNode>
+      </PipelineSequence>
+      <Sequence>
+        <Fallback>
+          <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+          <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+        </Fallback>
+        <ReactiveFallback name="RecoveryFallback">
+          <GoalUpdated/>
+          <RoundRobin name="RecoveryActions">
+            <Sequence name="FreshLook">
+              <ClearEntireCostmap name="ClearLocalCostmap-First" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-First" service_name="global_costmap/clear_entirely_global_costmap"/>
+              <Wait wait_duration="1.0"/>
+            </Sequence>
+            <BackUp backup_dist="0.6" backup_speed="0.25" error_code_id="{backup_error_code}"/>
+            <Wait wait_duration="1.0"/>
+            <BackUp backup_dist="0.8" backup_speed="0.25" error_code_id="{backup_error_code}"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <Wait wait_duration="1.0"/>
+            <Sequence name="ClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Last" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Last" service_name="global_costmap/clear_entirely_global_costmap"/>
+              <Wait wait_duration="1.0"/>
+            </Sequence>
+          </RoundRobin>
+        </ReactiveFallback>
+      </Sequence>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

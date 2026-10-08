@@ -43,16 +43,8 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
-            default_value="warehouse",
+            default_value="igvc2027",
             description="World for gazebo simulation"
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_cams",
-            default_value="true",
-            choices=("true", "false"),
-            description="Whether or not to include cameras in the simulation.",
         )
     )
     declared_arguments.append(
@@ -91,7 +83,6 @@ def generate_launch_description():
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
     show_sim = LaunchConfiguration("show_sim")
     use_gps = LaunchConfiguration("use_gps")
-    use_cams = LaunchConfiguration("use_cams")
     use_lidar = LaunchConfiguration("use_lidar")
     use_imu = LaunchConfiguration("use_imu")
     ui_type = LaunchConfiguration("ui_type")
@@ -192,7 +183,7 @@ def generate_launch_description():
     def make_gzbridge(context):
         sensor_enabled = {
             "lidar": LaunchConfiguration("use_lidar").perform(context) == "true",
-            "cams": LaunchConfiguration("use_cams").perform(context) == "true",
+            "cams": "true",
             "imu": LaunchConfiguration("use_imu").perform(context) == "true",
             "gps": LaunchConfiguration("use_gps").perform(context) == "true",
         }

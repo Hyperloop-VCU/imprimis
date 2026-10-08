@@ -7,7 +7,7 @@
   <maintainer email="rayneralla@icloud.com">ray</maintainer>
   <license>TODO: License declaration</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
@@ -45,6 +45,7 @@
   
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
+  <exec_depend>rclpy</exec_depend>
   <depend>lifecycle_msgs</depend>
   
   <depend>tf2</depend>
@@ -65,10 +66,10 @@
   
   <depend>angles</depend>
   <depend>bond</depend>
-  <depend>bondcpp</depend>
+  <!--<depend>bondcpp</depend>-->
   <depend>nav_2d_msgs</depend>
 
   <export>
-    <build_type>ament_cmake</build_type>
+    <build_type>ament_python</build_type>
   </export>
 </package>
