@@ -66,7 +66,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world",
-            default_value="warehouse",
+            default_value="igvc2027",
             description="World file used for simulation (excluding the .sdf). It must be located in imprimis_hardware_platform/worlds",
         )
     )
@@ -95,7 +95,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_recoveries",
-            default_value="false",
+            default_value="true",
             description="Start the Nav2 behavior server so the robot can back up when it is stuck. Needs a nav2_params file with a behavior_server section (Course2027, FullFootprint).",
         )
     )
