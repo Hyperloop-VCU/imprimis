@@ -1,3 +1,4 @@
+
 # Overview
 This repository contains necessary software for Imprimis, a fully autonomous ground vehicle developed by the HyperRobotics VIP at VCU. The ROS packages inside imprimis_ws run on the robot's main PC to process sensor information, make autonomous decisions, and communicate with the robot's onboard microcontrollers. Firmware for our two ESP32 microcontrollers in EspFirmware handles hardware connectivity and control.
 [Diagrams](https://drive.google.com/file/d/14b34cyZjVn4FuwoEjJM1487I_e60O_WF/view)
@@ -94,7 +95,7 @@ You can launch the navigation system, localization system, and hardware with the
 
 To make the robot navigate in a straight line to a goal position, you can use the "2D goal pose" tool in rviz to place a goal coordinate relative to the robot's own coordinate frame.
 
-![navigation in rviz w/o perception](.images/navigation_no_perception_demo.mp4)
+https://github.com/user-attachments/assets/0435f58a-7122-4a1c-a720-1de0642d7887
 
 Notice that the robot doesn't know where any obstacles are - that's because we haven't run the perception system alongside it! We have another launch file to do exactly that, detailed in the next section.
 
@@ -107,8 +108,7 @@ This launch file starts both navigation and perception, as well as a custom GUI 
 
 You can also give it goals manually using rviz, exactly as you did before.
 
-![navigation in rviz w/ perception](.images/navigation_perception_demo.mp4)
-![giving preset goals using the GUI](.images/gui_demo.mp4)
+https://github.com/user-attachments/assets/4d3bf97f-8e09-4ef9-b4c0-e6f08b94e38c
 
 # Launch Files
 As you have seen in previous sections, we use ROS2 python launch files to handle robot startup. It is a hierarchical process:
