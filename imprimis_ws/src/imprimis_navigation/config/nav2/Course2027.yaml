@@ -60,7 +60,7 @@ planner_server:
       analytic_expansion_max_cost: 100.0  #  The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
       analytic_expansion_max_cost_override: True  #  (Prev false)Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
       minimum_turning_radius: 0.5      # COURSE: 1.0 was too wide for No Man's Land. CHANGED from 0.2. Keeps the tail inside the wheel track. The IGVC course radius is 1.52 m or more.
-      reverse_penalty: 2.5             # Penalty to apply if motion is reversing, must be => 1
+      reverse_penalty: 5.0             # Penalty to apply if motion is reversing, must be => 1
       change_penalty: 2.5                 # (Previously 0.0) Penalty to apply if motion is changing directions (L to R), must be >= 0
       non_straight_penalty: 2.0          # Penalty to apply if motion is non-straight, must be => 1
       cost_penalty: 3.5              # (Previously 5.0) Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
@@ -287,6 +287,12 @@ global_costmap:
           obstacle_max_range: 6.0
           obstacle_min_range: 0.0
 
+      #wall_layer:
+      #  plugin: "costmap_wall::WallLayer"
+      #  wall_relative_to: "base_link"
+      #  y_offset: -5.0
+      #  wall_length: 4.0
+      #  cost_value: 254 # lethal obstacle
 
       # Add a "danger zone" around obstacles
       inflation_layer:

@@ -229,7 +229,7 @@ def generate_launch_description():
         }, {"use_sim_time": False}],
         namespace="gps"
     )
-
+    """
     camera_launch_include = GroupAction(
         [
             IncludeLaunchDescription(
@@ -240,7 +240,7 @@ def generate_launch_description():
         forwarding=False,
         condition=IfCondition(use_cams),
     )
-
+    """
 
     # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
@@ -284,7 +284,7 @@ def generate_launch_description():
         gps_nmea_driver,
         velodyne_driver_node,
         velodyne_transform_node,
-        camera_launch_include,
+        #camera_launch_include,
         controller_input_launch_include,
         lidar_delay_fixer,
         rviz_node,

@@ -1,0 +1,8 @@
+<library path="costmap_wall">
+  <class type="costmap_wall::WallLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>
+      Stamps a straight line of fixed cost at a fixed pose relative to a robot frame,
+      so it translates and rotates with that frame.
+    </description>
+  </class>
+</library>
