@@ -1,109 +1,165 @@
 
-// This is the firmware for ESP32 board "A" connected to the PC.
-
 #include <esp_now.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include <atomic>
 #include <esp_wifi.h>
 #include "../../common/config.h"
-//#include <PS4Controller.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
+// screen config
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// visualization: plot size
+#define PLOT_X_END 110
+#define PLOT_Y_END 62
+#define PLOT_X_START 18
+#define PLOT_Y_START 10
+
+// visualization: connection / average report positions
+#define AVG_REPORT_YOFF 5
+
+// visualization: plot size
+#define PLOT_X_END 110
+#define PLOT_Y_END 62
+#define PLOT_X_START 18
+#define PLOT_Y_START 10
+
+// visualization: y-axis ticks, labels, and scaling
+#define PLOT_YLIMIT_MS 30
+#define PLOT_NUM_TICKS 2
+#define PLOT_TICK_LABEL_XOFF 15
+
+// visualization: x-axis scaling
+#define PLOT_XAXIS_NUM_DATAPOINTS 20
+#define PLOT_XAXIS_TIME_BETWEEN_POINTS_MS 100
+
+// pins
+#define SCL 12
+#define SDA 14
+#define VRX 27
+#define VRY 26
+
+// display stuff
+float plotBuffer[PLOT_XAXIS_NUM_DATAPOINTS + 1];
+float* startPtr = plotBuffer;
+float* endPtr = startPtr;
+
+// struct telling us who board B is
 esp_now_peer_info_t peerInfo;
 
-// Shared between tasks
+// variables updated when wifi callbacks run
 std::atomic<bool> boardBConnected{};
-std::atomic<bool> manualEnabled{true};
 std::atomic<float> leftAngvel{};
 std::atomic<float> rightAngvel{};
-std::atomic<float> espnow_latency{};
+std::atomic<float> avgLatency{};
 
-float serial_parse_latency = 0.0;
+// ----------------------------------
 
-
-// Utilities
-inline void serialReadFloat(float& f)
+void receive_data_cb(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
-  while (!Serial.available());
-  f = Serial.parseFloat();
-}
-inline void serialReadInt(int& i)
-{
-  while (!Serial.available());
-  i = Serial.parseInt();
-}
-
-// Receive data callback: runs whenever B sends wheel angvels to A
-void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len) 
-{
-  boardBConnected = true; // assume we will always be able to send data if we can receive it
-  // copy recieved bytes into the struct so we can access/modify the data
+  boardBConnected = true;
   struct AtoBPacket received_data;
-  if (len != sizeof(AtoBPacket)) return;
+  if (len != sizeof(AtoBPacket)) {
+    return;
+  }
   memcpy(&received_data, incomingData, sizeof(AtoBPacket));
-
-  // update atomics
   leftAngvel = received_data.setLeftAngvel;
   rightAngvel = received_data.setRightAngvel;
-  espnow_latency = (float)((int32_t)esp_timer_get_time() - received_data.t_sent) / 1000;
-
-  //float lt = espnow_latency;
-  //Serial.printf("%f\n", lt);
-
+  //espnowLatency = (float)((int32_t)esp_timer_get_time() - received_data.t_sent) / 1000;
 }
 
-// Send data callback: runs whenever A sends commands/setpoints to B
-void sendDataCB(const uint8_t *mac_addr, esp_now_send_status_t status)
+void send_data_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
   if (status != ESP_NOW_SEND_SUCCESS) boardBConnected = false;
   else boardBConnected = true;
 }
 
+// ----------------------------------
 
-// Updates the data to send based on the command sent and prints data to serial.
-// Does nothing if there is an invalid command or no command.
-// Returns true if a valid command was received, false otherwise.
-bool handle_ROS_command(struct AtoBPacket& dataToSend) 
-{
-  if (!Serial.available()) return false;
+int get_normalized_joy_x() {
 
-  int64_t time_of_last_command_receive = esp_timer_get_time();
-  char chr = Serial.read();
-  switch(chr) {
-    case ANGVEL_SETPOINT:
-      serialReadFloat(dataToSend.setLeftAngvel);
-      serialReadFloat(dataToSend.setRightAngvel);
-      break;
-    case RESET_ENCODERS:
-      break;
-    default:
-      return false;
-  }
-
-  float leftAngvel_tmp = leftAngvel;
-  float rightAngvel_tmp = rightAngvel;
-  bool boardBConnected_tmp = boardBConnected;
-  float latency_tmp = espnow_latency;
-  bool openLoop_tmp = manualEnabled;
-  
-  Serial.printf(
-    "@%.2f %.2f %.2f %.2f %d %d\n", 
-    leftAngvel_tmp, 
-    rightAngvel_tmp,
-    latency_tmp / 2,
-    serial_parse_latency,
-    openLoop_tmp,
-    boardBConnected_tmp
-  );
-
-  serial_parse_latency = (float)(esp_timer_get_time() - time_of_last_command_receive) / 1000;
-  return true;
+  return analogRead(VRX);
 }
 
+int get_normalized_joy_y() {
+  return analogRead(VRY);
+}
+
+// ----------------------------------
+
+void draw_plot_axes_lines_and_ticks() {
+  display.drawLine(
+    PLOT_X_START, PLOT_Y_START, 
+    PLOT_X_START, PLOT_Y_END, 
+    WHITE
+  );
+  display.drawLine(
+    PLOT_X_START, PLOT_Y_END, 
+    PLOT_X_END, PLOT_Y_END, 
+    WHITE
+  );
+  int pixelTickInterval = (int)round((PLOT_Y_END - PLOT_Y_START) / PLOT_NUM_TICKS);
+
+  for (int i = 1; i <= PLOT_NUM_TICKS; i++) {
+    int tickY = PLOT_Y_END - i * pixelTickInterval;
+    display.setCursor(PLOT_X_START - PLOT_TICK_LABEL_XOFF, tickY);
+    int msValue = (int)round(PLOT_YLIMIT_MS * i / PLOT_NUM_TICKS);
+    display.printf("%d", msValue);
+  }
+}
+
+void draw_avg_report(int val) {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(
+    (PLOT_X_END - PLOT_X_START) / 2, 
+    PLOT_Y_START - AVG_REPORT_YOFF
+  );
+  float tempLatency = avgLatency;
+  if (!boardBConnected) {
+    display.printf("Average latency: %.2fms", val);
+  }
+  else {
+    display.printf("NOT CONNECTED");
+  }
+}
+
+// -----------------------
+
+void draw_plot_curve() {
+  if (!boardBConnected) {
+    // zero buffer
+    return;
+  }
+
+  return;
+}
+
+// -----------------------
 
 void setup() 
-{  
-  Serial.begin(SERIAL_BAUD_RATE_A); // PC connection
+{
+  // joystick pins
+  pinMode(VRX, INPUT);
+  pinMode(VRY, INPUT);
+  
+  // SSD1306 Display
+  Wire.begin(SDA, SCL);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c)) {
+    while (1) {
+      delay(1000);
+    }
+  }
+  display.setRotation(0);
+  display.clearDisplay();
+  draw_avg_report(0);
+  draw_plot_axes_lines_and_ticks();
+  display.display();
 
   // ESP-NOW
   WiFi.mode(WIFI_STA);
@@ -113,63 +169,28 @@ void setup()
   esp_now_init();
   memcpy(peerInfo.peer_addr, B_MAC, 6);
   peerInfo.channel = 0;  
-  //peerInfo.encrypt = true;
-  //esp_now_set_pmk((uint8_t *)PMK);
-  //for (uint8_t i = 0; i < 16; i++) peerInfo.lmk[i] = LMK[i];
   esp_now_add_peer(&peerInfo);
-  esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
-  esp_now_register_send_cb(esp_now_send_cb_t(sendDataCB));
-
-  // ps4
-  //PS4.begin();
+  esp_now_register_recv_cb(esp_now_recv_cb_t(receive_data_cb));
+  esp_now_register_send_cb(esp_now_send_cb_t(send_data_cb));
 }
 
 
 void loop() 
 {
-  manualEnabled = false;
 
-  /* handle status lights
-  if (manualEnabled) {
-    digitalWrite(YELLOW_LIGHT, HIGH);
-    status_YellowLightOn = true;
-  }
-  else if ((millis() - status_YellowLastSwitched) > YELLOW_SWITCH_PERIOD_MS) {
-    status_YellowLightOn = !status_YellowLightOn;
-    digitalWrite(YELLOW_LIGHT, (status_YellowLightOn ? HIGH : LOW));
-    status_YellowLastSwitched = millis();
-  }
-  
-  digitalWrite(GREEN_LIGHT, (boardBConnected ? HIGH : LOW));
-  */
-
-  // Main board A logic
-  // If a ROS command was received, send data back to ROS, regardless of mode
-  // If manual, send command to board B regardless of what ROS is doing
-  // If autonomous, send command to board B only if ROS sent one
+  // read stick and send command to B
   struct AtoBPacket dataToSend{};
-  
-  bool command_received = handle_ROS_command(dataToSend);
+  float manualXInput = get_normalized_joy_x();
+  float manualYInput = get_normalized_joy_y();
+  dataToSend.setLeftAngvel = manualYInput + manualXInput;
+  dataToSend.setRightAngvel = manualYInput - manualXInput;
+  dataToSend.t_sent = (int32_t)esp_timer_get_time();
+  esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
 
-  if (!manualEnabled && command_received) {
-    dataToSend.t_sent = (int32_t)esp_timer_get_time();
-    esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
-  }
-
-  /*
-  else if (manualEnabled) {
-    float manualXInput = 0.0;
-    float manualYInput = 0.0;
-    if (PS4.isConnected()) {
-      manualXInput = (PS4.RStickX() - 0.0) / 127.0;
-      manualYInput = (PS4.RStickY() - 0.0) / 127.0;
-    }
-
-    dataToSend.setLeftAngvel = manualYInput + manualXInput;
-    dataToSend.setRightAngvel = manualYInput - manualXInput;
-
-    dataToSend.t_sent = esp_timer_get_time();
-    esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
-  }
-  */
+  // update display
+  display.clearDisplay();
+  draw_plot_axes_lines_and_ticks();
+  draw_avg_report(manualXInput);
+  draw_plot_curve();
+  display.display();
 }
