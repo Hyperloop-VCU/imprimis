@@ -1,3 +1,9 @@
+'''
+This script will simulate a GPS by creating a single GGA message
+and publishing that to a ROS2 topic at a specificed rate.
+'''
+
+
 #!/usr/bin/env python3
 
 import argparse

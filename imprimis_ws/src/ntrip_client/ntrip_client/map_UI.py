@@ -1,3 +1,9 @@
+'''
+This script takes valid NMEA GGA Sentences from an input source
+and plots the GGA position on a map using Flask and Leaflet.js.
+'''
+
+
 #!/usr/bin/env python3
 
 from flask import Flask, jsonify, render_template_string
