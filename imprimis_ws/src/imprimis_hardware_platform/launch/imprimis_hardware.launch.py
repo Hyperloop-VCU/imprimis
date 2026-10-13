@@ -63,12 +63,22 @@ def generate_launch_description():
             description="Whether or not to start up the IMU driver.",
         )
     )
+
     declared_arguments.append(
         DeclareLaunchArgument(
             "ui_type",
             default_value="rviz",
             choices=("foxglove", "rviz", "none"),
             description="Use foxglove_bridge + (separate) foxglove studio, rosbridge + (separate) gps goal input + rviz, or no bridges / UIs.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_rtk",
+            default_value="false",
+            choices=("true", "false"),
+            description="Choose whether to use RTK-enabled GPS. Will launch the ntrip client and nmea driver. ",
         )
     )
     
@@ -79,6 +89,7 @@ def generate_launch_description():
     use_gps = LaunchConfiguration("use_gps")
     use_imu = LaunchConfiguration("use_imu")
     ui_type = LaunchConfiguration("ui_type")
+    use_rtk = LaunchConfiguration("use_rtk")
 
     # Get package directories from the workspace source folder
     # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
@@ -217,6 +228,8 @@ def generate_launch_description():
         ],
         condition=IfCondition(use_imu)
     )
+
+    #This may not be needed since the nmea navsat driver is invoked by the ntrip client.
     gps_nmea_driver = Node(
         package="nmea_navsat_driver",
         executable="nmea_serial_driver",
@@ -229,6 +242,25 @@ def generate_launch_description():
         }, {"use_sim_time": False}],
         namespace="gps"
     )
+
+    ntrip_client = Node(
+        package="ntrip_client",
+        executable="ntrip_node",
+        name="ntrip_client",
+        output="screen",
+        parameters=[{
+            'show_map': False,
+            'sim': False,
+            'debug': True,
+            'caster': "rtk.geodnet.com" ,
+            'port': 2101,
+            'mountpoint': "AUTO" ,
+            'baud_rate': 38400,
+            'gps_port': "/dev/ttyACM0",
+        }],
+        condition=IfCondition(use_rtk)
+    )
+
     """
     camera_launch_include = GroupAction(
         [

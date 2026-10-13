@@ -28,7 +28,6 @@ def generate_launch_description():
         show_map_arg,
 
         #Note the map only works with valid GGA sentences.
-        #The simulated GPS doesn't work btw. 
         Node(
             package='ntrip_client',
             executable='ntrip_node',

@@ -2,13 +2,17 @@
 
 '''
 This python script acts as an NTRIP client, connecting to an NTRIP caster and receiving RTCM data.
+
+The client will first connect to the GPS via serial port, then connect to the NTRIP Caster.
+It will forward GGA messages from the GPS to the caster, recieve RTCM datA, and send that back to the GPS via serial port.
+
+Additionally, the client will publish the GPS' GGA messages to a ROS2 topic called 'nmea_sentences' which is subscribed to
+by the nmea navsatdriver to convert those into NavSatFix messages which get published to /gps/fix
+
 The NTRIP Configuration section allows you to specify the connection details.
 Note that to login for some mountpoints you may need a username and password.
 
 While the details are defined below, it is also possible to override them using CLARGS.
-
-GPS serial lines are forwarded to the caster without filtering. Configure the
-GPS to output GGA if the caster requires GGA input.
 '''
 
 from ntrip_client.login_params import USERNAME_AUTH, PASSWORD_AUTH  #This stores credentials. Github doesn't like it when I upload 'secrets'
