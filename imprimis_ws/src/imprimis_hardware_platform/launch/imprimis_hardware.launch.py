@@ -250,7 +250,7 @@ def generate_launch_description():
         output="screen",
         parameters=[{
             'show_map': False,
-            'sim': False,
+            'sim': False, #The simulated_gps_node has not been run (to publish GGA) so this won't work
             'debug': True,
             'caster': "rtk.geodnet.com" ,
             'port': 2101,
@@ -314,6 +314,7 @@ def generate_launch_description():
         imu_driver,
         imu_calibrator,
         gps_nmea_driver,
+        ntrip_client,
         velodyne_driver_node,
         velodyne_transform_node,
         #camera_launch_include,

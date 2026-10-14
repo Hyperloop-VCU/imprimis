@@ -48,6 +48,7 @@
   <exec_depend>rosbridge_server</exec_depend>
   <exec_depend>rosbridge_suite</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
+  <exec_depend>ntrip_client</exec_depend>
 
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>controller_manager</test_depend>
