@@ -191,7 +191,7 @@ class NTRIPClient(Node):
 
         request = "\r\n".join(headers) + "\r\n\r\n"
 
-        if DEBUG:
+        if self.debug:
             self.get_logger().info("Sending NTRIP HTTP request.")
             self.get_logger().info(request)
 
@@ -217,11 +217,11 @@ class NTRIPClient(Node):
 
         header, separator, remaining = response.partition(b"\r\n\r\n")
 
-        
-        self.get_logger().info("Caster response:")
-        self.get_logger().info("--------------------------------")
-        self.get_logger().info(header.decode(errors="replace"))
-        self.get_logger().info("--------------------------------")
+        if self.debug:
+            self.get_logger().info("Caster response:")
+            self.get_logger().info("--------------------------------")
+            self.get_logger().info(header.decode(errors="replace"))
+            self.get_logger().info("--------------------------------")
 
         # Check response
         first_line = header.split(b"\r\n")[0].decode(
@@ -255,7 +255,7 @@ class NTRIPClient(Node):
             try:
                 self.serial_port.write(data)
                 self.serial_port.flush()
-                if DEBUG:
+                if self.debug:
                     self.get_logger().info(f"[IMPORTANT] Sent RTCM bytes to GPS serial port: {len(data)}")
                 return
             except Exception as exc:
@@ -302,7 +302,7 @@ class NTRIPClient(Node):
             else ""
         )
         if not sentence_id.endswith("GGA"):
-            if DEBUG:
+            if self.debug:
                 self.get_logger().warning(
                     f"Ignoring non-GGA sentence: {sentence_id}"
                 )
@@ -343,7 +343,7 @@ class NTRIPClient(Node):
 
                 gga_data = self.latest_gga.encode("ascii")
                 self.sock.sendall(gga_data)
-                if DEBUG:
+                if self.debug:
                     self.get_logger().info(
                         f"Sent latest GGA to NTRIP caster: {len(gga_data)} bytes"
                     )
@@ -359,8 +359,8 @@ class NTRIPClient(Node):
                     self.get_logger().warn("Caster closed the connection.")
                     self.close()
                     return
-
-                self.get_logger().info(f"Received RTCM bytes: {len(data)}")
+                if self.debug:
+                    self.get_logger().info(f"Received RTCM bytes: {len(data)}")
                 self.process_data(data)
 
         except KeyboardInterrupt:

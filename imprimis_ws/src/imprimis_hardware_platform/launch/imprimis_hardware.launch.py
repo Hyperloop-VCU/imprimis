@@ -78,7 +78,7 @@ def generate_launch_description():
             "use_rtk",
             default_value="false",
             choices=("true", "false"),
-            description="Choose whether to use RTK-enabled GPS. Will launch the ntrip client and nmea driver. ",
+            description="Choose whether to use RTK-enabled GPS.",
         )
     )
     
@@ -229,50 +229,13 @@ def generate_launch_description():
         condition=IfCondition(use_imu)
     )
 
-    #This may not be needed since the nmea navsat driver is invoked by the ntrip client.
-    gps_nmea_driver = Node(
-        package="nmea_navsat_driver",
-        executable="nmea_serial_driver",
-        condition=IfCondition(use_gps),
-        arguments=["--ros-args", "--log-level", "warn"],
-        parameters=[{
-            'port': '/dev/ttyACM0',
-            'baud': 9600,
-            'frame_id': 'gps_link'
-        }, {"use_sim_time": False}],
-        namespace="gps"
+    ntrip_launch_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('ntrip_client'), 'launch', 'ntrip.launch.py'])]),
+        launch_arguments={
+            'use_rtk': use_rtk,
+        }.items(),
+        condition=IfCondition(use_gps)
     )
-
-    ntrip_client = Node(
-        package="ntrip_client",
-        executable="ntrip_node",
-        name="ntrip_client",
-        output="screen",
-        parameters=[{
-            'show_map': False,
-            'sim': False, #The simulated_gps_node has not been run (to publish GGA) so this won't work
-            'debug': True,
-            'caster': "rtk.geodnet.com" ,
-            'port': 2101,
-            'mountpoint': "AUTO" ,
-            'baud_rate': 38400,
-            'gps_port': "/dev/ttyACM0",
-        }],
-        condition=IfCondition(use_rtk)
-    )
-
-    """
-    camera_launch_include = GroupAction(
-        [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('utils'), 'launch', 'multicam_test.launch.py'])]),
-            )
-        ],
-        scoped=True,
-        forwarding=False,
-        condition=IfCondition(use_cams),
-    )
-    """
 
     # Controller input
     controller_input_launch_include = IncludeLaunchDescription(
@@ -313,11 +276,9 @@ def generate_launch_description():
         # Not always
         imu_driver,
         imu_calibrator,
-        gps_nmea_driver,
-        ntrip_client,
+        ntrip_launch_include,
         velodyne_driver_node,
         velodyne_transform_node,
-        #camera_launch_include,
         controller_input_launch_include,
         lidar_delay_fixer,
         rviz_node,
