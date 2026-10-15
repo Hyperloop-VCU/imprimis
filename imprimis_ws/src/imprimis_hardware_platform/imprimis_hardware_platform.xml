@@ -1,9 +1,0 @@
-<library path="imprimis_hardware_platform">
-  <class name="imprimis_hardware_platform/DiffBotSystemHardware"
-         type="imprimis_hardware_platform::DiffBotSystemHardware"
-         base_class_type="hardware_interface::SystemInterface">
-    <description>
-      This is imprimis's custom hardware interface.
-    </description>
-  </class>
-</library>
