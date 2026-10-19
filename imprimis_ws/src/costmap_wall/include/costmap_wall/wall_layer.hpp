@@ -13,12 +13,15 @@ namespace costmap_wall
 
 /**
  * @class WallLayer
- * @brief Stamps a straight line of fixed cost at a fixed pose relative to a robot frame.
+ * @brief Drops a straight line of fixed cost behind the robot once, at startup, and leaves
+ * it there forever.
  *
- * The line is perpendicular to the frame's forward (+x) axis and sits y_offset metres
- * along it, so a negative y_offset puts the wall behind the robot. It is re-projected
- * into the costmap's global frame on every update, so it translates and rotates with
- * the frame.
+ * On the first cycle a transform from wall_relative_to to map_frame is available, the layer
+ * computes the wall's endpoints in map_frame and locks them in: wall_relative_to is never
+ * consulted again, and the robot driving away does not move the wall. Because the costmap's
+ * own global frame (e.g. a rolling local costmap's "odom") can drift relative to map_frame,
+ * the locked endpoints are re-projected into the costmap's global frame on every cycle so the
+ * wall still lines up with the map after a localization correction.
  */
 class WallLayer : public nav2_costmap_2d::Layer
 {
@@ -44,18 +47,27 @@ private:
   /** @brief Warn once if the wall cannot fit inside the costmap. */
   void checkCostmapBounds();
 
+  /** @brief Try to lock the wall's pose into map_frame_. No-op once locked_ is true. */
+  void tryLockWall();
+
   std::string wall_relative_to_;
+  std::string map_frame_;
   double y_offset_{-1.0};
   double wall_length_{4.0};
   unsigned char cost_value_{nav2_costmap_2d::LETHAL_OBSTACLE};
 
-  // Wall endpoints in the costmap's global frame, refreshed by updateBounds().
+  // The wall's endpoints in map_frame_, set once by tryLockWall() and never touched again.
+  bool locked_{false};
+  double map_wall_x0_{0.0}, map_wall_y0_{0.0}, map_wall_x1_{0.0}, map_wall_y1_{0.0};
+
+  // Wall endpoints re-projected into the costmap's current global frame, refreshed every
+  // updateBounds() call from the locked map_frame_ pose above.
   double wall_x0_{0.0}, wall_y0_{0.0}, wall_x1_{0.0}, wall_y1_{0.0};
   bool wall_valid_{false};
 
   // Bounding box reported last cycle. LayeredCostmap only clears the region the layers
-  // ask for, so the previous wall has to stay inside the bounds or its cells linger
-  // in the master grid after the robot moves.
+  // ask for, so if the re-projected pose shifts slightly (global frame drifting against
+  // map_frame_), the previous footprint has to stay inside the bounds or its cells linger.
   double prev_min_x_{0.0}, prev_min_y_{0.0}, prev_max_x_{0.0}, prev_max_y_{0.0};
   bool has_prev_{false};
 

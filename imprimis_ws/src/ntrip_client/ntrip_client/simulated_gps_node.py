@@ -196,8 +196,15 @@ class SimulatedGPSNode(Node):
             f"$GPGGA,{utc_time},"
             f"{lat_str},{lat_dir},"
             f"{lon_str},{lon_dir},"
-            "1,09,0.9,0.0,M,0.0,M,,"
+            "4,12,0,79,49.5,M,-35.0,M,1.0,"
         )
+
+#         sentence = (
+        #     f"$GPGGA,{utc_time},"
+        #     f"{lat_str},{lat_dir},"
+        #     f"{lon_str},{lon_dir},"
+        #     "1,09,0.9,0.0,M,0.0,M,,"
+        # )
 
         checksum = self._nmea_checksum(sentence[1:])
 

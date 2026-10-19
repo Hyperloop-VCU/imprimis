@@ -221,7 +221,7 @@ controller_server:
 global_costmap:
   global_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "wall_layer", "inflation_layer"]
       height: 100
       width: 100
       origin_x: -50.0
@@ -244,7 +244,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+        observation_sources: velodyne_data #lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 1.8
         min_obstacle_height: 0.3
         velodyne_data:
@@ -287,12 +287,12 @@ global_costmap:
           obstacle_max_range: 6.0
           obstacle_min_range: 0.0
 
-      #wall_layer:
-      #  plugin: "costmap_wall::WallLayer"
-      #  wall_relative_to: "base_link"
-      #  y_offset: -5.0
-      #  wall_length: 4.0
-      #  cost_value: 254 # lethal obstacle
+      wall_layer:
+        plugin: "costmap_wall::WallLayer"
+        wall_relative_to: "base_link"
+        y_offset: -5.0
+        wall_length: 4.0
+        cost_value: 254 # lethal obstacle
 
       # Add a "danger zone" around obstacles
       inflation_layer:

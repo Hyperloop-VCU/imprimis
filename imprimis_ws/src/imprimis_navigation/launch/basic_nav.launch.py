@@ -99,6 +99,14 @@ def generate_launch_description():
             description="Start the Nav2 behavior server so the robot can back up when it is stuck. Needs a nav2_params file with a behavior_server section (Course2027, FullFootprint).",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_rtk",
+            default_value="true",
+            description="If using the GPS, whether or not to use RTK corrections. Requires an internet connection.",
+        )
+    )
+
     
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
@@ -110,6 +118,7 @@ def generate_launch_description():
     show_sim = LaunchConfiguration("show_sim")
     ui_type = LaunchConfiguration("ui_type")
     use_lidar = LaunchConfiguration("use_lidar")
+    use_rtk = LaunchConfiguration("use_rtk")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
     # hardware and localization (real or simulated)
@@ -127,7 +136,8 @@ def generate_launch_description():
             ]),
             "show_sim": show_sim,
             "ui_type": ui_type,
-            'use_lidar': use_lidar
+            'use_lidar': use_lidar,
+            'use_rtk': use_rtk
         }.items(),
     )
 

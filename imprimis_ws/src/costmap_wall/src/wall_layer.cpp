@@ -18,6 +18,7 @@ void WallLayer::onInitialize()
 {
   declareParameter("enabled", rclcpp::ParameterValue(true));
   declareParameter("wall_relative_to", rclcpp::ParameterValue(std::string("base_link")));
+  declareParameter("map_frame", rclcpp::ParameterValue(std::string("map")));
   declareParameter("y_offset", rclcpp::ParameterValue(-1.0));
   declareParameter("wall_length", rclcpp::ParameterValue(4.0));
   declareParameter("cost_value", rclcpp::ParameterValue(254));
@@ -29,6 +30,7 @@ void WallLayer::onInitialize()
 
   node->get_parameter(name_ + "." + "enabled", enabled_);
   node->get_parameter(name_ + "." + "wall_relative_to", wall_relative_to_);
+  node->get_parameter(name_ + "." + "map_frame", map_frame_);
   node->get_parameter(name_ + "." + "y_offset", y_offset_);
   node->get_parameter(name_ + "." + "wall_length", wall_length_);
 
@@ -52,8 +54,10 @@ void WallLayer::onInitialize()
 
   RCLCPP_INFO(
     logger_,
-    "costmap_wall::WallLayer (%s): %.2f m wall at %.2f m along the +x axis of '%s', cost %d.",
-    name_.c_str(), wall_length_, y_offset_, wall_relative_to_.c_str(), cost_value);
+    "costmap_wall::WallLayer (%s): will drop a %.2f m wall %.2f m along the +x axis of '%s' "
+    "once, locked into '%s', cost %d.",
+    name_.c_str(), wall_length_, y_offset_, wall_relative_to_.c_str(), map_frame_.c_str(),
+    cost_value);
 
   current_ = true;
   checkCostmapBounds();
@@ -89,38 +93,21 @@ void WallLayer::checkCostmapBounds()
   }
 }
 
-void WallLayer::updateBounds(
-  double /*robot_x*/, double /*robot_y*/, double /*robot_yaw*/,
-  double * min_x, double * min_y, double * max_x, double * max_y)
+void WallLayer::tryLockWall()
 {
-  checkCostmapBounds();
-
-  // Always re-expose last cycle's footprint so those cells get cleared, even if the
-  // wall is disabled or the transform is missing this time around.
-  if (has_prev_) {
-    *min_x = std::min(*min_x, prev_min_x_);
-    *min_y = std::min(*min_y, prev_min_y_);
-    *max_x = std::max(*max_x, prev_max_x_);
-    *max_y = std::max(*max_y, prev_max_y_);
-    has_prev_ = false;
-  }
-
-  wall_valid_ = false;
-  if (!enabled_ || wall_length_ <= 0.0) {
+  if (locked_ || !enabled_ || wall_length_ <= 0.0) {
     return;
   }
 
-  const std::string global_frame = layered_costmap_->getGlobalFrameID();
-
   geometry_msgs::msg::TransformStamped tf;
   try {
-    tf = tf_->lookupTransform(global_frame, wall_relative_to_, tf2::TimePointZero);
+    tf = tf_->lookupTransform(map_frame_, wall_relative_to_, tf2::TimePointZero);
   } catch (const tf2::TransformException & ex) {
     RCLCPP_WARN_THROTTLE(
       logger_, *clock_, 2000,
-      "costmap_wall::WallLayer (%s): no transform from '%s' to '%s': %s",
-      name_.c_str(), wall_relative_to_.c_str(), global_frame.c_str(), ex.what());
-    current_ = false;
+      "costmap_wall::WallLayer (%s): waiting for a transform from '%s' to '%s' to drop the "
+      "wall: %s",
+      name_.c_str(), wall_relative_to_.c_str(), map_frame_.c_str(), ex.what());
     return;
   }
 
@@ -133,10 +120,78 @@ void WallLayer::updateBounds(
 
   // Endpoints in the wall frame are (y_offset, -half) and (y_offset, +half): the wall runs
   // along the frame's y axis and is pushed y_offset along its x (forward) axis.
-  wall_x0_ = ox + c * y_offset_ - s * (-half);
-  wall_y0_ = oy + s * y_offset_ + c * (-half);
-  wall_x1_ = ox + c * y_offset_ - s * (half);
-  wall_y1_ = oy + s * y_offset_ + c * (half);
+  map_wall_x0_ = ox + c * y_offset_ - s * (-half);
+  map_wall_y0_ = oy + s * y_offset_ + c * (-half);
+  map_wall_x1_ = ox + c * y_offset_ - s * (half);
+  map_wall_y1_ = oy + s * y_offset_ + c * (half);
+  locked_ = true;
+
+  RCLCPP_INFO(
+    logger_,
+    "costmap_wall::WallLayer (%s): wall locked at (%.2f, %.2f) - (%.2f, %.2f) in '%s'. It will "
+    "not move again.",
+    name_.c_str(), map_wall_x0_, map_wall_y0_, map_wall_x1_, map_wall_y1_, map_frame_.c_str());
+}
+
+void WallLayer::updateBounds(
+  double /*robot_x*/, double /*robot_y*/, double /*robot_yaw*/,
+  double * min_x, double * min_y, double * max_x, double * max_y)
+{
+  checkCostmapBounds();
+  tryLockWall();
+
+  // Always re-expose last cycle's footprint so those cells get cleared, even if the
+  // wall is disabled or not locked down yet.
+  if (has_prev_) {
+    *min_x = std::min(*min_x, prev_min_x_);
+    *min_y = std::min(*min_y, prev_min_y_);
+    *max_x = std::max(*max_x, prev_max_x_);
+    *max_y = std::max(*max_y, prev_max_y_);
+    has_prev_ = false;
+  }
+
+  wall_valid_ = false;
+  if (!enabled_ || !locked_) {
+    return;
+  }
+
+  const std::string global_frame = layered_costmap_->getGlobalFrameID();
+
+  if (global_frame == map_frame_) {
+    // No re-projection needed: the costmap's own frame is the one the wall is locked into.
+    wall_x0_ = map_wall_x0_;
+    wall_y0_ = map_wall_y0_;
+    wall_x1_ = map_wall_x1_;
+    wall_y1_ = map_wall_y1_;
+  } else {
+    // The costmap tracks some other frame (e.g. a rolling local costmap using "odom"), which
+    // can drift relative to map_frame_ as localization corrects itself. Re-project the locked,
+    // never-changing map_frame_ pose into that frame every cycle so the wall stays put in the
+    // map even as the drift between the two frames changes.
+    geometry_msgs::msg::TransformStamped tf;
+    try {
+      tf = tf_->lookupTransform(global_frame, map_frame_, tf2::TimePointZero);
+    } catch (const tf2::TransformException & ex) {
+      RCLCPP_WARN_THROTTLE(
+        logger_, *clock_, 2000,
+        "costmap_wall::WallLayer (%s): no transform from '%s' to '%s': %s",
+        name_.c_str(), map_frame_.c_str(), global_frame.c_str(), ex.what());
+      current_ = false;
+      return;
+    }
+
+    const double ox = tf.transform.translation.x;
+    const double oy = tf.transform.translation.y;
+    const double yaw = tf2::getYaw(tf.transform.rotation);
+    const double c = std::cos(yaw);
+    const double s = std::sin(yaw);
+
+    wall_x0_ = ox + c * map_wall_x0_ - s * map_wall_y0_;
+    wall_y0_ = oy + s * map_wall_x0_ + c * map_wall_y0_;
+    wall_x1_ = ox + c * map_wall_x1_ - s * map_wall_y1_;
+    wall_y1_ = oy + s * map_wall_x1_ + c * map_wall_y1_;
+  }
+
   wall_valid_ = true;
 
   prev_min_x_ = std::min(wall_x0_, wall_x1_);
@@ -190,7 +245,8 @@ void WallLayer::updateCosts(
 
 void WallLayer::reset()
 {
-  wall_valid_ = false;
+  // The wall is locked forever once dropped: a costmap reset (e.g. clear_costmap on another
+  // layer, or deactivate/activate) must not make it move or disappear.
   current_ = false;
 }
 

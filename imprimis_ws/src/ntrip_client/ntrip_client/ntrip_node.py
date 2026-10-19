@@ -35,7 +35,7 @@ DEBUG = False
 
 # ==============================
 # GPS/NTRIP CONFIGURATION
-RATE = 1.0  # Exchanges GPS data and correction data at this interval.
+RATE = 1/5.0  # Exchanges GPS data and correction data at this interval.
 SOCKET_TIMEOUT = 1
 # ==============================
 

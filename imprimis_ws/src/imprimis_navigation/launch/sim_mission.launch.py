@@ -41,7 +41,6 @@ def generate_launch_description():
             "nav2_params": LaunchConfiguration("nav2_params"),
             "show_sim": LaunchConfiguration("show_sim"),
             "ui_type": LaunchConfiguration("ui_type"),
-            "use_cams": "true",
             "use_recoveries": "true",
         }.items(),
     )
