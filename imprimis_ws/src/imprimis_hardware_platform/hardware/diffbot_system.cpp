@@ -225,11 +225,11 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   hw_positions_[1] += period.seconds() * hw_velocities_[1];
 
   // Print wheel states if needed
-  if (PRINT_READ_STATES) {
+  if (1) {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2);
     ss << "Left angvel: " << leftAngvel << "  |  Right angvel: " << rightAngvel << '\n';
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 400, "%s", ss.str().c_str()); 
+    RCLCPP_INFO(get_logger(), "%s", ss.str().c_str()); 
   }
 
   return hardware_interface::return_type::OK;

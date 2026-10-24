@@ -112,7 +112,7 @@ controller_server:
       # overall
       time_steps: 20 # default 56
       model_dt: 0.1 # default 0.05
-      batch_size: 40000 # default 2000
+      batch_size: 20000
       iteration_count: 1
       temperature: 0.3 # default 0.3
       gamma: 0.015 # default 0.015
@@ -121,7 +121,7 @@ controller_server:
 
       # linear
       vx_std: 0.4
-      vx_max: 2.2 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
+      vx_max: 0.5 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
       vx_min: -0.35 # REVERSE: was 0.0 ("must not drive backwards"). Slow reverse lets the robot free itself; PreferForwardCritic keeps it driving forward otherwise.
       ax_max: 3.0
       ax_min: -3.0
@@ -188,7 +188,7 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 14.0
+        cost_weight: 1.0
         max_path_occupancy_ratio: 0.05
         trajectory_point_step: 4
         threshold_to_consider: 0.5
@@ -232,10 +232,10 @@ global_costmap:
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
-      resolution: 0.1
+      resolution: 0.025
 
       # CHANGED: the real outline instead of a 0.54 m circle around the drive axle
-      footprint_padding: 0.08 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
+      footprint_padding: 0.00 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
       footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
 
       track_unknown_space: false
@@ -248,7 +248,7 @@ global_costmap:
         max_obstacle_height: 1.8
         min_obstacle_height: 0.3
         velodyne_data:
-          topic: /velodyne_points_nav # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
+          topic: /velodyne_points # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
           clearing: False    
           marking: True
           data_type: "PointCloud2"
@@ -333,7 +333,7 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+        observation_sources: velodyne_data #lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 10.0
         min_obstacle_height: -10.0
         velodyne_data:

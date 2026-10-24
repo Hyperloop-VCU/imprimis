@@ -247,7 +247,7 @@ class LaneMapper(Node):
                                               self.ground_z, self.height_tolerance, self.max_range)
             cells = st.thin_structures(xy, x_range=(0.0, self.max_range + 0.5), max_width=self.max_width)
             zone = self.zone_in_base()
-            self.get_logger().info(f'mask px={int(np.count_nonzero(mask))}  ground pts={len(xy)}  thin={len(cells)}  zone={zone is not None}')
+            #self.get_logger().info(f'mask px={int(np.count_nonzero(mask))}  ground pts={len(xy)}  thin={len(cells)}  zone={zone is not None}')
             if len(cells):
                 cells = cells[st.points_outside_polygon(cells, zone)]
             if self.detect_potholes:

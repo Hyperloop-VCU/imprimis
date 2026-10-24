@@ -13,8 +13,7 @@ setup(
         ('share/' + package_name + '/launch', ['launch/basic_nav.launch.py']),
         ('share/' + package_name + '/launch', ['launch/localization.launch.py']),
         ('share/' + package_name + '/launch', ['launch/nav2_minimal_bringup.launch.py']),
-        ('share/' + package_name + '/launch', ['launch/robot_mission.launch.py']),
-        ('share/' + package_name + '/launch', ['launch/sim_mission.launch.py'])
+        ('share/' + package_name + '/launch', ['launch/nav_perception.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

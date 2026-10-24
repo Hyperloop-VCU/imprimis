@@ -103,7 +103,7 @@ def generate_launch_description():
     )
     declare_use_recoveries_cmd = DeclareLaunchArgument(
         'use_recoveries',
-        default_value='false',
+        default_value='true',
         description='Start the behavior server (back up, wait). The parameter file must then have a '
                     'behavior_server section and name a behavior tree that uses it, such as recovery_nav_bt.xml.',
     )

@@ -61,7 +61,7 @@ struct BtoAPacket
 
 #define PID_UPDATE_PERIOD_MS 5 // PID loop rate - changing this requires changing the PID gains
 #define TIMEOUT_MS 300 // If B doesn't receive data for this long, stop the robot
-#define DATA_SEND_RATE_MS 10 // How often to send wheel angvels from B to A
+#define DATA_SEND_RATE_MS 30 // How often to send wheel angvels from B to A
 
 #define LEFT_COUNTS_PER_REV 18575 // Encoder counts per wheel revolution for each wheel
 #define RIGHT_COUNTS_PER_REV 18575

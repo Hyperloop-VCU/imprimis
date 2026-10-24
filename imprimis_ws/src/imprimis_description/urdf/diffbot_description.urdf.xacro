@@ -30,6 +30,8 @@
 <!-- Top section width is the same as base_width -->
 <xacro:property name="top_section_height" value="0.279"/> <!-- 11.000" --> <!-- Top of middle plane to top of top plane-->
 
+<xacro:property name="lidar_scan_angle" value="0.05"/>
+
 <!-- TOTAL ROBOT HEIGHT: 1.1173 m-->
 <!-- Simulated caster wheels: two swivel casters at the rear corners, as on the real robot.
      Positions are from the SolidWorks assembly HyperLabs Robot(07-03-25). Each is a low-friction
@@ -343,7 +345,7 @@
 
 <!-- Lidar scan point joint -->
 <joint name="lidar_scan_joint" type="fixed" >
-  <origin xyz="0 0 0.0377" rpy="0 0 0" />
+  <origin xyz="0 0 0.0377" rpy="0 0 ${-lidar_scan_angle}" />
   <parent link="lidar_model_link" />
   <child link="velodyne"/>
 </joint>

@@ -4,7 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -29,19 +29,22 @@ def generate_launch_description():
         DeclareLaunchArgument("gui", default_value="true", choices=("true", "false")),
         DeclareLaunchArgument("autostart", default_value="false", choices=("true", "false")),
         DeclareLaunchArgument("exit_when_done", default_value="false", choices=("true", "false")),
-        DeclareLaunchArgument("top_speed", default_value="2.1", description="Speed on clear stretches, m/s. 2.1 is 4.7 mph; the IGVC limit of 5 mph is 2.235."),
+        DeclareLaunchArgument("top_speed", default_value="0.5", description="Speed on clear stretches, m/s. 2.1 is 4.7 mph; the IGVC limit of 5 mph is 2.235."),
+        DeclareLaunchArgument("hardware_type", default_value="real", description="Wheter to use real hardware or simulation w/ a control GUI."),
+        DeclareLaunchArgument("nav_mode", default_value="outdoor", description="Outdoor or indoor mode.")
     ]
     world = LaunchConfiguration("world")
 
     navigation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_navigation"), "launch", "basic_nav.launch.py"])]),
         launch_arguments={
-            "hardware_type": "simulated",
+            "hardware_type": LaunchConfiguration("hardware_type"),
             "world": world,
             "nav2_params": LaunchConfiguration("nav2_params"),
             "show_sim": LaunchConfiguration("show_sim"),
             "ui_type": LaunchConfiguration("ui_type"),
             "use_recoveries": "true",
+            "nav_mode": LaunchConfiguration("nav_mode")
         }.items(),
     )
 
@@ -66,7 +69,7 @@ def generate_launch_description():
                 executable="sim_control_gui",
                 output="screen",
                 parameters=[],
-                condition=IfCondition(LaunchConfiguration("gui")),
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration("hardware_type"), "' == 'simulated'"])),
             ),
         ]
 
