@@ -11,6 +11,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/lane_detection.launch.py',
+                                                'launch/lane_segmentation.launch.py',
+                                                'launch/lane_projection.launch.py',
                                                 'launch/course_perception.launch.py'])
     ],
     install_requires=['setuptools'],
@@ -21,7 +23,9 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            'lane_detection = imprimis_perception.lane_detection:main',
+            'lane_detection = imprimis_perception.segmentation:main',
+            'lane_segmentation = imprimis_perception.segmentation:main',
+            'lane_projection = imprimis_perception.lane_projection:main',
             'lane_mapper = imprimis_perception.lane_mapper:main',
             'ramp_detector = imprimis_perception.ramp_detector:main'
         ],

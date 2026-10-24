@@ -8,7 +8,9 @@
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
+  <depend>rcl_interfaces</depend>
   <depend>sensor_msgs</depend>
+  <depend>sensor_msgs_py</depend>
   <depend>cv_bridge</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
@@ -16,6 +18,8 @@
   <depend>realsense2_camera</depend>          <!-- the driver node + rs_launch.py -->
   <depend>realsense2_camera_msgs</depend>               <!-- Extrinsics, IMUInfo, Metadata, RGBD msgs -->
   <depend>realsense2_description</depend>     <!-- D435i/D455 URDF xacros, meshes -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

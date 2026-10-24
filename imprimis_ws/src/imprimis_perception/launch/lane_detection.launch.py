@@ -1,69 +1,63 @@
+"""Single-host four-camera bring-up/test of segmentation and projection.
+
+For cameras on multiple Pis, start lane_segmentation.launch.py once per camera
+and lane_projection.launch.py once on the receiving laptop. Start camera drivers
+and publish calibrated camera-to-base TF separately in either arrangement.
+"""
 from launch import LaunchDescription
-from launch.substitutions import PythonExpression
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction, SetEnvironmentVariable, GroupAction
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration, PythonExpression
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-import os
-from ament_index_python.packages import get_package_share_directory
-import yaml
+from launch_ros.parameter_descriptions import ParameterValue
+
+
+CAMERAS = ('d455', 'd435i', 'd435_1', 'd435_2')
+
 
 def generate_launch_description():
+    base_frame = LaunchConfiguration('base_frame')
+    process_rate = LaunchConfiguration('process_rate_hz')
+    publish_raw = LaunchConfiguration('publish_raw_mask')
+    processing_width = LaunchConfiguration('processing_width')
+    mask_topics = [f'perception/{name}/lane_mask' for name in CAMERAS]
+    camera_info_topics = [f'cameras/{name}/color/camera_info' for name in CAMERAS]
 
-    # Declare and initialize arguments
-    declared_arguments = []
-    """
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "name",
-            default_value="true",
-            choices=("true", "false"),
-            description="description",
-        )
-    )
-    
-    name = LaunchConfiguration("name")
-    """
+    segmentation_nodes = []
+    for name in CAMERAS:
+        segmentation_nodes.append(Node(
+            package='imprimis_perception',
+            executable='lane_segmentation',
+            name=f'lane_segmentation_{name}',
+            output='screen',
+            parameters=[{
+                'image_topic': f'cameras/{name}/color/image_raw',
+                'mask_topic': f'perception/{name}/lane_mask',
+                'raw_mask_topic': f'perception/{name}/lane_mask_raw',
+                'process_rate_hz': ParameterValue(process_rate, value_type=float),
+                'publish_raw_mask': ParameterValue(publish_raw, value_type=bool),
+                'processing_width': ParameterValue(processing_width, value_type=int),
+            }],
+        ))
 
-    # Camera driver
-    # The GroupAction with forwarding=False and scoped=True prevents the camera launch file from seeing this launch file's arguments.
-    # We don't want to tell the camera "publish_odom_tf=false".
-    cam_node = GroupAction(
-        [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
-                launch_arguments={
-                    'pointcloud.enable': 'true',
-                    #'diagnostics_period': '1.0',
-                    #'log_level': 'error',
-                    #'camera_namespace': 'cameras',
-                    #'camera_name': 'd455',
-                    #'serial_no': '_234322304110',
-                    #'device_type': 'd455'
-                }.items(),
-            )
-        ],
-        scoped=True,
-        forwarding=False,
-    )
-
-    lanedetection_node = Node(
-        package="imprimis_perception",
-        executable="lane_detection",
+    projection_node = Node(
+        package='imprimis_perception',
+        executable='lane_projection',
+        output='screen',
+        parameters=[{
+            'camera_names': list(CAMERAS),
+            'mask_topics': mask_topics,
+            'camera_info_topics': camera_info_topics,
+            'base_frame': base_frame,
+            'output_topic': 'perception/lane_points',
+        }],
     )
 
-    # ros2 run tf2_ros static_transform_publisher --x 0 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id front_link --child-frame-id camera_link
-    stp_node = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=["--frame-id", "front_link", "--child-frame-id", "camera_link", "--x", "0", "--y", "0", "--z", "0", "--roll", "0", "--pitch", "0", "--yaw", "0"],
-    )
-
-    return LaunchDescription(declared_arguments + [
-        cam_node,
-        lanedetection_node,
-        stp_node
+    return LaunchDescription([
+        DeclareLaunchArgument('base_frame', default_value='base_link'),
+        DeclareLaunchArgument('process_rate_hz', default_value='10.0'),
+        DeclareLaunchArgument('publish_raw_mask', default_value='false'),
+        DeclareLaunchArgument('processing_width', default_value='640',
+                              description='Maximum mask width; zero keeps native resolution.'),
+        *segmentation_nodes,
+        projection_node,
     ])
