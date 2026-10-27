@@ -9,6 +9,8 @@ from std_msgs.msg import Header
 from sensor_msgs_py import point_cloud2
 import math
 
+from imprimis_perception import surface_tools as st
+
 
 class LaneDetection(Node):
     def __init__(self):
@@ -37,6 +39,7 @@ class LaneDetection(Node):
         self.min_area = self.get_parameter('min_area').value
         self.max_area = self.get_parameter('max_area').value
         self.kernel = np.ones((3, 3), np.uint8)
+        self.max_range = 4.0 #meters, forward limit shared by recompute() and raycast()
         
         
         self.bridge = CvBridge() #converts Ros message into OpenCv numpy matrix
@@ -137,9 +140,7 @@ class LaneDetection(Node):
             return #need to have intrinsics before we can really do much
 
         now = self.get_clock().now()
-        self.raw_mask_pub.publish(self.raw_msg)
-        
-        
+
         elapsed = (now - self.last_process_time).nanoseconds / 1e9
         if elapsed < self.process_period:
             return
@@ -156,7 +157,7 @@ class LaneDetection(Node):
             self.raw_mask_pub.publish(self.maskBridge.cv2_to_imgmsg(self.raw_mask,encoding='mono8'))
         
         lane_points = self.raycast(self.mask)
-        self.publishPointCloud(lane_points)
+        self.publishPointCloud(lane_points, msg.header.stamp)
         #self.get_logger().info(f'LanePoints: {lane_points}')
         self.get_logger().info(f'Lane pixels detected: {lane_pixel_count}', throttle_duration_sec=1.0)# for testing
 
@@ -201,7 +202,7 @@ class LaneDetection(Node):
         xg = self.Xg[hits]                  # ground distance to the right
         xy = np.column_stack((zg, -xg))     # top view: x forward, y left
 
-        cells = thin_structures(xy, cell=0.05, x_range=(0.0, 4.0), half_width=3.5, max_width=0.45)
+        cells = st.thin_structures(xy, cell=0.05, x_range=(0.0, self.max_range), half_width=3.5, max_width=0.45)
         if len(cells) == 0:
             return []
 
@@ -214,7 +215,7 @@ class LaneDetection(Node):
 
         return np.column_stack((xg, y_cam, z_cam)).astype(np.float32).tolist()
 
-    def publishPointCloud(self, lane_points):
+    def publishPointCloud(self, lane_points, stamp):
         fields = [
             PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
@@ -222,7 +223,7 @@ class LaneDetection(Node):
             ]
         header = Header()
         header.frame_id = self.frame_id
-        header.stamp = self.get_clock().now().to_msg()
+        header.stamp = stamp
 
         cloud_msg = point_cloud2.create_cloud(header, fields, lane_points)
         self.lane_pointcloud.publish(cloud_msg)        
@@ -240,7 +241,7 @@ class LaneDetection(Node):
         th = math.radians(self.theta)
 
         # ground grid for inverse mapping 
-        z_max = min(self.height * math.tan(th), 4.0)
+        z_max = min(self.height * math.tan(th), self.max_range)
         z_values = np.arange(0.5, z_max, 0.01)
         x_values = np.arange(-3.0, 3.0, 0.01)
         X, Z = np.meshgrid(x_values, z_values)
@@ -255,99 +256,8 @@ class LaneDetection(Node):
         
         self.u_valid = u[valid]
         self.v_valid = v[valid]
-        self.Xg = X[valid]   
-        self.Zg = Z[valid]   
-
-    def morphological_skeleton(image):
-        """Reduce every mark in a binary image to a line about one cell wide (its middle)."""
-        cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
-        skeleton = np.zeros_like(image)
-        work = image.copy()
-        for _ in range(64):
-            eroded = cv2.erode(work, cross)
-            opened = cv2.dilate(eroded, cross)
-            skeleton = cv2.bitwise_or(skeleton, cv2.subtract(work, opened))
-            work = eroded
-            if cv2.countNonZero(work) == 0:
-                break
-        return skeleton
-
-
-    def thin_structures(xy, cell=0.05, x_range=(0.0, 6.0), half_width=4.0, max_width=0.45, min_cells=5, skeleton=True):
-        """Keep only narrow marks, such as 4 inch tape, and drop wide white areas.
-
-        The points are drawn on a top-view grid. Anything that survives erosion by max_width is a wide
-        area; it is removed together with a border around it. Specks smaller than min_cells are removed
-        too. With skeleton set, each remaining mark is reduced to its middle line, so that tape seen in
-        many frames does not build up into a wide band in the cost map. Returns the centers of the
-        remaining cells.
-        """
-        if len(xy) == 0:
-            return np.zeros((0, 2))
-        nx = int(round((x_range[1] - x_range[0]) / cell))
-        ny = int(round(2 * half_width / cell))
-        ix = ((xy[:, 0] - x_range[0]) / cell).astype(int)
-        iy = ((xy[:, 1] + half_width) / cell).astype(int)
-        ok = (ix >= 0) & (ix < nx) & (iy >= 0) & (iy < ny)
-        grid = np.zeros((nx, ny), np.uint8)
-        grid[ix[ok], iy[ok]] = 255
-        closed = cv2.morphologyEx(grid, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
-        k = max(3, int(round(max_width / cell)))
-        wide = cv2.morphologyEx(closed, cv2.MORPH_OPEN, np.ones((k, k), np.uint8))
-        wide = cv2.dilate(wide, np.ones((k, k), np.uint8))
-        thin = cv2.bitwise_and(closed, cv2.bitwise_not(wide))
-        count, labels, stats, _ = cv2.connectedComponentsWithStats(thin, connectivity=8)
-        small = np.nonzero(stats[:, cv2.CC_STAT_AREA] < min_cells)[0]
-        if small.size:
-            thin[np.isin(labels, small)] = 0
-        if skeleton:
-            thin = morphological_skeleton(thin)
-        gx, gy = np.nonzero(thin)
-        return np.stack([x_range[0] + (gx + 0.5) * cell, -half_width + (gy + 0.5) * cell], axis=-1)
-
-
-    def find_white_discs(xy, cell=0.05, x_range=(0.0, 3.5), half_width=4.0, min_diameter=0.40, max_diameter=0.85,
-                        tape_width=0.30, min_fill=0.70, min_aspect=0.72, alone_margin=0.25):
-        """Painted potholes: round white areas on the ground. In the IGVC a pothole is a solid white circle 2 ft across.
-
-        xy are white pixels placed on the ground (from mask_to_ground_points, so things that stand up are
-        already gone). Lane tape is removed by an opening wider than the tape; what is left and is about
-        as long as it is wide, and filled, is a pothole. Returns a list of (x, y, diameter, cells), where
-        cells are the centers of the grid cells the pothole covers.
-
-        Three things keep lane tape from being taken for a pothole, which happened in a first version where
-        the tape curves or the robot stands close and askew to it. The shape must be nearly as wide as it is
-        long. Its size must be near that of the painted circle (0.61 m). And it must stand alone: the white
-        area it belongs to, before the tape was removed, may not reach more than alone_margin beyond it. A
-        piece of lane line always has more line attached. The price is that a pothole touching a lane line,
-        or one only half in view, is not reported until it is seen whole.
-        """
-        if cv2 is None or len(xy) == 0:
-            return []
-        grid = _top_view(xy, cell, x_range, half_width)
-        # far away the rows of pixels land more than a cell apart: close the gaps before judging the shape
-        closed = cv2.morphologyEx(grid, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
-        k = max(3, int(round(tape_width / cell)))
-        wide = cv2.morphologyEx(closed, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
-        found = []
-        count, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
-        for hx, hy, diameter, cells in _round_blobs(wide, cell, x_range, half_width, min_diameter, max_diameter, min_fill, min_aspect):
-            # the white area this blob was part of before the opening
-            ix = int((hx - x_range[0]) / cell)
-            iy = int((hy + half_width) / cell)
-            label = labels[min(max(ix, 0), labels.shape[0] - 1), min(max(iy, 0), labels.shape[1] - 1)]
-            if label == 0:
-                continue
-            whole = max(stats[label, cv2.CC_STAT_WIDTH], stats[label, cv2.CC_STAT_HEIGHT]) * cell
-            if whole > diameter + alone_margin:
-                continue                    # more white is attached: a lane line, not a pothole
-            # not cut off by the edge of what the camera can place on the ground
-            if hx + diameter / 2 > x_range[1] - cell or hx - diameter / 2 < x_range[0] + cell:
-                continue
-            found.append((hx, hy, diameter, cells))
-        return found
-
-
+        self.Xg = X[valid]
+        self.Zg = Z[valid]
 
 def main(args=None):
     rclpy.init(args=args)
