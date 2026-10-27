@@ -270,8 +270,11 @@ def thin_structures(xy, cell=0.05, x_range=(0.0, 6.0), half_width=4.0, max_width
     grid[ix[ok], iy[ok]] = 255
     closed = cv2.morphologyEx(grid, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
     k = max(3, int(round(max_width / cell)))
-    wide = cv2.morphologyEx(closed, cv2.MORPH_OPEN, np.ones((k, k), np.uint8))
-    wide = cv2.dilate(wide, np.ones((k, k), np.uint8))
+    # a round structuring element, not a square one, so a round blob (a pothole) erodes away
+    # cleanly instead of leaving thin crescent-shaped slivers near its curved edge
+    disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    wide = cv2.morphologyEx(closed, cv2.MORPH_OPEN, disc)
+    wide = cv2.dilate(wide, disc)
     thin = cv2.bitwise_and(closed, cv2.bitwise_not(wide))
     count, labels, stats, _ = cv2.connectedComponentsWithStats(thin, connectivity=8)
     small = np.nonzero(stats[:, cv2.CC_STAT_AREA] < min_cells)[0]
