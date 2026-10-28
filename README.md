@@ -101,7 +101,7 @@ Notice that the robot doesn't know where any obstacles are - that's because we h
 
 ## Navigation + perception system
 To launch the robot hardware, localization system, and perception/navigation system, run the following command:
-* ```ros2 launch imprimis_navigation sim_mission.launch.py```
+* ```ros2 launch imprimis_navigation nav_perception.launch.py hardware_type:=simulated```
 
 
 This launch file starts both navigation and perception, as well as a custom GUI used for interacting with the simulated robot. Using the "Send IGVC Waypoints" button on the GUI, you can give the robot a set of goal coordinates similar to IGVC, and have it autonomously navigate to those points while avoiding obstacles in the simulated world. The robot can be driven manually using WASD, and reset to its starting position using the "reset" button.
