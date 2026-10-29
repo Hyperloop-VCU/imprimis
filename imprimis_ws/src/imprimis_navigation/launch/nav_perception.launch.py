@@ -12,14 +12,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    """The simulator with everything on: navigation with reverse and recovery, the ramp detector, the
-    lane mapper, the lap manager, and the control window.
-
-    world        simulation world (igvc2027 has a course file, so laps are timed and remembered)
-    nav2_params  Course2027 for the igvc2027 world, FullFootprint for the others
-    gui          open the control window
-    autostart    start an automatic lap as soon as navigation is up (used for unattended test laps)
-    memory_dir   folder for the lap records and the remembered route
+    """
     """
     declared_arguments = [
         DeclareLaunchArgument("world", default_value="igvc2027"),
@@ -31,7 +24,8 @@ def generate_launch_description():
         DeclareLaunchArgument("exit_when_done", default_value="false", choices=("true", "false")),
         DeclareLaunchArgument("top_speed", default_value="0.5", description="Speed on clear stretches, m/s. 2.1 is 4.7 mph; the IGVC limit of 5 mph is 2.235."),
         DeclareLaunchArgument("hardware_type", default_value="real", description="Wheter to use real hardware or simulation w/ a control GUI."),
-        DeclareLaunchArgument("nav_mode", default_value="outdoor", description="Outdoor or indoor mode.")
+        DeclareLaunchArgument("nav_mode", default_value="outdoor", description="Outdoor or indoor mode."),
+        DeclareLaunchArgument("do_lanedetection", default_value="true", description="Passed to course_perception")
     ]
     world = LaunchConfiguration("world")
 
@@ -44,13 +38,14 @@ def generate_launch_description():
             "show_sim": LaunchConfiguration("show_sim"),
             "ui_type": LaunchConfiguration("ui_type"),
             "use_recoveries": "true",
-            "nav_mode": LaunchConfiguration("nav_mode")
+            "nav_mode": LaunchConfiguration("nav_mode"),
+            "use_cams": LaunchConfiguration("do_lanedetection")
         }.items(),
     )
 
     perception = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare("imprimis_perception"), "launch", "course_perception.launch.py"])]),
-        launch_arguments={"imu_yaw_in_base": "3.14159"}.items(),
+        launch_arguments={"imu_yaw_in_base": "3.14159", "do_lanedetection": LaunchConfiguration("do_lanedetection")}.items(),
     )
 
     # Course files are read from the source folder, like the other configuration in this repository.

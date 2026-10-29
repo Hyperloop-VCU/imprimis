@@ -137,7 +137,7 @@ class LaneDetection(Node):
             return #need to have intrinsics before we can really do much
 
         now = self.get_clock().now()
-        self.raw_mask_pub.publish(self.raw_msg)
+       # self.raw_mask_pub.publish(self.raw_msg)
         
         
         elapsed = (now - self.last_process_time).nanoseconds / 1e9

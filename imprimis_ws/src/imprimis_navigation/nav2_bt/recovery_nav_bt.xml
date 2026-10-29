@@ -29,7 +29,7 @@
           <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
           <Sequence>
             <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
-            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <!--<ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>-->
           </Sequence>
         </RecoveryNode>
       </PipelineSequence>
@@ -41,21 +41,21 @@
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>
           <RoundRobin name="RecoveryActions">
-            <Sequence name="FreshLook">
+            <!--<Sequence name="FreshLook">
               <ClearEntireCostmap name="ClearLocalCostmap-First" service_name="local_costmap/clear_entirely_local_costmap"/>
               <ClearEntireCostmap name="ClearGlobalCostmap-First" service_name="global_costmap/clear_entirely_global_costmap"/>
               <Wait wait_duration="1.0"/>
-            </Sequence>
+            </Sequence> -->
             <BackUp backup_dist="0.6" backup_speed="0.25" error_code_id="{backup_error_code}"/>
             <Wait wait_duration="1.0"/>
             <BackUp backup_dist="0.8" backup_speed="0.25" error_code_id="{backup_error_code}"/>
-            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <!-- <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/> -->
             <Wait wait_duration="1.0"/>
-            <Sequence name="ClearingActions">
+           <!-- <Sequence name="ClearingActions">
               <ClearEntireCostmap name="ClearLocalCostmap-Last" service_name="local_costmap/clear_entirely_local_costmap"/>
               <ClearEntireCostmap name="ClearGlobalCostmap-Last" service_name="global_costmap/clear_entirely_global_costmap"/>
               <Wait wait_duration="1.0"/>
-            </Sequence>
+            </Sequence> -->
           </RoundRobin>
         </ReactiveFallback>
       </Sequence>

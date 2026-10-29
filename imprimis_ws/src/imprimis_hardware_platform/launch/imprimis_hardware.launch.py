@@ -81,6 +81,14 @@ def generate_launch_description():
             description="Choose whether to use RTK-enabled GPS.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_cams",
+            default_value="false",
+            choices=("true", "false"),
+            description="Whether or not to start all the cameras IRL."
+        )
+    )
     
     use_controller = LaunchConfiguration("use_controller")
     publish_odom_tf = LaunchConfiguration("publish_odom_tf")
@@ -90,6 +98,7 @@ def generate_launch_description():
     use_imu = LaunchConfiguration("use_imu")
     ui_type = LaunchConfiguration("ui_type")
     use_rtk = LaunchConfiguration("use_rtk")
+    use_cams = LaunchConfiguration("use_cams")
 
     # Get package directories from the workspace source folder
     # This allows us to pass params files to nodes from SOURCE, not from install, preventing us from needing to rebuild every time we change parameters
@@ -197,6 +206,27 @@ def generate_launch_description():
         parameters=[{"use_sim_time": False}],
         condition=IfCondition(use_lidar)
     )
+
+    # Camera driver
+    cam_node = GroupAction(
+        [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
+                launch_arguments={
+                    'pointcloud.enable': 'true',
+                    #'diagnostics_period': '1.0',
+                    #'log_level': 'error',
+                    #'camera_namespace': 'cameras',
+                    #'camera_name': 'd455',
+                    #'serial_no': '_234322304110',
+                    #'device_type': 'd455'
+                }.items(),
+            )
+        ],
+        condition=IfCondition(use_cams),
+        scoped=True,
+        forwarding=False,
+    )
     
     # IMU driver, after a delay
     imu_driver = TimerAction(
@@ -265,6 +295,8 @@ def generate_launch_description():
 
     
 
+    
+
     things_to_launch = [
         # Always
         robot_state_pub_node,
@@ -284,6 +316,7 @@ def generate_launch_description():
         rviz_node,
         rosbridge_launch_include,
         foxglove_launch_include,
+        cam_node
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)

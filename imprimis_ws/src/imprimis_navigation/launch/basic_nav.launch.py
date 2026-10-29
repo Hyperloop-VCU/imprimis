@@ -106,6 +106,14 @@ def generate_launch_description():
             description="If using the GPS, whether or not to use RTK corrections. Requires an internet connection.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_cams",
+            default_value="false",
+            choices=("true", "false"),
+            description="Whether or not to start hardware cameras, only applies IRL.",
+        )
+    )
 
     
     hardware_type = LaunchConfiguration("hardware_type")
@@ -119,6 +127,7 @@ def generate_launch_description():
     ui_type = LaunchConfiguration("ui_type")
     use_lidar = LaunchConfiguration("use_lidar")
     use_rtk = LaunchConfiguration("use_rtk")
+    use_cams = LaunchConfiguration("use_cams")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
     # hardware and localization (real or simulated)
@@ -137,7 +146,8 @@ def generate_launch_description():
             "show_sim": show_sim,
             "ui_type": ui_type,
             'use_lidar': use_lidar,
-            'use_rtk': use_rtk
+            'use_rtk': use_rtk,
+            'use_cams': use_cams
         }.items(),
     )
 

@@ -36,6 +36,11 @@
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
     <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+    <!-- Drives every rendering-based sensor: the gpu_lidar and all three cameras.
+         World-level on purpose; it does not work declared on a model. -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
 
     <light name="sun" type="directional">
       <cast_shadows>true</cast_shadows>

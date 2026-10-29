@@ -31,14 +31,13 @@
     <material>Gazebo/Gray</material>
   </gazebo>
 
-  <!-- Simulated lidar configuration -->
-  <gazebo reference="velodyne"> <!-- Must match the lidar scan point link in diffbot description -->
-    <sensor name="vlp16" type="gpu_lidar">
-    <gz_frame_id>velodyne</gz_frame_id> <!-- Must match the lidar scan point link in diffbot description-->
+  <gazebo reference="velodyne">
+  <sensor name="vlp16" type="gpu_lidar">
+    <gz_frame_id>velodyne</gz_frame_id>
     <pose>0 0 0 0 0 0</pose>
     <topic>lidar</topic>
     <update_rate>10</update_rate>
-    <ray>
+    <lidar>
       <scan>
         <horizontal>
           <samples>1800</samples>
@@ -49,24 +48,20 @@
         <vertical>
           <samples>16</samples>
           <resolution>1</resolution>
-          <min_angle>-0.2617993877991494</min_angle>  <!-- -15 deg -->
-          <max_angle>0.2617993877991494</max_angle>   <!-- +15 deg -->
+          <min_angle>-0.2617993877991494</min_angle>
+          <max_angle>0.2617993877991494</max_angle>
         </vertical>
       </scan>
       <range>
         <min>0.1</min>
         <max>100.0</max>
         <resolution>0.01</resolution>
-        <!--noise type="gaussian">
-          <mean>0.0</mean>
-          <stddev>0.01</stddev>
-        </noise-->
       </range>
-    </ray>
+    </lidar>
     <always_on>true</always_on>
     <visualize>true</visualize>
-    </sensor>    
-  </gazebo>
+  </sensor>
+</gazebo>
 
   <!-- Simulated IMU configuration -->
   <gazebo reference="imu_link"> <!-- Must match the imu link in diffbot description -->
@@ -219,17 +214,6 @@
       <parameters>$(find imprimis_hardware_platform)/config/disable_odom_tf.yaml</parameters>
     </xacro:unless>
   </plugin>
-
-  <!-- Simulated sensor manager plugin -->
-  <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
-    <render_engine>ogre</render_engine>
-  </plugin>
-
-  <!-- IMU sensor plugin -->
-  <plugin filename="libignition-gazebo-imu-system.so" name="ignition::gazebo::systems::Imu"/>
-
-  <!-- GPS sensor plugin -->
-  <plugin filename="libignition-gazebo-navsat-system.so" name="ignition::gazebo::systems::NavSat"/>
 
   </gazebo>
 

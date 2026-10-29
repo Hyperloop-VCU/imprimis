@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name + '/launch', ['launch/localization.launch.py']),
         ('share/' + package_name + '/launch', ['launch/nav2_minimal_bringup.launch.py']),
         ('share/' + package_name + '/launch', ['launch/nav_perception.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/benchmark.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

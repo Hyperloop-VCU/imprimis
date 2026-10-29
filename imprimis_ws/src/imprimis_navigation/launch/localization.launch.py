@@ -79,6 +79,14 @@ def generate_launch_description():
             description="Whether or not to use RTK when using the GPS-generated map frame"
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_cams",
+            default_value="false",
+            choices=("true","false"),
+            description="Whether or not to use IRL cams."
+        )
+    )
     hardware_type = LaunchConfiguration("hardware_type")
     use_controller = LaunchConfiguration("use_controller")
     disable_local_ekf = LaunchConfiguration("disable_local_ekf")
@@ -88,6 +96,7 @@ def generate_launch_description():
     use_lidar = LaunchConfiguration("use_lidar")
     ui_type = LaunchConfiguration("ui_type")
     use_rtk = LaunchConfiguration("use_rtk")
+    use_cams = LaunchConfiguration("use_cams")
 
     nav_config_src_dir = PathJoinSubstitution([FindPackageShare("imprimis_navigation"), '../../../../src/imprimis_navigation/config'])
 
@@ -116,7 +125,8 @@ def generate_launch_description():
                 'use_gps': PythonExpression(["'true' if '", map_type, "' == 'gps' else 'false'"]),
                 'use_lidar': use_lidar,
                 'ui_type': ui_type,
-                'use_rtk': use_rtk
+                'use_rtk': use_rtk,
+                'use_cams': use_cams
             }.items(),
             condition=IfCondition(PythonExpression(["'", hardware_type, "' == 'real'"]))
         )

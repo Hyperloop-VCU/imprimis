@@ -15,3 +15,5 @@ imprimis_ws/src/pose_graph.g2o
 gps_goal_map_assets/
 imprimis_ws/fastdds_shm_profiles.xml
 imprimis_ws/src/ntrip_client/ntrip_client/login_params.py
+imprimis_ws/src/iterations/
+imprimis_ws/src/Lattice_Generator/lattice_venv

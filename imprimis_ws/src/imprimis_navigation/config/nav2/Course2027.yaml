@@ -45,35 +45,31 @@ planner_server:
     expected_planner_frequency: 1.0
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_smac_planner::SmacPlannerHybrid" # In Iron and older versions, "/" was used instead of "::"
-      downsample_costmap: false           # whether or not to downsample the map
-      downsampling_factor: 1              # multiplier for the resolution of the costmap layer (e.g. 2 on a 5cm costmap would be 10cm)
-      tolerance: 2.5                    # dist-to-goal heuristic cost (distance) for valid tolerance endpoints if exact goal cannot be found.
-      allow_unknown: true                 # allow traveling in unknown space
-      max_iterations: 1000000             # maximum total iterations to search for before failing (in case unreachable), set to -1 to disable
-      max_on_approach_iterations: 1000    # Maximum number of iterations after within tolerances to continue to try to find exact solution
-      max_planning_time: 2.0              # max time in s for planner to plan, smooth
-      motion_model_for_search: "DUBIN"    # REEDS_SHEPP is the motion model which accounts for reversing in the path, DUBIN does not and assumes a turning radius
-      angle_quantization_bins: 72         # Number of angle bins for search
-      analytic_expansion_ratio: 2.0       # The ratio to attempt analytic expansions during search for final approach.
-      analytic_expansion_max_length: 2.0  # For Hybrid/Lattice nodes: The maximum length of the analytic expansion to be considered valid to prevent unsafe shortcutting
-      analytic_expansion_max_cost: 100.0  #  The maximum single cost for any part of an analytic expansion to contain and be valid, except when necessary on approach to goal
-      analytic_expansion_max_cost_override: True  #  (Prev false)Whether or not to override the maximum cost setting if within critical distance to goal (ie probably required)
-      minimum_turning_radius: 0.5      # COURSE: 1.0 was too wide for No Man's Land. CHANGED from 0.2. Keeps the tail inside the wheel track. The IGVC course radius is 1.52 m or more.
-      reverse_penalty: 5.0             # Penalty to apply if motion is reversing, must be => 1
-      change_penalty: 2.5                 # (Previously 0.0) Penalty to apply if motion is changing directions (L to R), must be >= 0
-      non_straight_penalty: 2.0          # Penalty to apply if motion is non-straight, must be => 1
-      cost_penalty: 3.5              # (Previously 5.0) Penalty to apply to higher cost areas when adding into the obstacle map dynamic programming distance expansion heuristic. This drives the robot more towards the center of passages. A value between 1.3 - 3.5 is reasonable.
-      retrospective_penalty: 0.015
-      lookup_table_size: 20.0             # Size of the dubin/reeds-sheep distance window to cache, in meters.
-      cache_obstacle_heuristic: false     # Cache the obstacle map dynamic programming distance expansion heuristic between subsequent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.
-      debug_visualizations: false         # For Hybrid nodes: Whether to publish expansions on the /expansions topic as an array of poses (the orientation has no meaning) and the path's footprints on the /planned_footprints topic. WARNING: heavy to compute and to display, for debug only as it degrades the performance.
-      use_quadratic_cost_penalty: True # previously false
-      downsample_obstacle_heuristic: True
-      allow_primitive_interpolation: False
-      coarse_search_resolution: 4         # Number of bins to skip when doing a coarse search for the path. Only used for all_direction goal heading mode.
-      goal_heading_mode: "ALL_DIRECTION"        # DEFAULT, BIDIRECTIONAL, ALL_DIRECTION
-      smooth_path: True                   # If true, does a simple and quick smoothing post-processing to the path
+      plugin: "nav2_smac_planner::SmacPlannerLattice"
+      lattice_filepath: "/home/imprimis-pc/Desktop/imprimis/imprimis_ws/src/imprimis_navigation/config/nav2/diff_2.5cm.json"   # CHANGED: your generated file
+      tolerance: 2.0                     # Goal tolerance (m) if exact goal can't be reached
+      allow_unknown: true                 # Plan through unknown space
+      max_iterations: 1000000             # <= 0 disables the limit
+      max_on_approach_iterations: 1000    # Extra iterations near goal to hit it exactly
+      terminal_checking_interval: 5000    # Iterations between cancel/timeout checks
+      max_planning_time: 5.0              # Seconds for planning + smoothing
+      analytic_expansion_ratio: 3.5       # How often to try a direct shot to the goal
+      analytic_expansion_max_length: 3.0  # Max length (m) of that direct shot
+      analytic_expansion_max_cost: 200.0  # Max cell cost the direct shot may cross
+      analytic_expansion_max_cost_override: false
+      reverse_penalty: 2.0                # Only applies if reversing is enabled
+      change_penalty: 0.00                # default 0.05, Penalty for switching turn direction
+      non_straight_penalty: 1.05          # Penalty for curved primitives
+      cost_penalty: 2.0                   # How strongly to avoid high-cost cells
+      rotation_penalty: 0.0               # default 0.5, Penalty for in-place rotations (diff/omni only)
+      retrospective_penalty: 0.015        # Prefers later maneuvers; 0.0 = fully admissible
+      lookup_table_size: 20.0             # Heuristic cache window (m)
+      cache_obstacle_heuristic: false     # true speeds replanning a lot on static maps
+      allow_reverse_expansion: false      # Allow reverse primitives
+      goal_heading_mode: "DEFAULT"        # DEFAULT, BIDIRECTIONAL, or ALL_DIRECTION
+      coarse_search_resolution: 1         # Heading step for non-DEFAULT goal modes
+      debug_visualizations: false         # Publishes expansions and footprints
+      smooth_path: true
       smoother:
         max_iterations: 1000
         w_smooth: 0.3
@@ -121,14 +117,14 @@ controller_server:
 
       # linear
       vx_std: 0.4
-      vx_max: 0.5 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
+      vx_max: 1.0 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
       vx_min: -0.35 # REVERSE: was 0.0 ("must not drive backwards"). Slow reverse lets the robot free itself; PreferForwardCritic keeps it driving forward otherwise.
       ax_max: 3.0
       ax_min: -3.0
 
       # angular
-      wz_max: 1.5
-      wz_std: 0.6 # default 0.4
+      wz_max: 0.4
+      wz_std: 0.4 # default 0.4
       az_max: 3.5
       
       # lateral - these should all be zero;  diff drive robots can't move like that
@@ -178,42 +174,49 @@ controller_server:
       CostCritic:
         enabled: true # CHANGED from false: the controller now checks the outline too
         cost_power: 1
-        cost_weight: 3.81
+        cost_weight: 3.81 # default 3.81
         critical_cost: 300.0
         consider_footprint: true
         near_collision_cost: 253 # CHANGED from 254 (Nav2 default)
         collision_cost: 1000000.0 # CHANGED from 400.0 (Nav2 default)
         near_goal_distance: 1.0
         trajectory_point_step: 1 # MARGIN: was 2. Check the outline at every step of a sampled path, not every second one.
+
+      # Penalizes trajectories that lead the robot *too far away from the path*.
+      # Penalizes trajectories that deviate from the path orientation.
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.0
-        max_path_occupancy_ratio: 0.05
-        trajectory_point_step: 4
-        threshold_to_consider: 0.5
-        offset_from_furthest: 20
-        use_path_orientations: false
+        cost_weight: 5.0
+        max_path_occupancy_ratio: 0.05 # (0-1), if this much of the path is occupied,
+        trajectory_point_step: 1 # default 4; how densely along the candidate trajectories to evaluate how far the robot is from the path, and how much it deviates from the angle
+        threshold_to_consider: 0.5 # if we're this at least this close to the goal in m, deactivate this critic
+        offset_from_furthest: 5 # default 20; if the candidate trajectories don't reach at least this far along the path (0 is the start of the path, 20 means 20 points ahead along the pruned path), deactivate this critic.
+        use_path_orientations: true
+      
+      # Penalizes trajectories that don't make forward progress along the path
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 1.0
         offset_from_furthest: 5
         threshold_to_consider: 1.4
+
+      # Penalizes trajectories that deviate significantly from the path angle
       PathAngleCritic:
         enabled: true
         cost_power: 1
         cost_weight: 2.0
-        offset_from_furthest: 4
-        threshold_to_consider: 0.5
-        max_angle_to_furthest: 1.0
-        mode: 0
-      # VelocityDeadbandCritic:
-      #   enabled: true
-      #   cost_power: 1
-      #   cost_weight: 35.0
-      #   deadband_velocities: [0.05, 0.05, 0.05]
-      # TwirlingCritic:
+        offset_from_furthest: 10 # default 4; lookahead point. How far ahead of the furthest point along the candidate trajectory to reference
+        threshold_to_consider: 0.5 # if we're at least this close to the goal in m, deactivate this critic
+        max_angle_to_furthest: 1.0 # activate this critic if the robot's straight-line angle to the lookahead is greater than this in radians
+        mode: 2 # default 0; determine what counts as "in line" with the angle. 0 - robot must face forward, 1 - robot can face forward or backward, 2 - robot must face whatever direction the path says
+      VelocityDeadbandCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 35.0
+        deadband_velocities: [0.05, 0.05, 0.05]
+      #TwirlingCritic:
       #   enabled: true
       #   twirling_cost_power: 1
       #   twirling_cost_weight: 10.0
@@ -227,7 +230,7 @@ global_costmap:
       origin_x: -50.0
       origin_y: -50.0
       publish_frequency: 5.0
-      update_frequency: 50.0
+      update_frequency: 30.0
       always_send_full_costmap: false
       rolling_window: true
       global_frame: odom
@@ -236,7 +239,7 @@ global_costmap:
 
       # CHANGED: the real outline instead of a 0.54 m circle around the drive axle
       footprint_padding: 0.00 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
-      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
+      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.20, -0.33], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.33], [-0.20, 0.49] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -244,7 +247,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data #lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 1.8
         min_obstacle_height: 0.3
         velodyne_data:
@@ -316,16 +319,16 @@ local_costmap:
       origin_x: -5.0
       origin_y: -5.0
       publish_frequency: 5.0
-      update_frequency: 50.0
+      update_frequency: 30.0
       always_send_full_costmap: false
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
-      resolution: 0.1
+      resolution: 0.025
 
-      footprint_padding: 0.08 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
+      footprint_padding: 0.00 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
       # CHANGED: same outline as the global costmap
-      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
+      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.20, -0.33], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.33], [-0.20, 0.49] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -333,7 +336,7 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: velodyne_data #lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
         max_obstacle_height: 10.0
         min_obstacle_height: -10.0
         velodyne_data:

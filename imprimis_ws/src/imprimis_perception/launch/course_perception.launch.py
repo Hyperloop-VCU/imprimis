@@ -3,6 +3,8 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.conditions import IfCondition
+
 
 
 def generate_launch_description():
@@ -19,6 +21,8 @@ def generate_launch_description():
                               description="Look for potholes (painted white circles) and mark them in the cost maps."),
         DeclareLaunchArgument("detect_drop_offs", default_value="true",
                               description="Also look for real holes, where the depth camera sees the ground farther away than flat ground would be."),
+        DeclareLaunchArgument("do_lanedetection", default_value="false",
+                              description="If true, launches the lane mapper node; if false, doesn't launch it.")
     ]
     # No use_sim_time here on purpose: both nodes read the time from the sensor message stamps.
     common = {
@@ -36,5 +40,6 @@ def generate_launch_description():
         parameters=[common, {"use_depth": ParameterValue(LaunchConfiguration("use_depth"), value_type=bool),
                              "detect_potholes": ParameterValue(LaunchConfiguration("detect_potholes"), value_type=bool),
                              "detect_drop_offs": ParameterValue(LaunchConfiguration("detect_drop_offs"), value_type=bool)}],
+        condition=IfCondition(LaunchConfiguration("do_lanedetection"))
     )
     return LaunchDescription(declared_arguments + [ramp_detector, lane_mapper])
