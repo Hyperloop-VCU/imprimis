@@ -99,8 +99,7 @@ def height_and_angle_from_transform(transform):
 
 
 def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier_fraction=0.3):
-    """RANSAC plane through points (Nx3, in the LiDAR's own frame). Returns (normal, d) with
-    normal @ p + d == 0 on the plane, normal's z >= 0, or None if no good plane was found."""
+    #basically draw a plane from three randomly selected points, and check how many points have less than the distance_threshold from that plane and use that to find the best plane
     n = len(points)
     if n < 50:
         return None
@@ -171,6 +170,9 @@ class LaneProjection(Node):
         self.declare_parameter('ground_plane_distance', 0.05)   # RANSAC inlier threshold, meters
         self.declare_parameter('obstacle_height', 0.12)         # above the plane counts as an obstacle
         self.declare_parameter('obstacle_reject_radius', 0.2)   # veto lane points this close to one
+        self.declare_parameter('ground_plane_range', 6.0)       # only fit the plane to points within this far, meters
+        self.declare_parameter('lidar_min_range', 0.5)          # drop closer returns -- the sim LiDAR reports
+                                                                  # degenerate (0,0,0) self-hits inside this radius
 
         mask_topic = self.get_parameter('mask_topic').value
         camera_info_topic = self.get_parameter('camera_info_topic').value
@@ -182,6 +184,8 @@ class LaneProjection(Node):
         self.ground_plane_distance = self.get_parameter('ground_plane_distance').value
         self.obstacle_height = self.get_parameter('obstacle_height').value
         self.obstacle_reject_radius = self.get_parameter('obstacle_reject_radius').value
+        self.ground_plane_range = self.get_parameter('ground_plane_range').value
+        self.lidar_min_range = self.get_parameter('lidar_min_range').value
         self.max_range = 4.0
 
         self.bridge = CvBridge()
@@ -269,6 +273,16 @@ class LaneProjection(Node):
         if not self.lidar_extrinsic_ready:
             return
         points = point_cloud2.read_points_numpy(msg, field_names=['x', 'y', 'z'], skip_nans=True)
+        if len(points) == 0:
+            return
+        # skip_nans only drops NaN rows -- a no-return ray (out of range, e.g. sky) comes back as
+        # +/-Inf instead, so drop those too, and only fit the plane to nearby points: a point far
+        # enough away that the ground has curved or sloped out from under it shouldn't have to be
+        # coplanar with the ground right around the robot, and letting it count would just dilute
+        # the inlier fraction and make a good nearby plane look like a bad one.
+        points = points[np.isfinite(points).all(axis=1)]
+        r = np.linalg.norm(points, axis=1)
+        points = points[(r > self.lidar_min_range) & (r < self.ground_plane_range)]
         if len(points) == 0:
             return
         plane = fit_ground_plane(points, distance_threshold=self.ground_plane_distance)

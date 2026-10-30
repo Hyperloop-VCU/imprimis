@@ -9,12 +9,8 @@ from rcl_interfaces.msg import SetParametersResult
 
 
 def segment_lane_pixels(cv_image: np.ndarray, lower_white, upper_white, kernel: np.ndarray,
-                         min_area: float, max_area: float):
-    """Threshold white lane paint out of a BGR frame.
-
-    Returns (mask, raw_mask): raw_mask is the result right after the morphological open
-    (kept around for debugging), mask is the final result after filtering contours by area.
-    """
+                        min_area: float, max_area: float):
+    
     hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
     hue, sat, val = cv2.split(hsv)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
