@@ -1,14 +1,9 @@
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo, PointField, PointCloud2
-import cv2
-from cv_bridge import CvBridge
-import numpy as np
-from rcl_interfaces.msg import SetParametersResult
-from std_msgs.msg import Header
-from sensor_msgs_py import point_cloud2
-import math
+"""Backward-compatible executable for the new segmentation-only lane node.
 
+The projection stage now lives in lane_projection.py. Use lane_detection.launch.py
+to start four per-camera segmenters and the shared projector.
+"""
+from imprimis_perception.segmentation import main
 
 class LaneDetection(Node):
     def __init__(self):
@@ -361,6 +356,4 @@ def main(args=None):
         rclpy.shutdown()
 
 if __name__ == '__main__':
-    main() 
-
-            
+    main()
