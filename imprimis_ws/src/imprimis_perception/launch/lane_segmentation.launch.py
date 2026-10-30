@@ -4,6 +4,10 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
@@ -28,6 +32,18 @@ def generate_launch_description():
             'publish_raw_mask': ParameterValue(publish_raw, value_type=bool),
             'processing_width': ParameterValue(processing_width, value_type=int),
         }],
+
+        realsense = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+            FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'
+        ])
+    ),
+    launch_arguments={
+        'camera_name': 'camera',
+        'camera_namespace': 'camera',
+    }.items(),
+)
     )
     return LaunchDescription([
         DeclareLaunchArgument('camera_name', default_value='front'),
