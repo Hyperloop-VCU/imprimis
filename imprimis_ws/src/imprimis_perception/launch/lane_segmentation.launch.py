@@ -31,20 +31,24 @@ def generate_launch_description():
             'process_rate_hz': ParameterValue(process_rate, value_type=float),
             'publish_raw_mask': ParameterValue(publish_raw, value_type=bool),
             'processing_width': ParameterValue(processing_width, value_type=int),
-        }],
+        }]
 
-        realsense = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-            FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'
-        ])
-    ),
-    launch_arguments={
-        'camera_name': 'camera',
-        'camera_namespace': 'camera',
-    }.items(),
-)
+      
     )
+
+    realsense = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+        PathJoinSubstitution([
+        FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'
+        ])
+        ),
+        launch_arguments={
+            'camera_name': camera_name,
+            'camera_namespace': 'cameras',
+        }.items(),
+    )
+
+
     return LaunchDescription([
         DeclareLaunchArgument('camera_name', default_value='front'),
         DeclareLaunchArgument('image_topic', default_value='/camera/camera/color/image_raw'),
@@ -54,5 +58,5 @@ def generate_launch_description():
         DeclareLaunchArgument('publish_raw_mask', default_value='false'),
         DeclareLaunchArgument('processing_width', default_value='640',
                               description='Maximum mask width sent over the network; zero keeps native resolution.'),
-        segmenter,
+        segmenter,realsense
     ])
