@@ -1,35 +1,61 @@
 <!--
-  Navigate to a pose, replanning once a second, with recovery.
+  Navigate to a pose, replanning twice a second, with recovery.
 
   default_nav2_bt.xml plans once and has no way out when the robot is wedged. This tree is the
-  stock Nav2 "navigate to pose with replanning and recovery" tree with two changes:
+  stock Nav2 "navigate to pose with replanning and recovery" tree with these changes:
+
     - the Spin recovery is removed. The robot's tail reaches 0.9 m behind the drive axle and
       sweeps a 1.8 m circle when it spins, so spinning in a 1.5 m passage hits things.
-    - the recovery steps are: take a fresh look (clear both cost maps and wait a second, so that the
-      LiDAR, the lane points and the route corridor are marked again), reverse 0.6 m, wait, reverse
-      0.8 m, clear the local cost map, wait, take a fresh look again.
-      The cost maps never forget a mark on their own. Barrels grow in them by a cell or two as they are
-      seen from different sides, and that closes a passage of 1.5 m. Laps stalled in the chicane of the
-      north arm until the global cost map was cleared, so the fresh look now comes first. For a while
-      it came last, because a robot facing a truly closed passage forgot the dead end and drove into
-      it again; the lap manager now stops such a lap (no ground gained along the route for 75 s).
+
+    - ITERATION 1: the cost map clears are switched back on, and placed LAST.
+      Every ClearEntireCostmap in this tree was commented out when the four real bags were
+      recorded, which left the round robin as BackUp, Wait, BackUp, Wait. The bags show why that
+      could never work. Both cost maps had ray-trace clearing disabled, so the walls grew inward
+      all run until no footprint-feasible route to the goal was left and the PLANNER failed -
+      /plan stops one tree tick before the recovery fires, in all three failed runs. Nothing in
+      this tree removed a stale mark, so the one thing that would have freed the robot was the
+      one thing it could not do. Both BackUps then aborted after 0.07-0.10 m of the 0.6 and 0.8 m
+      they were asked for, because the tail was already inside a band of cells that the cost map
+      wrongly believed were lethal.
+      Clearing is a last resort, so it is the last pair of entries in the round robin: the robot
+      tries to reverse and look again twice before it is allowed to forget anything, and it
+      forgets the local map on its own before it forgets both. The real fix for the stale marks
+      is clearing: True in Course2027.yaml; these entries are the safety net for when a mark is
+      stale for some other reason.
+
+    - ITERATION 1: the round robin ends with a longer Wait after the full clear, so the LiDAR,
+      the lane points and the route corridor are all marked again before the next attempt, and
+      number_of_retries is 8 rather than 6 so that there are attempts left after the clears
+      instead of the clears being the last thing that ever happens.
+
+    - ITERATION 1: replanning raised from 1 Hz to 2 Hz. The cost maps now change meaningfully
+      between ticks (they clear as well as mark), and at 0.5 m/s a 1 Hz plan was up to 1.1 s and
+      half a metre stale by the time the controller used it; the probe of the stopped runs found
+      the controller working from a 1.12 s old plan. Planning measured under 0.1 s in the bags,
+      and the global cost map is now 11x smaller, so 2 Hz is affordable.
+
+  A robot facing a genuinely closed passage will forget the dead end here and drive at it again.
+  The lap manager stops such a lap (no ground gained along the route for 75 s); indoors, the
+  tester is the lap manager.
 
   It needs the behavior server (launch with use_recoveries:=true).
 -->
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+    <RecoveryNode number_of_retries="8" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
         <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
         <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
-        <RateController hz="1.0">
+        <RateController hz="2.0">
           <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
         </RateController>
         <RecoveryNode number_of_retries="1" name="FollowPath">
           <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
           <Sequence>
             <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
-            <!--<ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>-->
+            <!-- Deliberately empty of any clear: a single bad control cycle is not a reason to
+                 throw away what the cost maps know. controller_server.failure_tolerance absorbs
+                 those, and anything worse drops through to the round robin below. -->
           </Sequence>
         </RecoveryNode>
       </PipelineSequence>
@@ -41,21 +67,30 @@
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>
           <RoundRobin name="RecoveryActions">
-            <!--<Sequence name="FreshLook">
-              <ClearEntireCostmap name="ClearLocalCostmap-First" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <ClearEntireCostmap name="ClearGlobalCostmap-First" service_name="global_costmap/clear_entirely_global_costmap"/>
-              <Wait wait_duration="1.0"/>
-            </Sequence> -->
-            <BackUp backup_dist="0.6" backup_speed="0.25" error_code_id="{backup_error_code}"/>
-            <Wait wait_duration="1.0"/>
+            <!-- 1. Back off a little and look again. 0.5 m rather than the old 0.6 m: the shorter
+                    the reverse, the better its chance of passing the behavior server's own
+                    collision check and actually completing. -->
+            <BackUp backup_dist="0.5" backup_speed="0.25" error_code_id="{backup_error_code}"/>
+            <!-- 2. Stand still long enough for a full Velodyne sweep (10 Hz) to mark and, now,
+                    to clear. -->
+            <Wait wait_duration="2.0"/>
+            <!-- 3. Back off further. -->
             <BackUp backup_dist="0.8" backup_speed="0.25" error_code_id="{backup_error_code}"/>
-            <!-- <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/> -->
-            <Wait wait_duration="1.0"/>
-           <!-- <Sequence name="ClearingActions">
-              <ClearEntireCostmap name="ClearLocalCostmap-Last" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Last" service_name="global_costmap/clear_entirely_global_costmap"/>
-              <Wait wait_duration="1.0"/>
-            </Sequence> -->
+            <Wait wait_duration="2.0"/>
+            <!-- 5. LAST RESORT, step one: forget the local map only. The global map keeps the
+                    route, so the robot cannot wander off it while the controller re-reads the
+                    space immediately around the robot. -->
+            <Sequence name="ClearLocalOnly">
+              <ClearEntireCostmap name="ClearLocalCostmap-LastResort" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <Wait wait_duration="2.0"/>
+            </Sequence>
+            <!-- 6. LAST RESORT, step two: forget both maps and rebuild from the sensors. The wall
+                    layer is not clearable, so the virtual wall at the start line survives this. -->
+            <Sequence name="ClearEverything">
+              <ClearEntireCostmap name="ClearLocalCostmap-Full" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Full" service_name="global_costmap/clear_entirely_global_costmap"/>
+              <Wait wait_duration="3.0"/>
+            </Sequence>
           </RoundRobin>
         </ReactiveFallback>
       </Sequence>

@@ -1,34 +1,29 @@
 # Course2027.yaml
-# Update of 4 October 2026 (search for SPEED): top speed 2.2 m/s, controller look-ahead 5 m. The node speed_governor
-#   publishes speed_limit, so the top speed is only used where the path ahead is clear.
-# Update of 3 October 2026 (search for REVERSE, LANE, RAMP):
-#   REVERSE  slow reverse in the controller, the behavior server, and the recovery behavior tree
-#   LANE     the lane mapper's points are a second obstacle source in both cost maps
-#   RAMP     the cost maps read the ramp detector's filtered LiDAR cloud
-# Launch with use_cams:=true use_recoveries:=true and the two perception nodes running
-# (imprimis_mission sim_mission.launch.py does all of this). Without ramp_detector running the
-# cost maps receive no LiDAR points at all.
-# FullFootprint.yaml adjusted for the IGVC 2027 course world (igvc2027.sdf): tighter turns, lower speed,
-# with the same inflation as FullFootprint.yaml. Select with nav2_params:=Course2027
-# Changes from FullFootprint.yaml are marked COURSE.
 #
-# (header of FullFootprint.yaml follows)
-# A copy of SmartPlannerSmartController.yaml in which the planner AND the controller both use the
-# robot's real rectangular outline, so the long tail behind the drive axle is accounted for.
-# Select it with:  nav2_params:=FullFootprint
+# ============================= ITERATION 1 (search for ITER1) =============================
+# Tuned against the four real bags in iterations/1/RealBags. Four findings drove it:
 #
-# Outline, measured from base_link (the drive axle), from diffbot_description.urdf.xacro:
-#   front +0.215 m, rear -0.842 m, half width 0.486 m at the wheels and 0.311 m along the tail.
-#   The six-point outline below follows that shape and adds 10 to 20 mm.
+#  1. Both cost maps had clearing: False on every observation source, so a cell once marked was
+#     never unmarked. The walls grew inward all run. At the moment the robot stopped, 35-57% of
+#     the lethal cells had no LiDAR return within 15 cm, and in all four runs the free corridor
+#     across the robot fell to 0.75-0.80 m in a hallway measured at 2.13 m - narrower than the
+#     robot's own 0.98 m. Fixed: clearing: True on velodyne_data in both maps.
 #
-# Changes from SmartPlannerSmartController.yaml (search for "CHANGED"):
-#   1. global costmap: robot_radius 0.54 replaced by the six-point footprint polygon
-#   2. local costmap: same polygon, and the map grows from 5 m to 10 m square
-#   3. planner: minimum_turning_radius 0.2 -> 1.0 (the tail swings 0.30 m outside the wheel track at 0.2 m,
-#      and 0.07 m at 1.0 m)
-#   4. MPPI: vx_max 10.0 -> 2.2 (5 mph is 2.235 m/s), CostCritic enabled with the footprint
-#   5. velocity smoother: 3.0 -> 2.2 m/s
-# NOT YET RUN in simulation or on the robot. Compare against the original file before trusting it.
+#  2. The planner, not the controller, was what failed. /plan stopped one tree tick before the
+#     recovery fired in each of the three failed runs; the robot's own centre cell was never
+#     occupied, so this was NoValidPathCouldBeFound, not StartOccupied - there was simply no
+#     footprint-feasible route left through the cost map of (1).
+#
+#  3. The yaw rate was pinned at exactly +/-0.200000 rad/s for 20-67% of every control sample,
+#     because an absolute speed_limit scales MPPI's wz as well as its vx. See the note on vx_max.
+#
+#  4. The controller ran at 6.7-7.6 Hz against controller_frequency 10.0 in three of four runs.
+#     The 100 x 100 m global cost map at 2.5 cm (16 M cells at 30 Hz) and a 20000 x 20 MPPI batch
+#     with a footprint check at every point were the two costs; both are cut here.
+#
+# Full write-up, including the changes OUTSIDE this file that the team needs to make:
+#     iterations/1/change_report.pdf
+# =========================================================================================
 
 bt_navigator:
   ros__parameters:
@@ -47,12 +42,14 @@ planner_server:
     GridBased:
       plugin: "nav2_smac_planner::SmacPlannerLattice"
       lattice_filepath: "/home/imprimis-pc/Desktop/imprimis/imprimis_ws/src/imprimis_navigation/config/nav2/diff_2.5cm.json"   # CHANGED: your generated file
-      tolerance: 2.0                     # Goal tolerance (m) if exact goal can't be reached
+      tolerance: 1.0                      # ITER1: was 2.0. Matched to xy_goal_tolerance, so a plan that ends
+                                          #   short still ends inside the distance at which the robot stops.
       allow_unknown: true                 # Plan through unknown space
       max_iterations: 1000000             # <= 0 disables the limit
       max_on_approach_iterations: 1000    # Extra iterations near goal to hit it exactly
       terminal_checking_interval: 5000    # Iterations between cancel/timeout checks
-      max_planning_time: 5.0              # Seconds for planning + smoothing
+      max_planning_time: 2.0              # ITER1: was 5.0. Planning measured under 0.1 s in the real runs; a 5 s
+                                          #   budget only delays the failure report, and the tree replans at 2 Hz.
       analytic_expansion_ratio: 3.5       # How often to try a direct shot to the goal
       analytic_expansion_max_length: 3.0  # Max length (m) of that direct shot
       analytic_expansion_max_cost: 200.0  # Max cell cost the direct shot may cross
@@ -60,14 +57,19 @@ planner_server:
       reverse_penalty: 2.0                # Only applies if reversing is enabled
       change_penalty: 0.00                # default 0.05, Penalty for switching turn direction
       non_straight_penalty: 1.05          # Penalty for curved primitives
-      cost_penalty: 2.0                   # How strongly to avoid high-cost cells
-      rotation_penalty: 0.0               # default 0.5, Penalty for in-place rotations (diff/omni only)
+      cost_penalty: 3.0                   # ITER1: was 2.0. Pushes the route further from the walls, which is what
+                                          #   we want in a 2.1 m corridor.
+      rotation_penalty: 5.0               # ITER1: was 0.0. diff_2.5cm.json contains in-place rotation primitives
+                                          #   (trajectory_length 0.000). The tail sweeps a 1.8 m circle, which is why
+                                          #   Spin is kept out of the recovery tree; the planner must not use them either.
       retrospective_penalty: 0.015        # Prefers later maneuvers; 0.0 = fully admissible
       lookup_table_size: 20.0             # Heuristic cache window (m)
       cache_obstacle_heuristic: false     # true speeds replanning a lot on static maps
       allow_reverse_expansion: false      # Allow reverse primitives
-      goal_heading_mode: "DEFAULT"        # DEFAULT, BIDIRECTIONAL, or ALL_DIRECTION
-      coarse_search_resolution: 1         # Heading step for non-DEFAULT goal modes
+      goal_heading_mode: "ALL_DIRECTION"  # ITER1: was "DEFAULT". We do not care which way the robot faces at the goal,
+                                          #   so let the planner finish on whichever heading is cheapest.
+      coarse_search_resolution: 2         # ITER1: 8 of the 16 goal headings are tried instead of all 16.
+                                          #   Must divide number_of_headings (16) in diff_2.5cm.json.
       debug_visualizations: false         # Publishes expansions and footprints
       smooth_path: true
       smoother:
@@ -85,13 +87,24 @@ controller_server:
     robot_base_frame: base_link
     enable_stamped_cmd_vel: true
     controller_frequency: 10.0 # must be 1/model_dt
+    failure_tolerance: 0.3 # ITER1: added. One bad control cycle no longer drops the whole tree into recovery.
     goal_checker_plugins: ["goal_checker"]
+    progress_checker_plugins: ["progress_checker"]
+
+    # PROGRESS CHECKER
+    # ITER1: added. This was running all along on Nav2's defaults (0.5 m every 10 s), unseen because it
+    # was never written down. At 0.5 m/s, and slower still while squeezing past a bin, those defaults are
+    # tight enough to abort a run that is in fact making progress.
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.35
+      movement_time_allowance: 20.0
 
     # GOAL CHECKER
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.3
-      yaw_goal_tolerance: 6.28 # I don't care about the yaw
+      xy_goal_tolerance: 1.0 # ITER1: was 0.3. Stop as soon as the robot is within 1 m of the waypoint.
+      yaw_goal_tolerance: 6.28 # heading-agnostic: any final heading is accepted
       stateful: True
 
     # MPPI CONTROLLER
@@ -106,26 +119,44 @@ controller_server:
         time_step: 25
 
       # overall
-      time_steps: 20 # default 56
+      time_steps: 30 # ITER1: was 20. 20 steps x 0.1 s x 0.5 m/s is 1.0 m of look-ahead, less than the robot is
+                     #   long. 30 gives 3.0 s / 1.5 m, so a rollout can see past the robot's own tail.
       model_dt: 0.1 # default 0.05
-      batch_size: 20000
+      batch_size: 6000 # ITER1: was 20000. 20000 x 20 points with a footprint check at every one is what made the
+                       #   controller run at 6.7-7.6 Hz against a 10 Hz controller_frequency in three of four runs.
       iteration_count: 1
       temperature: 0.3 # default 0.3
       gamma: 0.015 # default 0.015
-      prune_distance: 5.0 # SPEED: was 1.7. The controller only looks this far along the path; 1.7 m held the robot near 1 m/s whatever vx_max said. Needs vx_max x 2 s.
+      prune_distance: 2.5 # ITER1: was 5.0. At 0.5 m/s a 5 m window is ten seconds of path, and its far end falls
+                          #   outside the 10 m local cost map, where MPPI counts the points as invalid.
       regenerate_noises: true # default false
 
       # linear
-      vx_std: 0.4
-      vx_max: 1.0 # SPEED: was 1.4. 2.2 m/s is 4.92 mph; the IGVC limit is 5 mph (2.235 m/s). The speed governor sets how much of this is used.
-      vx_min: -0.35 # REVERSE: was 0.0 ("must not drive backwards"). Slow reverse lets the robot free itself; PreferForwardCritic keeps it driving forward otherwise.
-      ax_max: 3.0
-      ax_min: -3.0
+      vx_std: 0.4  # ITER1: was 0.4. Half the sampling range is enough now that vx_max is 0.5; it was spending
+                   #   most of the batch on samples that get clamped.
+      # ITER1: vx_max was 1.0, and this one number was costing us the course.
+      #   speed_governor publishes an ABSOLUTE speed limit, and MPPI's Optimizer::setSpeedLimit turns an
+      #   absolute limit into ratio = speed_limit / vx_max and then applies that ratio to wz as well:
+      #       s.constraints.wz = s.base_constraints.wz * ratio
+      #   nav_perception.launch.py declares top_speed with a default of 0.5, so ratio was 0.5/1.0 = 0.5 and
+      #   the real yaw limit was 0.4 * 0.5 = 0.20 rad/s. In the four bags the command sat at exactly
+      #   +/-0.200000 rad/s for 20-67% of every control sample, while the lattice was asking for 0.45-1.5 m
+      #   radii, i.e. 0.14-0.56 rad/s. 76% of planning cycles demanded more yaw than the controller could give.
+      #   Setting vx_max to the governor's own top speed makes the ratio 1.0, so wz is no longer halved.
+      #   IF YOU RAISE top_speed, RAISE THIS TO THE SAME NUMBER IN THE SAME COMMIT - see change_report.pdf.
+      vx_max: 1.0
+      vx_min: -0.3 # ITER1: was -0.35. Matches the 0.25 m/s the BackUp recovery asks for, with a little over.
+      ax_max: 1.5  # ITER1: was 3.0. Measured from the bags, the robot reaches 0.3-0.56 m/s^2 (p95) and peaks
+      ax_min: -1.5 #   at 1.4. MPPI rolls out trajectories with these numbers, so optimistic values make it
+                   #   plan motions the robot cannot actually execute.
 
       # angular
-      wz_max: 0.4
-      wz_std: 0.4 # default 0.4
-      az_max: 3.5
+      # ITER1: wz_max was 0.4. Read the note on vx_max first. 0.9 rad/s at 0.5 m/s is a 0.56 m turning radius,
+      #   which covers the 0.5 m minimum radius the lattice in diff_2.5cm.json is built around.
+      wz_max: 0.9
+      wz_std: 0.45 # ITER1: was 0.4. Half the new range, so turns are explored as well as straight running.
+      az_max: 2.0  # ITER1: was 3.5. Measured peak was 1.7 rad/s^2; the velocity smoother allows 2.0 anyway,
+                   #   so 3.5 only let MPPI believe in yaw ramps the robot never delivers.
       
       # lateral - these should all be zero;  diff drive robots can't move like that
       vy_std: 0.0
@@ -140,7 +171,9 @@ controller_server:
       #  min_turning_r: 0.2
 
       # critics
-      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
+      # ITER1: GoalAngleCritic dropped. It pulls the robot towards the goal's heading on the way in, and we do
+      #   not care what the heading is - the goal checker accepts any of them.
+      critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
       ConstraintCritic:
         enabled: true
         cost_power: 1
@@ -149,12 +182,14 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
-        threshold_to_consider: 1.0 # default 1.4
+        threshold_to_consider: 1.5 # ITER1: was 1.0. Has to take over a little before the 1.0 m stop radius.
+      # ITER1: GoalAngleCritic removed from the critics list above; its block is left here, disabled, so the
+      #   numbers are still on hand if a heading-sensitive goal is ever wanted.
       GoalAngleCritic:
-        enabled: true
+        enabled: false
         cost_power: 1
         cost_weight: 3.0
-        threshold_to_consider: 1.0 # default 0.5
+        threshold_to_consider: 1.0
       PreferForwardCritic:
         enabled: true
         cost_power: 1
@@ -174,24 +209,32 @@ controller_server:
       CostCritic:
         enabled: true # CHANGED from false: the controller now checks the outline too
         cost_power: 1
-        cost_weight: 3.81 # default 3.81
+        cost_weight: 5.0 # ITER1: was 3.81. The costs this critic reads are the inflation field, so a heavier
+                         #   weight is the direct way to ask for "as far from the walls as the path allows".
         critical_cost: 300.0
         consider_footprint: true
         near_collision_cost: 253 # CHANGED from 254 (Nav2 default)
         collision_cost: 1000000.0 # CHANGED from 400.0 (Nav2 default)
-        near_goal_distance: 1.0
-        trajectory_point_step: 1 # MARGIN: was 2. Check the outline at every step of a sampled path, not every second one.
+        near_goal_distance: 1.5 # ITER1: was 1.0. Follows xy_goal_tolerance.
+        trajectory_point_step: 2 # ITER1: was 1. At 0.5 m/s and model_dt 0.1 the points are 5 cm apart, so every
+                                 #   second one is a 10 cm check interval on a robot 1.08 m long - still far finer
+                                 #   than the cost map's own 2.5 cm cells can resolve, and half the work.
 
       # Penalizes trajectories that lead the robot *too far away from the path*.
       # Penalizes trajectories that deviate from the path orientation.
+      # ITER1 note on all three path critics: offset_from_furthest counts PATH POINTS, not metres, and the
+      # Smac lattice hands us a path with 2.5-2.8 cm between points (measured: 390 poses over 9.96 m). The
+      # values here were Nav2's defaults, which assume the ~5-10 cm spacing of the grid planners, so every
+      # look-ahead was a quarter of what it was meant to be.
       PathAlignCritic:
         enabled: true
         cost_power: 1
         cost_weight: 5.0
         max_path_occupancy_ratio: 0.05 # (0-1), if this much of the path is occupied,
-        trajectory_point_step: 1 # default 4; how densely along the candidate trajectories to evaluate how far the robot is from the path, and how much it deviates from the angle
-        threshold_to_consider: 0.5 # if we're this at least this close to the goal in m, deactivate this critic
-        offset_from_furthest: 5 # default 20; if the candidate trajectories don't reach at least this far along the path (0 is the start of the path, 20 means 20 points ahead along the pruned path), deactivate this critic.
+        trajectory_point_step: 2 # ITER1: was 1. See the note on CostCritic.trajectory_point_step.
+        threshold_to_consider: 1.2 # ITER1: was 0.5. Hand over to GoalCritic before the 1.0 m stop radius.
+        offset_from_furthest: 20 # ITER1: was 5, i.e. 13 cm of path. 20 points is 0.5 m, so the robot gets its
+                                 #   bearing before this critic starts holding it to the line.
         use_path_orientations: true
       
       # Penalizes trajectories that don't make forward progress along the path
@@ -199,17 +242,21 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 1.0
-        offset_from_furthest: 5
-        threshold_to_consider: 1.4
+        offset_from_furthest: 24 # ITER1: was 5. This critic drags the end of each rollout towards the path point
+                                 #   offset_from_furthest ahead of the furthest point the rollouts already reach.
+                                 #   At 2.5 cm spacing that carrot was 13 cm out - no forward pull at all. 24
+                                 #   points is 0.61 m.
+        threshold_to_consider: 1.5 # ITER1: was 1.4. Follows xy_goal_tolerance.
 
       # Penalizes trajectories that deviate significantly from the path angle
       PathAngleCritic:
         enabled: true
         cost_power: 1
         cost_weight: 2.0
-        offset_from_furthest: 10 # default 4; lookahead point. How far ahead of the furthest point along the candidate trajectory to reference
-        threshold_to_consider: 0.5 # if we're at least this close to the goal in m, deactivate this critic
-        max_angle_to_furthest: 1.0 # activate this critic if the robot's straight-line angle to the lookahead is greater than this in radians
+        offset_from_furthest: 20 # ITER1: was 10, i.e. 26 cm of path. 20 points is 0.5 m.
+        threshold_to_consider: 1.2 # ITER1: was 0.5. Follows xy_goal_tolerance.
+        max_angle_to_furthest: 0.6 # ITER1: was 1.0. Starts lining the robot up at 34 degrees of error instead of
+                                   #   57, so it enters the turn already pointing into it.
         mode: 2 # default 0; determine what counts as "in line" with the angle. 0 - robot must face forward, 1 - robot can face forward or backward, 2 - robot must face whatever direction the path says
       VelocityDeadbandCritic:
         enabled: true
@@ -224,13 +271,17 @@ controller_server:
 global_costmap:
   global_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "wall_layer", "inflation_layer"]
-      height: 100
-      width: 100
-      origin_x: -50.0
-      origin_y: -50.0
-      publish_frequency: 5.0
-      update_frequency: 30.0
+      plugins: ["stvl_layer", "wall_layer", "inflation_layer"] # ITER2: obstacle_layer -> stvl_layer
+      # ITER1: was 100 x 100 m. At 0.025 m that is 16 MILLION cells, rebuilt and re-centred 30 times a second
+      # (it is a rolling window, so every update copies the whole grid). The planner never looks more than a
+      # few metres out and the waypoints in these tests were 6.5-7.9 m away. 30 x 30 m is 1.44 M cells.
+      height: 30
+      width: 30
+      origin_x: -15.0
+      origin_y: -15.0
+      publish_frequency: 2.0  # ITER1: was 5.0 and was only managing 1.9-3.4 Hz. This topic is for RViz and the
+                              #   speed governor; nothing in the planning loop reads it.
+      update_frequency: 5.0   # ITER1: was 30.0. The tree replans at 2 Hz, so 5 Hz is already generous.
       always_send_full_costmap: false
       rolling_window: true
       global_frame: odom
@@ -244,51 +295,172 @@ global_costmap:
       track_unknown_space: false
       unknown_cost_value: 0
 
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
-        max_obstacle_height: 1.8
-        min_obstacle_height: 0.3
-        velodyne_data:
-          topic: /velodyne_points # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
-          clearing: False    
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 3.0
-          min_obstacle_height: 0.2
-          raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0
-          obstacle_min_range: 0.2
+      # ======================= ITER2: ray-trace clearing replaced =======================
+      # ObstacleLayer's clearing is 2D. raytraceFreespace reads only x and y from the cloud, so a
+      # ray that passes OVER a short object on its way to a wall behind it erases that object's
+      # cells. The Velodyne sits 1.23 m above the ground and looks 15 degrees down, so its lowest
+      # ring is at 1.23 - 0.268 * range metres up: at 1.0 m range nothing below 0.96 m is visible
+      # to any ring. A 0.9 m bin therefore drops out of the cloud inside about 1.2 m, and the rays
+      # going past it to the wall wipe it off the map - exactly as the team saw in iteration 2.
+      #
+      # SpatioTemporalVoxelLayer does not ray-trace. It keeps a 3D voxel grid and forgets in two
+      # separate ways:
+      #   * every voxel decays on a timer (voxel_decay), so a stale mark goes by itself;
+      #   * voxels INSIDE the sensor's frustum that were not seen again decay faster
+      #     (decay_acceleration).
+      # ClearFrustums only touches voxels for which the frustum's IsInside() is true, so a voxel
+      # the sensor physically cannot see is never cleared - which is the property asked for.
+      # ==================================================================================
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled: true
+        voxel_decay: 30.0             # s. How long an UNSEEN voxel survives. This is the only thing
+                                      #   that forgets an obstacle out of the sensor's view, so it is
+                                      #   deliberately long: the robot passes a bin in about 4 s.
+        decay_model: 0                # 0 = linear, 1 = exponential, -1 = never forget
+        voxel_size: 0.025             # matches the cost map resolution, so a voxel is one cell
+        track_unknown_space: false    # matches track_unknown_space below: unseen space is free
+        mark_threshold: 0             # one voxel anywhere in the column marks the cell
+        update_footprint_enabled: true
+        combination_method: 1         # 1 = max
+        origin_z: 0.0
+        publish_voxel_map: false      # set true to inspect the voxel grid in RViz
+        transform_tolerance: 0.2
+        mapping_mode: false
+        map_save_duration: 60.0
+        observation_sources: velodyne_mark velodyne_clear lane_mark pothole_mark
 
-        # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
-        # so that they pass the height limits of this layer.
-        lane_data:
+        # ---- marking: the same filtered cloud and the same height band as before ----
+        velodyne_mark:
+          data_type: PointCloud2
+          topic: /velodyne_points_nav
+          marking: true
+          clearing: false
+          obstacle_range: 8.0
+          min_obstacle_height: 0.2
+          max_obstacle_height: 3.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"             # collapse the 24 000-point cloud to one point per voxel
+          voxel_min_points: 0
+          clear_after_reading: true
+
+        # ---- clearing: a frustum, not a ray ----
+        velodyne_clear:
+          enabled: true
+          data_type: PointCloud2
+          topic: /velodyne_points_nav
+          marking: false
+          clearing: true
+          # ramp_detector republishes the cloud in base_link, which is 0.128 m off the ground and
+          # 0.369 m ahead of the mast. Without this the frustum would be anchored there instead of
+          # at the sensor, and the whole point of the change is that the frustum matches what the
+          # Velodyne can actually see.
+          sensor_frame: velodyne
+          min_z: 1.0                  # m. Frustum near range. The VLP-16's own minimum range is
+                                      #   about 1 m, so nothing nearer is ever cleared.
+          max_z: 8.0               # m. Frustum far range; kept equal to obstacle_range so the
+                                      #   layer never clears further out than it marks.
+          vertical_fov_angle: 0.5236  # rad. The VLP-16's 30 degrees, symmetric about horizontal.
+          vertical_fov_padding: 0.0   # padding WIDENS the frustum and so clears more. Keep at 0.
+          horizontal_fov_angle: 6.29  # rad. The VLP-16 sees all the way round.
+          decay_acceleration: 20.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
+          model_type: 1               # 1 = 3D lidar frustum, 0 = depth camera
+
+        # ---- LANE / POTHOLE: unchanged in meaning, marking only, now with a decay timer ----
+        lane_mark:
+          data_type: PointCloud2
           topic: /perception/lane_points
-          clearing: False
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 2.0
+          marking: true
+          clearing: false
+          obstacle_range: 6.0
           min_obstacle_height: 0.0
-          raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0
-          obstacle_min_range: 0.0
-        
-        # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
-        # The robot's outline must stay off them, so they are marked like any other obstacle.
-        pothole_data:
+          max_obstacle_height: 2.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"
+          voxel_min_points: 0
+          clear_after_reading: true
+        pothole_mark:
+          data_type: PointCloud2
           topic: /perception/pothole_points
-          clearing: False
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 2.0
+          marking: true
+          clearing: false
+          obstacle_range: 6.0
           min_obstacle_height: 0.0
-          raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0
-          obstacle_min_range: 0.0
+          max_obstacle_height: 2.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"
+          voxel_min_points: 0
+          clear_after_reading: true
+
+      # ---- ITER2: the ObstacleLayer this replaced, kept so the change can be undone ----
+      # To revert: put "obstacle_layer" back in the plugins list above, delete stvl_layer,
+      # and uncomment this block.
+      # obstacle_layer:
+      #   plugin: "nav2_costmap_2d::ObstacleLayer"
+      #   enabled: True
+      #   observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+      #   # ITER1: these were 1.8 / 0.3 here and 3.0 / 0.2 on the source below, which disagreed with each other
+      #   #   and with the local cost map. Harmonised.
+      #   max_obstacle_height: 3.0
+      #   min_obstacle_height: 0.2
+      #   velodyne_data:
+      #     # ITER1: the topic was /velodyne_points, the raw driver cloud - ground returns included and not
+      #     #   levelled against the IMU - while the local cost map was reading the filtered /velodyne_points_nav
+      #     #   from ramp_detector. The comment on this line already said it should be the filtered cloud. The two
+      #     #   maps happened to agree indoors, where the ground is flat; on the ramp they would not have.
+      #     topic: /velodyne_points_nav
+      #     # ITER1: clearing was False. THIS IS THE CHANGE THAT MATTERS MOST IN THIS ITERATION.
+      #     #   With clearing off the obstacle layer can only ever add cells. Nothing takes a mark away, so every
+      #     #   sweep of the Velodyne thickened the walls a little further inward. Measured in the bags: 35-57% of
+      #     #   the lethal cells at the moment the robot stopped had no LiDAR return within 15 cm of them, and the
+      #     #   free corridor across the robot closed from 2.23 m to 0.80 m over twelve seconds of driving, in a
+      #     #   hallway the team measured at 2.13 m. All four runs reached a point where the cost map claimed less
+      #     #   free width across the robot than the robot is wide. Ray-trace clearing removes a mark once the
+      #     #   LiDAR sees through where it used to be.
+      #     clearing: True
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 3.0
+      #     min_obstacle_height: 0.2
+      #     raytrace_max_range: 9.0 # ITER1: was 6.0. Kept above obstacle_max_range so the far edge of a marked
+      #                             #   region can still be cleared.
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 8.0 # ITER1: was 6.0. The map is 30 m wide now; the planner can use the extra reach.
+      #     obstacle_min_range: 0.2
+
+      #   # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
+      #   # so that they pass the height limits of this layer.
+      #   lane_data:
+      #     topic: /perception/lane_points
+      #     clearing: False
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 2.0
+      #     min_obstacle_height: 0.0
+      #     raytrace_max_range: 6.0
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 6.0
+      #     obstacle_min_range: 0.0
+      #   
+      #   # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
+      #   # The robot's outline must stay off them, so they are marked like any other obstacle.
+      #   pothole_data:
+      #     topic: /perception/pothole_points
+      #     clearing: False
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 2.0
+      #     min_obstacle_height: 0.0
+      #     raytrace_max_range: 6.0
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 6.0
+      #     obstacle_min_range: 0.0
 
       wall_layer:
         plugin: "costmap_wall::WallLayer"
@@ -301,7 +473,10 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 1.7 # higher is more leniant (3.0 was tried on the course: the robot brushed barrels)
-        inflation_radius: 3.0 # NOTE: THIS MUST BE LARGER THAN THE DISTANCE FROM BASE_LINK TO THE FURTHEST CORNER nav2 will tell you if it's too small.
+        inflation_radius: 2.0 # ITER1: was 3.0. The furthest footprint corner is 0.92 m from base_link, so 2.0 m
+                              #   still leaves plenty of margin over the limit this note warns about. A 3 m radius
+                              #   at 2.5 cm cells is a 240-cell-wide kernel, and in a 2.1 m corridor every cell is
+                              #   inside it from both walls at once, which flattens the gradient we want.
 
       # Massive blank map, filled over time
       #static_layer:
@@ -311,15 +486,17 @@ global_costmap:
 local_costmap:
   local_costmap:
     ros__parameters:
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins: ["stvl_layer", "inflation_layer"] # ITER2: obstacle_layer -> stvl_layer
       # CHANGED: 10 m square. MPPI looks 2 s ahead; at 2.2 m/s that is 4.4 m, and any rollout
       # that leaves the local costmap is scored as a collision.
       height: 10
       width: 10
       origin_x: -5.0
       origin_y: -5.0
-      publish_frequency: 5.0
-      update_frequency: 30.0
+      publish_frequency: 2.0  # ITER1: was 5.0, and was only managing 1.5-2.7 Hz.
+      update_frequency: 10.0  # ITER1: was 30.0. This map lives in the controller server's process and was
+                              #   competing with MPPI for the same core; it only ever managed 15-22 Hz anyway.
+                              #   10 Hz matches controller_frequency, which is as often as the map is read.
       always_send_full_costmap: false
       rolling_window: true
       global_frame: odom
@@ -333,51 +510,155 @@ local_costmap:
       track_unknown_space: false
       unknown_cost_value: 0
 
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
-        max_obstacle_height: 10.0
-        min_obstacle_height: -10.0
-        velodyne_data:
-          topic: /velodyne_points_nav # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
-          clearing: False
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 3.0
+      # ======================= ITER2: ray-trace clearing replaced =======================
+      # ObstacleLayer's clearing is 2D. raytraceFreespace reads only x and y from the cloud, so a
+      # ray that passes OVER a short object on its way to a wall behind it erases that object's
+      # cells. The Velodyne sits 1.23 m above the ground and looks 15 degrees down, so its lowest
+      # ring is at 1.23 - 0.268 * range metres up: at 1.0 m range nothing below 0.96 m is visible
+      # to any ring. A 0.9 m bin therefore drops out of the cloud inside about 1.2 m, and the rays
+      # going past it to the wall wipe it off the map - exactly as the team saw in iteration 2.
+      #
+      # SpatioTemporalVoxelLayer does not ray-trace. It keeps a 3D voxel grid and forgets in two
+      # separate ways:
+      #   * every voxel decays on a timer (voxel_decay), so a stale mark goes by itself;
+      #   * voxels INSIDE the sensor's frustum that were not seen again decay faster
+      #     (decay_acceleration).
+      # ClearFrustums only touches voxels for which the frustum's IsInside() is true, so a voxel
+      # the sensor physically cannot see is never cleared - which is the property asked for.
+      # ==================================================================================
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled: true
+        voxel_decay: 15.0             # s. How long an UNSEEN voxel survives. This is the only thing
+                                      #   that forgets an obstacle out of the sensor's view, so it is
+                                      #   deliberately long: the robot passes a bin in about 4 s.
+        decay_model: 0                # 0 = linear, 1 = exponential, -1 = never forget
+        voxel_size: 0.025             # matches the cost map resolution, so a voxel is one cell
+        track_unknown_space: false    # matches track_unknown_space below: unseen space is free
+        mark_threshold: 0             # one voxel anywhere in the column marks the cell
+        update_footprint_enabled: true
+        combination_method: 1         # 1 = max
+        origin_z: 0.0
+        publish_voxel_map: false      # set true to inspect the voxel grid in RViz
+        transform_tolerance: 0.2
+        mapping_mode: false
+        map_save_duration: 60.0
+        observation_sources: velodyne_mark velodyne_clear lane_mark pothole_mark
+
+        # ---- marking: the same filtered cloud and the same height band as before ----
+        velodyne_mark:
+          data_type: PointCloud2
+          topic: /velodyne_points_nav
+          marking: true
+          clearing: false
+          obstacle_range: 6.0
           min_obstacle_height: 0.2
-          raytrace_max_range: 6.0 # CHANGED with the larger local costmap
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0 # CHANGED with the larger local costmap
-          obstacle_min_range: 0.2
-        # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
-        # so that they pass the height limits of this layer.
-        lane_data:
+          max_obstacle_height: 3.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"             # collapse the 24 000-point cloud to one point per voxel
+          voxel_min_points: 0
+          clear_after_reading: true
+
+        # ---- clearing: a frustum, not a ray ----
+        velodyne_clear:
+          enabled: true
+          data_type: PointCloud2
+          topic: /velodyne_points_nav
+          marking: false
+          clearing: true
+          # ramp_detector republishes the cloud in base_link, which is 0.128 m off the ground and
+          # 0.369 m ahead of the mast. Without this the frustum would be anchored there instead of
+          # at the sensor, and the whole point of the change is that the frustum matches what the
+          # Velodyne can actually see.
+          sensor_frame: velodyne
+          min_z: 1.0                  # m. Frustum near range. The VLP-16's own minimum range is
+                                      #   about 1 m, so nothing nearer is ever cleared.
+          max_z: 6.0               # m. Frustum far range; kept equal to obstacle_range so the
+                                      #   layer never clears further out than it marks.
+          vertical_fov_angle: 0.5236  # rad. The VLP-16's 30 degrees, symmetric about horizontal.
+          vertical_fov_padding: 0.0   # padding WIDENS the frustum and so clears more. Keep at 0.
+          horizontal_fov_angle: 6.29  # rad. The VLP-16 sees all the way round.
+          decay_acceleration: 20.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
+          model_type: 1               # 1 = 3D lidar frustum, 0 = depth camera
+
+        # ---- LANE / POTHOLE: unchanged in meaning, marking only, now with a decay timer ----
+        lane_mark:
+          data_type: PointCloud2
           topic: /perception/lane_points
-          clearing: False
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 2.0
+          marking: true
+          clearing: false
+          obstacle_range: 6.0
           min_obstacle_height: 0.0
-          raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0
-          obstacle_min_range: 0.0
-
-        # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
-        # The robot's outline must stay off them, so they are marked like any other obstacle.
-        pothole_data:
+          max_obstacle_height: 2.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"
+          voxel_min_points: 0
+          clear_after_reading: true
+        pothole_mark:
+          data_type: PointCloud2
           topic: /perception/pothole_points
-          clearing: False
-          marking: True
-          data_type: "PointCloud2"
-          max_obstacle_height: 2.0
+          marking: true
+          clearing: false
+          obstacle_range: 6.0
           min_obstacle_height: 0.0
-          raytrace_max_range: 6.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 6.0
-          obstacle_min_range: 0.0
+          max_obstacle_height: 2.0
+          expected_update_rate: 0.0
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"
+          voxel_min_points: 0
+          clear_after_reading: true
 
+      # ---- ITER2: the ObstacleLayer this replaced, kept so the change can be undone ----
+      # obstacle_layer:
+      #   plugin: "nav2_costmap_2d::ObstacleLayer"
+      #   enabled: True
+      #   observation_sources: velodyne_data lane_data pothole_data # LANE: lane_data added. CORRIDOR: corridor_data added. POTHOLE: pothole_data added
+      #   max_obstacle_height: 10.0
+      #   min_obstacle_height: -10.0
+      #   velodyne_data:
+      #     topic: /velodyne_points_nav # RAMP: was /velodyne_points. This is the cloud from ramp_detector, leveled with the IMU, ground and ramp surface removed.
+      #     clearing: True # ITER1: was False. See the long note on the same line in the global cost map.
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 3.0
+      #     min_obstacle_height: 0.2
+      #     raytrace_max_range: 7.0 # ITER1: was 6.0. Above obstacle_max_range, and still inside the 7.07 m
+      #                             #   half-diagonal of this 10 m map.
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 6.0 # CHANGED with the larger local costmap
+      #     obstacle_min_range: 0.2
+      #   # LANE: white tape seen by the camera (lane_mapper). The points arrive 0.5 m above base_link
+      #   # so that they pass the height limits of this layer.
+      #   lane_data:
+      #     topic: /perception/lane_points
+      #     clearing: False
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 2.0
+      #     min_obstacle_height: 0.0
+      #     raytrace_max_range: 6.0
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 6.0
+      #     obstacle_min_range: 0.0
+
+      #   # POTHOLE: potholes found by lane_mapper (painted white circles, and places where the ground drops away).
+      #   # The robot's outline must stay off them, so they are marked like any other obstacle.
+      #   pothole_data:
+      #     topic: /perception/pothole_points
+      #     clearing: False
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     max_obstacle_height: 2.0
+      #     min_obstacle_height: 0.0
+      #     raytrace_max_range: 6.0
+      #     raytrace_min_range: 0.0
+      #     obstacle_max_range: 6.0
+      #     obstacle_min_range: 0.0
 
       # Add a "danger zone" around obstacles
       inflation_layer:
@@ -392,10 +673,15 @@ velocity_smoother:
     smoothing_frequency: 10.0
     feedback: "OPEN_LOOP"
     scale_velocities: false
-    max_velocity: [2.2, 0.0, 1.5]    # CHANGED from [3.0, 0.0, 1.0]: 5 mph, and wz_max of the controller
-    min_velocity: [-2.2, 0.0, -1.5]  # CHANGED from [-3.0, 0.0, -1.0]
-    max_accel: [3.0, 0.0, 2.0]       # was [2.0, 0.0, 1.0]
-    max_decel: [-3.0, 0.0, -2.0]     # was [-2.0, 0.0, -1.0]
+    # ITER1: this is now the last line of defence, and it is deliberately set as one.
+    #   MPPI's absolute-speed-limit path computes ratio = speed_limit / vx_max and does NOT clamp it to 1, so a
+    #   speed_limit above vx_max scales wz UP without bound. These two caps hold whatever the governor asks for:
+    #   2.235 m/s is exactly 5 mph, the IGVC limit, and 1.2 rad/s is a yaw rate this robot can actually turn at.
+    max_velocity: [2.235, 0.0, 1.2]
+    min_velocity: [-2.235, 0.0, -1.2]
+    max_accel: [1.5, 0.0, 2.0]       # ITER1: was [3.0, 0.0, 2.0]; matches MPPI's ax_max/az_max
+    max_decel: [-2.0, 0.0, -2.5]     # ITER1: was [-3.0, 0.0, -2.0]; braking is allowed to be firmer than
+                                     #   accelerating, and measured peak deceleration was 1.4 m/s^2
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     odom_topic: /odometry/filtered/local

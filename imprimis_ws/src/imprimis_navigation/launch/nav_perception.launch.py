@@ -22,7 +22,7 @@ def generate_launch_description():
         DeclareLaunchArgument("gui", default_value="true", choices=("true", "false")),
         DeclareLaunchArgument("autostart", default_value="false", choices=("true", "false")),
         DeclareLaunchArgument("exit_when_done", default_value="false", choices=("true", "false")),
-        DeclareLaunchArgument("top_speed", default_value="0.5", description="Speed on clear stretches, m/s. 2.1 is 4.7 mph; the IGVC limit of 5 mph is 2.235."),
+        DeclareLaunchArgument("top_speed", default_value="1.0", description="Speed on clear stretches, m/s. 2.1 is 4.7 mph; the IGVC limit of 5 mph is 2.235."),
         DeclareLaunchArgument("hardware_type", default_value="real", description="Wheter to use real hardware or simulation w/ a control GUI."),
         DeclareLaunchArgument("nav_mode", default_value="outdoor", description="Outdoor or indoor mode."),
         DeclareLaunchArgument("do_lanedetection", default_value="true", description="Passed to course_perception")
