@@ -100,6 +100,13 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   else if (received_data.gainChange == 2) rightController.setPID(received_data.newKp, received_data.newKi, received_data.newKd);
   leftController.newSetpoint(received_data.setLeftAngvel);
   rightController.newSetpoint(received_data.setRightAngvel);
+
+  // send data to board A, ping pong
+  struct BtoAPacket data_to_send{};
+  data_to_send.currLeftAngvel = leftController.getAngvel();
+  data_to_send.currRightAngvel = rightController.getAngvel();
+  data_to_send.timestamp = received_data.timestamp;
+  (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
   pauseUpdates = false;
 }
 
@@ -173,12 +180,12 @@ void loop()
     time_of_last_controller_update = millis();
   }
 
-  // Send data to board A at a fixed rate
+  /* Send data to board A at a fixed rate
   if (millis() - time_of_last_data_send > DATA_SEND_RATE_MS) {
     struct BtoAPacket data_to_send{};
     data_to_send.currLeftAngvel = leftController.getAngvel();
     data_to_send.currRightAngvel = rightController.getAngvel();
     (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
     time_of_last_data_send = millis();
-  }
+  } */
 }

@@ -127,8 +127,21 @@ controller_server:
       iteration_count: 1
       temperature: 0.3 # default 0.3
       gamma: 0.015 # default 0.015
-      prune_distance: 2.5 # ITER1: was 5.0. At 0.5 m/s a 5 m window is ten seconds of path, and its far end falls
+      prune_distance: 4.0 # ITER1: was 5.0. At 0.5 m/s a 5 m window is ten seconds of path, and its far end falls
                           #   outside the 10 m local cost map, where MPPI counts the points as invalid.
+                          # ITER3: was 2.5, which was right for vx_max 0.5 and is too short for 1.0, and is
+                          #   the one provable reason raising vx_max to 1.0 bought almost nothing.
+                          #   PathFollowCritic scores each rollout by the distance from its LAST point to the
+                          #   path point (furthest_reached_path_point + offset_from_furthest). That carrot
+                          #   normally sits ahead of every rollout, so reaching further always scores better -
+                          #   but the index is clamped to path_size. The rollout horizon is
+                          #   time_steps 30 x model_dt 0.1 = 3.0 s, which at 1.0 m/s is 3.0 m of trajectory,
+                          #   against a path pruned to 2.5 m. Once the carrot clamps at the end of the pruned
+                          #   path, a faster rollout ends FURTHER PAST the carrot and is penalised for it, so
+                          #   the pruned length divided by the horizon, 2.5 / 3.0 = 0.83 m/s, is a hard
+                          #   disincentive ceiling. Measured: MPPI's own output never passed 0.50 m/s in run 7
+                          #   or 0.63 m/s in run 9, and 0 percent of moving samples reached 0.8 of the cap.
+                          #   4.0 m clears the 3.0 m horizon and still sits inside the 10 m local cost map.
       regenerate_noises: true # default false
 
       # linear
@@ -232,9 +245,13 @@ controller_server:
         cost_weight: 5.0
         max_path_occupancy_ratio: 0.05 # (0-1), if this much of the path is occupied,
         trajectory_point_step: 2 # ITER1: was 1. See the note on CostCritic.trajectory_point_step.
-        threshold_to_consider: 1.2 # ITER1: was 0.5. Hand over to GoalCritic before the 1.0 m stop radius.
-        offset_from_furthest: 20 # ITER1: was 5, i.e. 13 cm of path. 20 points is 0.5 m, so the robot gets its
+        threshold_to_consider: 1.6 # ITER1: was 0.5. Hand over to GoalCritic before the 1.0 m stop radius.
+                                   # ITER3: was 1.2. Scales with the look-ahead below.
+        offset_from_furthest: 36 # ITER1: was 5, i.e. 13 cm of path. 20 points is 0.5 m, so the robot gets its
                                  #   bearing before this critic starts holding it to the line.
+                                 # ITER3: was 20. Measured spacing in the iteration-3 plans is 2.8-2.9 cm
+                                 #   (logged per plan by claude_tools/run_story.py), so 20 points was 0.57 m.
+                                 #   36 points is 1.0 m, which is one second of path at the new 1.0 m/s cap.
         use_path_orientations: true
       
       # Penalizes trajectories that don't make forward progress along the path
@@ -242,19 +259,30 @@ controller_server:
         enabled: true
         cost_power: 1
         cost_weight: 1.0
-        offset_from_furthest: 24 # ITER1: was 5. This critic drags the end of each rollout towards the path point
+        offset_from_furthest: 45 # ITER1: was 5. This critic drags the end of each rollout towards the path point
                                  #   offset_from_furthest ahead of the furthest point the rollouts already reach.
                                  #   At 2.5 cm spacing that carrot was 13 cm out - no forward pull at all. 24
                                  #   points is 0.61 m.
-        threshold_to_consider: 1.5 # ITER1: was 1.4. Follows xy_goal_tolerance.
+                                 # ITER3: was 24. Measured spacing in the iteration-3 plans is 2.8-2.9 cm, so
+                                 #   24 points put the carrot 0.68 m beyond the furthest rollout - sized for
+                                 #   0.5 m/s, and under a quarter of the 3.0 s horizon at 1.0 m/s. The carrot
+                                 #   has to stay ahead of the fastest rollout to keep rewarding speed, so it
+                                 #   is scaled with the cap: 45 points is 1.27 m. See prune_distance above,
+                                 #   which is the harder of the two limits.
+        threshold_to_consider: 2.0 # ITER1: was 1.4. Follows xy_goal_tolerance.
+                                   # ITER3: was 1.5. Has to exceed the look-ahead above or the critic switches
+                                   #   itself off before the carrot is reachable.
 
       # Penalizes trajectories that deviate significantly from the path angle
       PathAngleCritic:
         enabled: true
         cost_power: 1
         cost_weight: 2.0
-        offset_from_furthest: 20 # ITER1: was 10, i.e. 26 cm of path. 20 points is 0.5 m.
-        threshold_to_consider: 1.2 # ITER1: was 0.5. Follows xy_goal_tolerance.
+        offset_from_furthest: 36 # ITER1: was 10, i.e. 26 cm of path. 20 points is 0.5 m.
+                                 # ITER3: was 20. Matched to PathAlignCritic above: 36 points is 1.0 m, so the
+                                 #   robot lines up on where the path goes a second from now, not 0.57 m ahead.
+        threshold_to_consider: 1.6 # ITER1: was 0.5. Follows xy_goal_tolerance.
+                                   # ITER3: was 1.2. Scales with the look-ahead above.
         max_angle_to_furthest: 0.6 # ITER1: was 1.0. Starts lining the robot up at 34 degrees of error instead of
                                    #   57, so it enters the turn already pointing into it.
         mode: 2 # default 0; determine what counts as "in line" with the angle. 0 - robot must face forward, 1 - robot can face forward or backward, 2 - robot must face whatever direction the path says
@@ -279,10 +307,18 @@ global_costmap:
       width: 30
       origin_x: -15.0
       origin_y: -15.0
-      publish_frequency: 2.0  # ITER1: was 5.0 and was only managing 1.9-3.4 Hz. This topic is for RViz and the
+      publish_frequency: 5.0  # ITER1: was 5.0 and was only managing 1.9-3.4 Hz. This topic is for RViz and the
                               #   speed governor; nothing in the planning loop reads it.
       update_frequency: 5.0   # ITER1: was 30.0. The tree replans at 2 Hz, so 5 Hz is already generous.
-      always_send_full_costmap: false
+      # ITER3: was false. With false, Costmap2DPublisher::publishCostmap only sends a full
+      #   /costmap message when the resolution, the size or the ORIGIN changes; otherwise it
+      #   sends a delta on /costmap_updates. Both maps roll, so the origin only moves while the
+      #   robot does - a STATIONARY robot publishes nothing on /costmap at all. That is why
+      #   runs 2 and 4 of iteration 3, which deliberately parked the robot and waited for the
+      #   decay, recorded no cost map during the wait, and why the cost map at the instant of
+      #   run 8's failure is not in the bag either. Costs one full message per publish at the
+      #   existing 2 Hz, not a higher rate.
+      always_send_full_costmap: true
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
@@ -365,7 +401,7 @@ global_costmap:
           vertical_fov_angle: 0.5236  # rad. The VLP-16's 30 degrees, symmetric about horizontal.
           vertical_fov_padding: 0.0   # padding WIDENS the frustum and so clears more. Keep at 0.
           horizontal_fov_angle: 6.29  # rad. The VLP-16 sees all the way round.
-          decay_acceleration: 20.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
+          decay_acceleration: 5.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
           model_type: 1               # 1 = 3D lidar frustum, 0 = depth camera
 
         # ---- LANE / POTHOLE: unchanged in meaning, marking only, now with a decay timer ----
@@ -493,11 +529,19 @@ local_costmap:
       width: 10
       origin_x: -5.0
       origin_y: -5.0
-      publish_frequency: 2.0  # ITER1: was 5.0, and was only managing 1.5-2.7 Hz.
+      publish_frequency: 10.0  # ITER1: was 5.0, and was only managing 1.5-2.7 Hz.
       update_frequency: 10.0  # ITER1: was 30.0. This map lives in the controller server's process and was
                               #   competing with MPPI for the same core; it only ever managed 15-22 Hz anyway.
                               #   10 Hz matches controller_frequency, which is as often as the map is read.
-      always_send_full_costmap: false
+      # ITER3: was false. With false, Costmap2DPublisher::publishCostmap only sends a full
+      #   /costmap message when the resolution, the size or the ORIGIN changes; otherwise it
+      #   sends a delta on /costmap_updates. Both maps roll, so the origin only moves while the
+      #   robot does - a STATIONARY robot publishes nothing on /costmap at all. That is why
+      #   runs 2 and 4 of iteration 3, which deliberately parked the robot and waited for the
+      #   decay, recorded no cost map during the wait, and why the cost map at the instant of
+      #   run 8's failure is not in the bag either. Costs one full message per publish at the
+      #   existing 2 Hz, not a higher rate.
+      always_send_full_costmap: true
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
@@ -529,9 +573,18 @@ local_costmap:
       stvl_layer:
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled: true
-        voxel_decay: 15.0             # s. How long an UNSEEN voxel survives. This is the only thing
+        voxel_decay: 30.0             # s. How long an UNSEEN voxel survives. This is the only thing
                                       #   that forgets an obstacle out of the sensor's view, so it is
                                       #   deliberately long: the robot passes a bin in about 4 s.
+                                      # ITER3: was 15.0. Iteration 3 raised the GLOBAL map to 30.0 but
+                                      #   left this one at 15.0, so the two maps disagreed about how long
+                                      #   an unseen obstacle lives, and the map the CONTROLLER reads was
+                                      #   the forgetful one. Matched up.
+                                      #   Measured on real_bag2 through a live cost map node: this number
+                                      #   only decides the lifetime of voxels OUTSIDE the clearing
+                                      #   frustum. Every cluster in that scene was inside it and died in
+                                      #   0.7 s regardless of whether this said 15 or 30 - see
+                                      #   change_report.pdf.
         decay_model: 0                # 0 = linear, 1 = exponential, -1 = never forget
         voxel_size: 0.025             # matches the cost map resolution, so a voxel is one cell
         track_unknown_space: false    # matches track_unknown_space below: unseen space is free
@@ -580,7 +633,7 @@ local_costmap:
           vertical_fov_angle: 0.5236  # rad. The VLP-16's 30 degrees, symmetric about horizontal.
           vertical_fov_padding: 0.0   # padding WIDENS the frustum and so clears more. Keep at 0.
           horizontal_fov_angle: 6.29  # rad. The VLP-16 sees all the way round.
-          decay_acceleration: 20.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
+          decay_acceleration: 5.0     # 1/s^2. How much faster an in-view unseen voxel is forgotten.
           model_type: 1               # 1 = 3D lidar frustum, 0 = depth camera
 
         # ---- LANE / POTHOLE: unchanged in meaning, marking only, now with a decay timer ----

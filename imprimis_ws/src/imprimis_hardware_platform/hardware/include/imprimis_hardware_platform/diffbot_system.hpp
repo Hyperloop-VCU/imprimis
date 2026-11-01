@@ -107,6 +107,7 @@ private:
   std::vector<double> hw_velocities_;
   double mode_gpio;
   double boardBConnected_gpio;
+  double rtlatency_gpio;
   double dummy_gpio_cmd;
 };
 

@@ -17,6 +17,7 @@ const char LMK[] = "testtesttesttest";
 struct AtoBPacket
 {
   bool ignorePacket;           // If this is true, board B will pretend like it didn't receive the message. Used for probing connection status.
+  unsigned long timestamp;     // timestamp for latency measurements.
   float setLeftAngvel;         // Angular velocity setpoint for the left PID controller, or open-loop effort if openLoop=true
   float setRightAngvel;        // Angular velocity setpoint for the right PID controller, or open-loop effort if openLoop=true
   bool reset;                  // If board A sets this to true, B will reset the motor controllers and encoder counts
@@ -31,6 +32,7 @@ struct BtoAPacket
 {
   float currLeftAngvel;
   float currRightAngvel;
+  unsigned long timestamp; // associated timestamp from AtoBPacket
 };
 
 
@@ -61,7 +63,7 @@ struct BtoAPacket
 
 #define PID_UPDATE_PERIOD_MS 5 // PID loop rate - changing this requires changing the PID gains
 #define TIMEOUT_MS 300 // If B doesn't receive data for this long, stop the robot
-#define DATA_SEND_RATE_MS 30 // How often to send wheel angvels from B to A
+//#define DATA_SEND_RATE_MS 30 // How often to send wheel angvels from B to A
 
 #define LEFT_COUNTS_PER_REV 18575 // Encoder counts per wheel revolution for each wheel
 #define RIGHT_COUNTS_PER_REV 18575

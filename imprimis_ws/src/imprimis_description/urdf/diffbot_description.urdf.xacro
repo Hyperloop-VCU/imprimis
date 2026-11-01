@@ -18,7 +18,7 @@
 <xacro:property name="base_length" value="1.022" />  <!-- 40.250" --> <!-- Edge-to-edge length of the bottom and middle planes -->
 <xacro:property name="base_height" value="0.486" />  <!-- 19.125" --> <!-- Top of bottom plane to top of middle plane -->
 <xacro:property name="wheel_len" value="0.1020" />   <!-- 04.000" -->
-<xacro:property name="wheel_radius" value="0.18" />  <!-- 07.000" -->
+<xacro:property name="wheel_radius" value="0.165" />  <!-- 06.500" -->
 <!-- Coincidentally, wheel_xoff is almost exactly equal to the wheel radius -->
 <xacro:property name="wheel_yoff" value="0.124"/>    <!-- 04.875" --> <!-- Edge of robot width to wheel center -->
 <xacro:property name="wheel_zoff" value="0.0523"/>   <!-- 02.050" --> <!-- Top of bottom plane to wheel center-->

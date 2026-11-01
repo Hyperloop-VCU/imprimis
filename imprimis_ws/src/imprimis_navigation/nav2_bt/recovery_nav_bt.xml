@@ -34,6 +34,12 @@
       the controller working from a 1.12 s old plan. Planning measured under 0.1 s in the bags,
       and the global cost map is now 11x smaller, so 2 Hz is affordable.
 
+    - ITERATION 3: the two error-code gates are spelled out with AreErrorCodesPresent instead
+      of WouldAControllerRecoveryHelp / WouldAPlannerRecoveryHelp. Those two nodes carry fixed
+      code lists that leave out ComputePathToPose 205 START_OCCUPIED, 206 GOAL_OCCUPIED and
+      FollowPath 107 CONTROLLER_TIMED_OUT. Run 8 of iteration 3 failed on 205 and the gate
+      refused it, so the round robin below never ran at all - see the note on the gate itself.
+
   A robot facing a genuinely closed passage will forget the dead end here and drive at it again.
   The lap manager stops such a lap (no ground gained along the route for 75 s); indoors, the
   tester is the lap manager.
@@ -52,7 +58,14 @@
         <RecoveryNode number_of_retries="1" name="FollowPath">
           <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
           <Sequence>
-            <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+            <!-- ITERATION 3: was WouldAControllerRecoveryHelp, which hard-codes
+                 {100 UNKNOWN, 104 PATIENCE_EXCEEDED, 105 FAILED_TO_MAKE_PROGRESS,
+                 106 NO_VALID_CONTROL} and so does not include 107 CONTROLLER_TIMED_OUT.
+                 Spelling the list out adds 107 and makes it visible what is covered.
+                 101 INVALID_CONTROLLER, 102 TF_ERROR and 103 INVALID_PATH are left out on
+                 purpose: those are configuration faults that no amount of retrying fixes. -->
+            <AreErrorCodesPresent error_code="{follow_path_error_code}"
+                                  error_codes_to_check="100;104;105;106;107"/>
             <!-- Deliberately empty of any clear: a single bad control cycle is not a reason to
                  throw away what the cost maps know. controller_server.failure_tolerance absorbs
                  those, and anything worse drops through to the round robin below. -->
@@ -60,9 +73,23 @@
         </RecoveryNode>
       </PipelineSequence>
       <Sequence>
+        <!-- ITERATION 3: THIS GATE IS WHY RUN 8 DIED WITH THE RECOVERY UNUSED.
+             At t=13.62 the planner logged
+               GridBasedplugin failed to plan from (2.14, 1.69) to (1.55, 6.42): "Start occupied"
+             which is ComputePathToPose error 205, START_OCCUPIED. WouldAPlannerRecoveryHelp
+             only matches {200 UNKNOWN, 207 TIMEOUT, 208 NO_VALID_PATH}, so it returned FAILURE,
+             the controller condition returned FAILURE too, this Fallback failed, and the whole
+             round robin below never ticked once: no BackUp, no Wait, no clear. The run aborted
+             3.1 m in. Backing up is exactly the right answer to START_OCCUPIED, and the robot
+             was never allowed to try it.
+             Listing the codes explicitly adds 205 START_OCCUPIED and 206 GOAL_OCCUPIED, and
+             keeps out the codes a recovery genuinely cannot help with: 201 INVALID_PLANNER,
+             202 TF_ERROR, 203 START_OUTSIDE_MAP, 204 GOAL_OUTSIDE_MAP. -->
         <Fallback>
-          <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
-          <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+          <AreErrorCodesPresent error_code="{follow_path_error_code}"
+                                error_codes_to_check="100;104;105;106;107"/>
+          <AreErrorCodesPresent error_code="{compute_path_error_code}"
+                                error_codes_to_check="200;205;206;207;208"/>
         </Fallback>
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>

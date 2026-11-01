@@ -16,12 +16,13 @@ bool yellowLightOn = false;
 unsigned long yellowLightLastSwitched = millis();
 unsigned long manualSwitchLastRead = millis();
 unsigned long manualCommandLastSent = millis();
-//unsigned long rosDataLastSent = millis();
+unsigned long autonomousCmdLastSent = millis();
 
 std::atomic<bool> boardBConnected{};
 std::atomic<bool> manualMode{};
 std::atomic<float> leftAngvel{};
 std::atomic<float> rightAngvel{};
+std::atomic<float> rtlatency{};
 
 FlyskyIBUS IBUS(Serial2, RX_RC_IBUS, TX_RC_IBUS);
 esp_now_peer_info_t peerInfo;
@@ -41,6 +42,9 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   // update atomics
   leftAngvel = received_data.currLeftAngvel;
   rightAngvel = received_data.currRightAngvel;
+
+  // update latency
+  rtlatency = millis() - received_data.timestamp;
 }
 
 // Send data callback: runs whenever A sends commands/setpoints to B
@@ -67,6 +71,7 @@ void handleROS()
       dataToSend.ignorePacket = false;
       int valsRead = sscanf(rosBuffer, "s %f %f", &dataToSend.setLeftAngvel, &dataToSend.setRightAngvel);
       if (valsRead == 2) {
+        dataToSend.timestamp = millis();
         esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
       }
       else {
@@ -77,7 +82,8 @@ void handleROS()
     float rightAngvel_tmp = rightAngvel;
     bool boardBConnected_tmp = boardBConnected;
     bool manual_tmp = manualMode;
-    Serial.printf("@%.2f %.2f %d %d\n", leftAngvel_tmp, rightAngvel_tmp, manual_tmp, boardBConnected_tmp);
+    unsigned long latency_tmp = rtlatency;
+    Serial.printf("@%.2f %.2f %d %d %ld\n", leftAngvel_tmp, rightAngvel_tmp, manual_tmp, boardBConnected_tmp, latency_tmp);
     bufferIndex = 0;
     //rosDataLastSent = millis();
   } 
@@ -91,7 +97,6 @@ void handleROS()
   // message still in-progress but we overflowed the buffer. this should never happen
   else {
     bufferIndex = 0;
-
   }
 
 }

@@ -54,6 +54,7 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_init(const hardware
   hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   mode_gpio = 0.0;
   boardBConnected_gpio = 0.0;
+  rtlatency_gpio = 0.0;
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -75,7 +76,7 @@ std::vector<hardware_interface::StateInterface> DiffBotSystemHardware::export_st
   auto gpio = info_.gpios[0];
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "manualMode", &mode_gpio));
   state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "boardBConnected", &boardBConnected_gpio));
-
+  state_interfaces.emplace_back(hardware_interface::StateInterface(gpio.name, "rtlatency", &rtlatency_gpio));
   return state_interfaces;
 }
 
@@ -124,7 +125,8 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
       std::this_thread::sleep_for(100ms);
       float leftAngvel, rightAngvel;
       bool read_mode, boardBConnected;
-      status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
+      unsigned long rtlatency;
+      status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected, rtlatency);
 
       if (status != SerialLink::Status::Ok) {
         RCLCPP_INFO(get_logger(), "Non-boardA device found on port %s (%s)", ports[i], esp32->status_to_string(status));
@@ -176,7 +178,8 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
   // read states from board A
   float leftAngvel, rightAngvel;
   bool read_mode, boardBConnected;
-  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected);
+  unsigned long rtlatency;
+  auto read_status = esp32->read_current_state(leftAngvel, rightAngvel, read_mode, boardBConnected, rtlatency);
 
   // Check backlog
   size_t backlog = esp32->getAvailable();
@@ -198,8 +201,12 @@ hardware_interface::return_type DiffBotSystemHardware::read(const rclcpp::Time &
     RCLCPP_WARN(get_logger(), "Lost connection to board B and the motors!");
   else if (boardBConnected && !boardBConnected_gpio)
     RCLCPP_INFO(get_logger(), "Connection to motors re-established.");
+
   mode_gpio = static_cast<double>(read_mode);
   boardBConnected_gpio = static_cast<double>(boardBConnected);
+  rtlatency_gpio = static_cast<double>(rtlatency);
+
+
 
   // Board B and motors off, assume motors stopped
   if (!boardBConnected_gpio) {
