@@ -44,7 +44,7 @@ void receiveDataCB(const uint8_t * mac, const uint8_t *incomingData, int len)
   rightAngvel = received_data.currRightAngvel;
 
   // update latency
-  rtlatency = millis() - received_data.timestamp;
+  //rtlatency = millis() - received_data.timestamp;
 }
 
 // Send data callback: runs whenever A sends commands/setpoints to B
@@ -65,27 +65,48 @@ void handleROS()
     
   // message finished
   if (inChar == '\n') {
+
+    // autonomous mode
     if (!manualMode) {
       struct AtoBPacket dataToSend{};
       dataToSend.openLoop = 0;
       dataToSend.ignorePacket = false;
-      int valsRead = sscanf(rosBuffer, "s %f %f", &dataToSend.setLeftAngvel, &dataToSend.setRightAngvel);
-      if (valsRead == 2) {
-        dataToSend.timestamp = millis();
-        esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
+
+      // setpoint command
+      if (rosBuffer[0] == 's') {
+        int valsRead = sscanf(rosBuffer, "s %f %f", &dataToSend.setLeftAngvel, &dataToSend.setRightAngvel);
+        if (valsRead == 2) {
+          dataToSend.timestamp = 0; //millis();
+          esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
+        }
+        else {
+          // handle failed read
+        }
       }
-      else {
-        // TODO do something if the read command isn't valid
+
+      // pid gain command
+      else if (rosBuffer[0] == 'e') {
+        int valsRead = sscanf(rosBuffer, "e %f %f %f %d", &dataToSend.newKp, &dataToSend.newKi, &dataToSend.newKd, &dataToSend.gainChange);
+        if (valsRead == 4) {
+          dataToSend.timestamp = 0; //millis();
+          esp_now_send(B_MAC, (uint8_t*)&dataToSend, sizeof(AtoBPacket));
+        }
+        else {
+          // handle failed read
+        }
       }
     }
-    float leftAngvel_tmp = leftAngvel;
-    float rightAngvel_tmp = rightAngvel;
-    bool boardBConnected_tmp = boardBConnected;
-    bool manual_tmp = manualMode;
-    unsigned long latency_tmp = rtlatency;
-    Serial.printf("@%.2f %.2f %d %d %ld\n", leftAngvel_tmp, rightAngvel_tmp, manual_tmp, boardBConnected_tmp, latency_tmp);
+
+    // get data command: works in both manual and autonomous mode
+    if (rosBuffer[0] == 'g') {
+      float leftAngvel_tmp = leftAngvel;
+      float rightAngvel_tmp = rightAngvel;
+      bool boardBConnected_tmp = boardBConnected;
+      bool manual_tmp = manualMode;
+      unsigned long latency_tmp = rtlatency;
+      Serial.printf("@%.2f %.2f %d %d %ld\n", leftAngvel_tmp, rightAngvel_tmp, manual_tmp, boardBConnected_tmp, latency_tmp);
+    }
     bufferIndex = 0;
-    //rosDataLastSent = millis();
   } 
 
   // message in-progress

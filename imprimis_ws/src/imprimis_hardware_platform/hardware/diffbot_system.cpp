@@ -104,7 +104,7 @@ hardware_interface::CallbackReturn DiffBotSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // setup serial connection
-  esp32 = std::make_shared<SerialLink>(921600, 0.0);
+  esp32 = std::make_shared<SerialLink>(921600, 0.003);
 
   // try ports
   const char* ports[] =

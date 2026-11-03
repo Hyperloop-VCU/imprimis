@@ -6,8 +6,6 @@ import struct
 from threading import Thread
 
 
-
-
 # This class handles all communication with the ESP32.
 
 class Esp32:
@@ -21,17 +19,28 @@ class Esp32:
         )
     
     def send_setpoint(self, left: float, right: float):
-
         msg = f"s {left:.2f} {right:.2f}"
         self.ser.write(bytes(msg + '\n', 'utf-8'))
 
     def read_angvels(self) -> tuple[float, float]:
-        data = self.ser.read(8)
-        if len(data) == 8:
-            left, right = struct.unpack('<ff', data)
-            return (left, right)
-        print(f"Could not read data from ESP32")
-        return (0.0, 0.0)
+
+        # write
+        msg = f"g"
+        self.ser.write(bytes(msg + '\n', 'utf-8'))
+
+        # then read
+        line = self.ser.readline()
+        if not line:
+            print("Failed to read from board A: line is false")
+            return 0, 0
+        text = line.decode("ascii", errors="ignore").strip()[1:]
+        try:
+            left, right, mode, conn, latency_ignore = [float(x) for x in text.split(" ")]
+        except ValueError as e:
+            print(f"Failed to read from board A: {e}")
+            return 0, 0
+
+        return left, right
     
     def send_PI(self, p: float, i: float, d: float, motor: int):
         msg = f"e {p:.2f} {i:.2f} {d:.2f} {motor}"
@@ -99,14 +108,16 @@ ax.set_ylabel("Angular velocity")
 
 # attach mouse move event callback
 fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
-esp32 = Esp32("/dev/ttyUSB0", 115200, 1.0)
+esp32 = Esp32("/dev/ttyUSB0", 921600, 1.0)
 time.sleep(1)
-esp32.send_PI(2.0, 6.0, 0.0, 1)
-esp32.send_PI(2.0, 6.0, 0.0, 2)
-esp32.reset()
+esp32.send_PI(2.3, 6.2, 0.0, 1)
+time.sleep(1)
+esp32.send_PI(2.3, 6.2, 0.0, 2)
+#esp32.reset()
 start_time = time.time()
+time.sleep(1)
 
-ani = animation.FuncAnimation(fig, update, init_func=init, interval=50, blit=True)
+ani = animation.FuncAnimation(fig, update, init_func=init, interval=10, blit=True)
 plt.show()
 
 esp32.close()
