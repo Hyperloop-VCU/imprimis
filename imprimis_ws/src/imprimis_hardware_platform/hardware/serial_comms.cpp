@@ -71,6 +71,14 @@ SerialLink::Status SerialLink::read_current_state(float& leftAngVel, float& righ
 {
     if (!is_connected()) return Status::NotConnected;
 
+    try {
+        std::string cmd = "g\n";
+        size_t n = g_ser->write(reinterpret_cast<const uint8_t*>(cmd.data()), cmd.size());
+        if (n != cmd.size()) return Status::WriteFailed;
+    } catch (...) {
+        return Status::WriteFailed;
+    }
+
     try 
     {
         std::string bytes;

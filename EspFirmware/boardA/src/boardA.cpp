@@ -7,6 +7,7 @@
 #include <atomic>
 #include "../../common/config.h"
 #include <FlyskyIBUS.h>
+#include <esp_wifi.h>
 
 #define SERIAL_BUFFER_SIZE 30
 #define SWITCH_READ_PERIOD_MS 100
@@ -131,6 +132,9 @@ void setup()
 
   // ESP-NOW
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);
+  esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_max_tx_power(84);
   esp_now_init();
   memcpy(peerInfo.peer_addr, B_MAC, 6);
   peerInfo.channel = 0;  

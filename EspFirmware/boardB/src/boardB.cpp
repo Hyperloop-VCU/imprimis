@@ -11,6 +11,7 @@
 #include "../../common/config.h"
 #include "driver/pcnt.h"
 #include "hal/pcnt_hal.h"
+#include <esp_wifi.h>
 #include "MotorController.cpp"
 
 
@@ -30,6 +31,8 @@ unsigned long time_of_last_data_send = millis();
 
 std::atomic<bool> openLoop{true};
 std::atomic<bool> pauseUpdates{false};
+//std::atomic<float> receivedLeftSetpoint{};
+//std::atomic<float> receivedRightSetpoint{};
 
 // encoder PCNT configs
 pcnt_config_t left_encoder_config0 {
@@ -89,6 +92,9 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   memcpy(&received_data, incomingData, sizeof(received_data));
   if (received_data.ignorePacket) return;
   time_of_last_data_receive = millis();
+
+  //receivedLeftSetpoint = received_data.setLeftAngvel;
+  //receivedRightSetpoint = received_data.setRightAngvel;
   
   if (received_data.reset || (openLoop != received_data.openLoop)) {
     pauseUpdates = true;
@@ -101,12 +107,13 @@ void receiveDataCB(const uint8_t* mac, const uint8_t* incomingData, int len)
   leftController.newSetpoint(received_data.setLeftAngvel);
   rightController.newSetpoint(received_data.setRightAngvel);
 
-  // send data to board A, ping pong
+  /* send data to board A, ping pong
   struct BtoAPacket data_to_send{};
   data_to_send.currLeftAngvel = leftController.getAngvel();
   data_to_send.currRightAngvel = rightController.getAngvel();
   data_to_send.timestamp = received_data.timestamp;
   (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
+  */
   pauseUpdates = false;
 }
 
@@ -136,6 +143,9 @@ void setup()
 
   // setup ESP-now, register receive callback
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);
+  esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_max_tx_power(84);
   esp_now_init();
   memcpy(peerInfo.peer_addr, A_MAC, 6);
   peerInfo.channel = 0;  
@@ -144,6 +154,11 @@ void setup()
   for (uint8_t i = 0; i < 16; i++) peerInfo.lmk[i] = LMK[i];
   esp_now_add_peer(&peerInfo);
   esp_now_register_recv_cb(esp_now_recv_cb_t(receiveDataCB));
+
+  //while (1) {
+  //  Serial.println(WiFi.macAddress());
+  //  delay(100);
+  //}
 }
 
 
@@ -160,7 +175,7 @@ void loop()
     return;
   }
 
-  // Update controllers at a fixed rate
+  // Update controllers  and send data at a fixed rate
   if (millis() - time_of_last_controller_update > PID_UPDATE_PERIOD_MS) {
     if (!pauseUpdates) {
       int16_t leftEncoderCount, rightEncoderCount;
@@ -178,14 +193,10 @@ void loop()
       pcnt_counter_clear(RIGHT_ENCODER_PCNT);
     }
     time_of_last_controller_update = millis();
-  }
 
-  // Send data to board A at a fixed rate
-  if (millis() - time_of_last_data_send > DATA_SEND_RATE_MS) {
     struct BtoAPacket data_to_send{};
     data_to_send.currLeftAngvel = leftController.getAngvel();
     data_to_send.currRightAngvel = rightController.getAngvel();
     (void*)esp_now_send(A_MAC, (uint8_t *)&data_to_send, sizeof(data_to_send));
-    time_of_last_data_send = millis();
   }
 }

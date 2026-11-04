@@ -298,11 +298,10 @@ time.sleep(1)
 esp32.send_PI(2.3, 6.2, 0.0, 1)
 time.sleep(1)
 esp32.send_PI(2.3, 6.2, 0.0, 2)
-#esp32.reset()
 start_time = time.time()
 time.sleep(1)
 
-ani = animation.FuncAnimation(fig, update, init_func=init, interval=10, blit=True)
+ani = animation.FuncAnimation(fig, update, init_func=init, interval=33, blit=True)
 plt.show()
 
 esp32.close()

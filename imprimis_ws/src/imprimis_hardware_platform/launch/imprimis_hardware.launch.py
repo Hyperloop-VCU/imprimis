@@ -235,7 +235,7 @@ def generate_launch_description():
             Node(
                 package="umx_driver",
                 executable="um7_driver",
-                parameters=[{"port": "/dev/ttyUSB1"}],
+                parameters=[{"port": "/dev/ttyUSB1", "update_rate": 60}], # 60 Hz is the maximum that 115200 baud supports. 115200 is the max baud the driver supports
                 arguments=["--ros-args", "--log-level", "warn"]
             )
         ],
