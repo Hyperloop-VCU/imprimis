@@ -23,8 +23,7 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            'lane_detection = imprimis_perception.segmentation:main',
-            'lane_segmentation = imprimis_perception.segmentation:main',
+            'lane_segmentation = imprimis_perception.lane_segmentation:main',
             'lane_projection = imprimis_perception.lane_projection:main',
             'lane_mapper = imprimis_perception.lane_mapper:main',
             'ramp_detector = imprimis_perception.ramp_detector:main'
