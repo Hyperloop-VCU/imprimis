@@ -94,15 +94,52 @@
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>
           <RoundRobin name="RecoveryActions">
-            <!-- 1. Back off a little and look again. 0.5 m rather than the old 0.6 m: the shorter
-                    the reverse, the better its chance of passing the behavior server's own
-                    collision check and actually completing. -->
-            <BackUp backup_dist="0.5" backup_speed="0.25" error_code_id="{backup_error_code}"/>
-            <!-- 2. Stand still long enough for a full Velodyne sweep (10 Hz) to mark and, now,
-                    to clear. -->
+            <!-- ITERATION 4: THE GATE ABOVE NOW WORKS AND EVERY RUNG BELOW IT DID NOT.
+                 Runs 3, 4 and 10 all entered this round robin. Between them they made
+                 EIGHT BackUp attempts and all eight aborted with error 714,
+                   behavior_server: "Collision Ahead - Exiting DriveOnHeading"
+                 - four of them in under 20 ms, before the robot moved at all. The round
+                 robin therefore reached ClearEntireCostmap in 5.4 s (run 4), 5.1 s
+                 (run 3) and 8.1 s (run 10), and runs 4 and 10 went on to clear BOTH
+                 maps. Clearing is supposed to be the last resort; it was in practice the
+                 first rung that did anything.
+
+                 Why BackUp aborts, from nav2_behaviors DriveOnHeading::isCollisionFree:
+                 it simulates the reverse forward by simulate_ahead_time (1.0 s here) at
+                 backup_speed, stopping early once it has covered the requested distance,
+                 and vetoes the WHOLE manoeuvre if the footprint at any simulated pose
+                 covers a cell of cost 254. At backup_speed 0.25 that projection was
+                 0.25 m. This robot's tail reaches 0.86 m behind base_link, and these
+                 aborts all happened where the measured footprint clearance was 2.5-5 cm,
+                 so 0.25 m of straight reverse always put the tail outline on a lethal
+                 cell.
+
+                 Two changes, both aimed at letting a reverse actually start:
+                   * backup_speed 0.25 -> 0.10, so the veto looks 0.10 m ahead instead of
+                     0.25 m. This does NOT remove the protection: onCycleUpdate re-runs
+                     the same check every cycle at 10 Hz, so the reverse still stops
+                     before contact - it just is not refused outright before it begins.
+                   * the first reverse is shortened to 0.30 m, because the projection is
+                     also capped by the distance still to run, so a shorter request is
+                     checked over a shorter span.
+                 A reverse is now slower (0.30 m takes 3 s) and that is accepted: a
+                 recovery that takes three seconds and works beats one that takes ten
+                 milliseconds and fails.
+
+              1. Stand still FIRST. This used to be step 2. Nothing moves, so it can never
+                 be refused, and it is the one rung that was always going to run: STVL's
+                 in-frustum decay clears an unseen voxel in about 1 s at
+                 decay_acceleration 5.0 (measured in iteration 3), so two seconds is
+                 enough to drop a transient mark before anything is asked to reverse into
+                 it. If the blockage was transient, the replan after this rung succeeds
+                 and nothing else in the round robin is ever reached. -->
             <Wait wait_duration="2.0"/>
-            <!-- 3. Back off further. -->
-            <BackUp backup_dist="0.8" backup_speed="0.25" error_code_id="{backup_error_code}"/>
+            <!-- 2. Back off a little and look again. 0.30 m at 0.10 m/s. -->
+            <BackUp backup_dist="0.30" backup_speed="0.10" error_code_id="{backup_error_code}"/>
+            <!-- 3. Another full sweep's worth of standing still. -->
+            <Wait wait_duration="2.0"/>
+            <!-- 4. Back off further, same speed so the same 0.10 m veto window applies. -->
+            <BackUp backup_dist="0.50" backup_speed="0.10" error_code_id="{backup_error_code}"/>
             <Wait wait_duration="2.0"/>
             <!-- 5. LAST RESORT, step one: forget the local map only. The global map keeps the
                     route, so the robot cannot wander off it while the controller re-reads the

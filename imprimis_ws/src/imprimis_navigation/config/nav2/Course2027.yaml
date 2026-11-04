@@ -723,7 +723,18 @@ local_costmap:
 velocity_smoother:
   ros__parameters:
     enable_stamped_cmd_vel: true
-    smoothing_frequency: 10.0
+    # ITER4: was 10.0. Measured on every iteration-4 bag, the header stamp on each
+    #   /diffbot_base_controller/cmd_vel message is 92 ms old at the median and 95-100 ms
+    #   old whenever the robot is moving - one whole smoother period. The smoother
+    #   republishes on its own clock and carries its INPUT's stamp, so a command issued by
+    #   MPPI waits up to 1/smoothing_frequency here before it is sent on. At 10 Hz that is
+    #   a mean 50 ms of pure queueing delay added to the 40-55 ms of real actuation dead
+    #   time measured in latency_claude_3; at 20 Hz it is a mean 25 ms.
+    #   Nothing about the shaping changes: feedback is OPEN_LOOP, so the ramp is set by
+    #   max_accel/max_decel below and those are untouched - doubling the rate only halves
+    #   how long a fresh command sits before it is acted on. It does not touch MPPI, which
+    #   still runs at controller_frequency 10.0.
+    smoothing_frequency: 20.0
     feedback: "OPEN_LOOP"
     scale_velocities: false
     # ITER1: this is now the last line of defence, and it is deliberately set as one.
