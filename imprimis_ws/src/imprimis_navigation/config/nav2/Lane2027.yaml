@@ -298,7 +298,7 @@ global_costmap:
         lane_points:
           topic: /perception/lane_points
           data_type: "PointCloud2"
-          sensor_frame: camera_color_optical_frame
+          sensor_frame: d435i_color_optical_frame # the driver frame with camera_name:=d435i; clearing rays start here
           # LANE TUNING (iteration 2): was False, inherited from Course2027/the reference file. With
           # clearing off, every frame's (noisy) detections just pile onto the costmap forever and
           # never get taken back -- that's what turned a thin tape line into the growing solid blob
@@ -411,7 +411,7 @@ local_costmap:
         lane_points:
           topic: /perception/lane_points
           data_type: "PointCloud2"
-          sensor_frame: camera_color_optical_frame
+          sensor_frame: d435i_color_optical_frame # the driver frame with camera_name:=d435i; clearing rays start here
           # LANE TUNING (iteration 2): see the matching comment in the global costmap's lane_layer.
           clearing: True
           marking: True

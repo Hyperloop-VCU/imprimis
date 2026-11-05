@@ -34,20 +34,37 @@ def segment_lane_pixels(cv_image: np.ndarray, lower_white, upper_white, kernel: 
     return mask, raw_mask
 
 
+def shrink_to_width(cv_image: np.ndarray, max_width: int):
+    """The image resized to at most max_width pixels wide (0 = leave it), and the scale that was applied."""
+    width = cv_image.shape[1]
+    if max_width <= 0 or width <= max_width:
+        return cv_image, 1.0
+    scale = max_width / float(width)
+    height = int(round(cv_image.shape[0] * scale))
+    return cv2.resize(cv_image, (max_width, height), interpolation=cv2.INTER_AREA), scale
+
+
 class LaneSegmentation(Node):
     def __init__(self):
         super().__init__('lane_segmentation')
 
-        self.declare_parameter('image_topic', '/camera/camera/color/image_raw')
+        self.declare_parameter('image_topic', '/cameras/d435i/color/image_raw')
+        # base name; the PNG mask goes out on <mask_topic>/compressed (image_transport naming, so rviz/rqt_image_view find it)
+        self.declare_parameter('mask_topic', '/perception/d435i/lane_mask')
+        self.declare_parameter('raw_mask_topic', '/perception/d435i/lane_mask_raw')
         self.declare_parameter('process_rate_hz', 10.0)
+        self.declare_parameter('processing_width', 640) #shrink wider images to this before segmenting, saves Pi CPU and network; 0 keeps native size
         self.declare_parameter('lower_white', (0, 0, 200))
         self.declare_parameter('upper_white', (179, 60, 255))
         self.declare_parameter('min_area', 400.0) #below this is mostly ceiling-light speckle, measured from real test footage
-        self.declare_parameter('max_area', 60000.0)
-        self.declare_parameter('publish_raw_mask', True) #should we publish the raw mask view, keep true for testing
+        self.declare_parameter('max_area', 60000.0) #min_area and max_area are in pixels of the camera's native image, and are scaled when it is shrunk
+        self.declare_parameter('publish_raw_mask', False) #publish the mask before the area filter, turn on for testing
 
         image_topic = self.get_parameter('image_topic').value
+        mask_topic = self.get_parameter('mask_topic').value
+        raw_mask_topic = self.get_parameter('raw_mask_topic').value
         self.process_period = 1.0 / self.get_parameter('process_rate_hz').value
+        self.processing_width = self.get_parameter('processing_width').value
         self.lower_white = self.get_parameter('lower_white').value
         self.upper_white = self.get_parameter('upper_white').value
         self.min_area = self.get_parameter('min_area').value
@@ -69,18 +86,18 @@ class LaneSegmentation(Node):
 
         self.mask_pub = self.create_publisher(
             CompressedImage,
-            'perception/mask/compressed', #image_transport naming convention, so rviz/rqt_image_view can find it
+            mask_topic + '/compressed',
             1
         )
 
         self.raw_mask_pub = self.create_publisher(
             CompressedImage,
-            'perception/mask_raw/compressed',
+            raw_mask_topic + '/compressed',
             1
         )
 
         self.get_logger().info(
-            f'Lane segmentation started. Waiting on {image_topic}'
+            f'Lane segmentation started. Waiting on {image_topic}, publishing {mask_topic}/compressed'
         )
 
     def parameter_callback(self, params):
@@ -105,6 +122,11 @@ class LaneSegmentation(Node):
             if param.name == 'publish_raw_mask':
                 self.publish_raw_mask = param.value
 
+            if param.name == 'processing_width':
+                if param.value < 0:
+                    return SetParametersResult(successful=False, reason='processing_width was below 0')
+                self.processing_width = param.value
+
         return SetParametersResult(successful=True)
 
     def image_cb(self, msg: Image):
@@ -115,9 +137,13 @@ class LaneSegmentation(Node):
         self.last_process_time = now
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        cv_image, scale = shrink_to_width(cv_image, self.processing_width)
 
+        # the projector rescales the camera intrinsics to whatever size the mask arrives at
+        area_scale = scale * scale
         mask, raw_mask = segment_lane_pixels(
-            cv_image, self.lower_white, self.upper_white, self.kernel, self.min_area, self.max_area)
+            cv_image, self.lower_white, self.upper_white, self.kernel,
+            self.min_area * area_scale, self.max_area * area_scale)
 
         mask_msg = self.bridge.cv2_to_compressed_imgmsg(mask, dst_format='png')
         mask_msg.header = msg.header

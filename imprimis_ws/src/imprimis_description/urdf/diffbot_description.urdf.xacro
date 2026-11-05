@@ -14,13 +14,13 @@
 <xacro:property name="top_section_mass" value="10.0"/>
 
 <!-- Robot measurements -->
-<xacro:property name="base_width" value="0.6223" />  <!-- 24.500" --> <!-- Edge-to-edge robot width, same across all heights. This allows us to represent the robot width as a single rectangular prism if we want. -->
+<xacro:property name="base_width" value="0.6096" />  <!-- 24.000" --> <!-- Edge-to-edge robot width, same across all heights. This allows us to represent the robot width as a single rectangular prism if we want. -->
 <xacro:property name="base_length" value="1.022" />  <!-- 40.250" --> <!-- Edge-to-edge length of the bottom and middle planes -->
 <xacro:property name="base_height" value="0.486" />  <!-- 19.125" --> <!-- Top of bottom plane to top of middle plane -->
-<xacro:property name="wheel_len" value="0.1020" />   <!-- 04.000" -->
-<xacro:property name="wheel_radius" value="0.18" />  <!-- 07.000" -->
+<xacro:property name="wheel_len" value="0.10795" />   <!-- 04.250" -->
+<xacro:property name="wheel_radius" value="0.175" />
 <!-- Coincidentally, wheel_xoff is almost exactly equal to the wheel radius -->
-<xacro:property name="wheel_yoff" value="0.124"/>    <!-- 04.875" --> <!-- Edge of robot width to wheel center -->
+<xacro:property name="wheel_yoff" value="0.1214"/>    <!-- 04.78125" --> <!-- Edge of robot width to wheel center -->
 <xacro:property name="wheel_zoff" value="0.0523"/>   <!-- 02.050" --> <!-- Top of bottom plane to wheel center-->
 <xacro:property name="lidar_pole_side" value="0.0266"/>  <!-- 01.050" --> <!-- Side length of lidar pole -->
 <xacro:property name="lidar_pole_height" value="0.300"/> <!-- 11.810" --> <!-- Top of top plane to top of the pole -->
@@ -352,8 +352,10 @@
 
 <!-- Camera joint and link  -->
 <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+<!-- Measured on the robot 2026-11-04: lens center 27.0" (0.686 m) above flat ground, tilted 12 deg down.
+     The +0.0245 raises front_link to that height; 0.2094 rad = 12 deg. -->
 <xacro:sensor_d435i parent="chassis" name="front">
-  <origin xyz="${base_length+0.01} 0 ${base_height-0.022+0.065}" rpy="0 0.2269 0"/>
+  <origin xyz="${base_length+0.01} 0 ${base_height-0.022+0.065+0.0245}" rpy="0 0.2094 0"/>
 </xacro:sensor_d435i>
 
 <!-- Connect camera link to the rest of the robot

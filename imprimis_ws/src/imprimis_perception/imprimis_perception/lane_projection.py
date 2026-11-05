@@ -1,84 +1,93 @@
+"""Lane projection: lane masks from one or more cameras, placed on the ground and published for the cost maps.
+
+Each camera's segmentation node sends a mono8 PNG mask. This node looks up where that camera sits on the
+robot (TF, from the URDF), works out once which ground point every mask pixel sees, and per mask keeps
+the ground points under white pixels. Only narrow marks survive (st.thin_structures), and points near
+something the LiDAR sees standing up are dropped.
+
+Output is in base_frame (base_link), which speed_governor expects. The points sit output_height above
+the ground: 0 puts them on it, for Lane2027.yaml's lane_layer (-0.3 to 0.1 m in odom). Course2027.yaml's
+lane_mark source (0.0 to 2.0 m) was tuned for the old lane_mapper's 0.5 m above base_link, about 0.62 here.
+
+Adding a camera: add its name to camera_names. Its topics and optical frame follow from the name by the
+patterns below, and its mount comes from TF, in any position or direction.
+
+Topics out:
+  perception/lane_points     (PointCloud2, base_frame)
+  perception/pothole_points  (PointCloud2, base_frame)
+"""
 import math
 
+import numpy as np
 import rclpy
+import tf2_ros
+from cv_bridge import CvBridge
+from rcl_interfaces.msg import SetParametersResult
 from rclpy.node import Node
 from rclpy.time import Time
-from sensor_msgs.msg import CameraInfo, CompressedImage, PointField, PointCloud2
-from cv_bridge import CvBridge
-import numpy as np
-from rcl_interfaces.msg import SetParametersResult
-from std_msgs.msg import Header
+from sensor_msgs.msg import CameraInfo, CompressedImage, PointCloud2
 from sensor_msgs_py import point_cloud2
-import tf2_ros
+from std_msgs.msg import Header
 
 from imprimis_perception import surface_tools as st
 
 
-def build_ground_grid(camera_matrix, image_width, image_height, height, angle_deg, max_range):
-    fx = camera_matrix[0][0]
-    fy = camera_matrix[1][1]
-    cx = camera_matrix[0][2]
-    cy = camera_matrix[1][2]
-
-    th = math.radians(angle_deg)
-    z_max = min(height * math.tan(th), max_range)
-    z_values = np.arange(0.5, z_max, 0.01)
-    x_values = np.arange(-3.0, 3.0, 0.01)
-    X, Z = np.meshgrid(x_values, z_values)
-
-    y_cam = height * math.sin(th) - Z * math.cos(th)
-    z_cam = height * math.cos(th) + Z * math.sin(th)
-
-    u = np.round(fx * (X / z_cam) + cx).astype(int)
-    v = np.round(fy * (y_cam / z_cam) + cy).astype(int)
-    valid = (u >= 0) & (u < image_width) & (v >= 0) & (v < image_height)
-
-    return u[valid], v[valid], X[valid], Z[valid]
+# ---------------------------------------------------------------------------------- ground geometry (no ROS)
+def scaled_intrinsics(k, info_width, info_height, mask_width, mask_height):
+    """fx, fy, cx, cy of the camera for a mask that was resized from the CameraInfo resolution."""
+    sx = mask_width / float(info_width)
+    sy = mask_height / float(info_height)
+    return k[0][0] * sx, k[1][1] * sy, k[0][2] * sx, k[1][2] * sy
 
 
-def mask_to_ground_xy(mask, u_valid, v_valid, Xg, Zg):
-    hits = mask[v_valid, u_valid] == 255
-    if not np.any(hits):
-        return np.zeros((0, 2))
+def build_ground_lookup(intr, width, height, r_base_cam, t_base_cam, ground_z,
+                        min_range=0.5, max_range=4.0, cell=0.01):
+    """Which mask pixel sees each point of a fine ground grid around the camera.
 
-    zg = Zg[hits]
-    xg = Xg[hits]
-    return np.column_stack((zg, -xg))   # top view: x forward, y left
+    r_base_cam, t_base_cam place the camera's OPTICAL frame (x right, y down, z forward) in the base
+    frame: p_base = r @ p_cam + t. The ground is the plane z = ground_z of the base frame. Grid points are
+    kept between min_range and max_range of the camera, measured along the ground, and only where they land
+    inside the image. Any mount works: tilted, rolled, turned sideways or backwards.
+
+    Returns u, v (pixel column and row per kept point) and xy (the points, base frame), all the same length.
+    """
+    fx, fy, cx, cy = intr
+    gx = np.arange(t_base_cam[0] - max_range, t_base_cam[0] + max_range, cell)
+    gy = np.arange(t_base_cam[1] - max_range, t_base_cam[1] + max_range, cell)
+    X, Y = np.meshgrid(gx, gy)
+    X, Y = X.ravel(), Y.ravel()
+    reach = np.hypot(X - t_base_cam[0], Y - t_base_cam[1])
+    near = (reach >= min_range) & (reach <= max_range)
+    X, Y = X[near], Y[near]
+
+    ground = np.stack([X, Y, np.full_like(X, ground_z)], axis=-1)
+    p_cam = (ground - t_base_cam) @ r_base_cam        # r.T @ (p - t), row by row
+    ahead = p_cam[:, 2] > 0.05
+    p_cam, X, Y = p_cam[ahead], X[ahead], Y[ahead]
+    u = np.round(fx * p_cam[:, 0] / p_cam[:, 2] + cx).astype(int)
+    v = np.round(fy * p_cam[:, 1] / p_cam[:, 2] + cy).astype(int)
+    inside = (u >= 0) & (u < width) & (v >= 0) & (v < height)
+    return u[inside], v[inside], np.stack([X[inside], Y[inside]], axis=-1)
 
 
-def ground_to_camera(zg, xg, height, angle_deg):
-    th = math.radians(angle_deg)
-    y_cam = height * math.sin(th) - zg * math.cos(th)
-    z_cam = height * math.cos(th) + zg * math.sin(th)
-    return xg, y_cam, z_cam
+def mask_to_ground_xy(mask, u, v, xy):
+    """Ground points (base frame) whose pixel in the mask is white."""
+    hits = mask[v, u] > 0
+    return xy[hits]
 
 
-def raycast(xy, max_range, height, angle_deg):
-    if len(xy) == 0:
-        return []
-
-    cells = st.thin_structures(xy, cell=0.05, x_range=(0.0, max_range), half_width=3.5, max_width=0.45)
-    if len(cells) == 0:
-        return []
-
-    zg = cells[:, 0]
-    xg = -cells[:, 1]
-    xg, y_cam, z_cam = ground_to_camera(zg, xg, height, angle_deg)
-    return np.column_stack((xg, y_cam, z_cam)).astype(np.float32).tolist()
+def grid_bounds(xy, cell=0.05):
+    """x_range and half_width for st.thin_structures / st.find_white_discs that cover all of xy."""
+    x0 = math.floor(xy[:, 0].min() / cell) * cell
+    x1 = math.ceil(xy[:, 0].max() / cell) * cell + cell
+    half = math.ceil(np.abs(xy[:, 1]).max() / cell) * cell + cell
+    return (x0, x1), half
 
 
-def find_potholes(xy, max_range, height, angle_deg):
-    if len(xy) == 0:
-        return []
-
-    discs = st.find_white_discs(xy, cell=0.05, x_range=(0.0, max_range), half_width=3.5)
-    if not discs:
-        return []
-
-    zg = np.array([hx for hx, hy, diameter, cells in discs])
-    xg = -np.array([hy for hx, hy, diameter, cells in discs])
-    xg, y_cam, z_cam = ground_to_camera(zg, xg, height, angle_deg)
-    return np.column_stack((xg, y_cam, z_cam)).astype(np.float32).tolist()
+def camera_height_and_pitch(r_base_cam, t_base_cam, ground_z):
+    """Height of the camera above the ground (m) and how far its view points below horizontal (deg). For the log."""
+    forward = r_base_cam[:, 2]
+    return t_base_cam[2] - ground_z, math.degrees(math.asin(max(-1.0, min(1.0, -forward[2]))))
 
 
 def rotation_and_translation(transform):
@@ -89,15 +98,7 @@ def rotation_and_translation(transform):
     return r, np.array([t.x, t.y, t.z])
 
 
-def height_and_angle_from_transform(transform):
-    t = transform.transform.translation
-    q = transform.transform.rotation
-    r = st.quat_to_matrix(q.x, q.y, q.z, q.w)
-    forward_z = r[2, 2]  # ground-frame z of the optical z-axis (forward)
-    angle_deg = math.degrees(math.acos(max(-1.0, min(1.0, -forward_z))))
-    return t.z, angle_deg
-
-
+# ---------------------------------------------------------------------------------- LiDAR veto (no ROS)
 def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier_fraction=0.3):
     #basically draw a plane from three randomly selected points, and check how many points have less than the distance_threshold from that plane and use that to find the best plane
     n = len(points)
@@ -132,38 +133,56 @@ def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier
 
 
 def classify_obstacles(points, plane, obstacle_height=0.12):
-    """(x, y) in the LiDAR's own frame of points standing clearly above the fitted ground plane."""
+    """Points (x, y, z in the LiDAR's own frame) standing clearly above the fitted ground plane."""
     normal, d = plane
     height_above = points @ normal + d
     obstacles = points[height_above > obstacle_height]
     if len(obstacles) == 0:
-        return np.zeros((0, 2))
+        return np.zeros((0, 3))
     # voxel-downsample so the proximity check below stays cheap
     keys = np.round(obstacles[:, :2] / 0.1).astype(int)
     _, idx = np.unique(keys, axis=0, return_index=True)
-    return obstacles[idx, :2]
+    return obstacles[idx]
 
 
-def reject_near_obstacles(points_cam, r_lidar_from_cam, t_lidar_from_cam, obstacle_xy, radius=0.2):
-    """points_cam (camera-frame x,y,z lists), dropping the ones near an obstacle seen by the LiDAR --
+def reject_near_obstacles(xy, obstacle_xy, radius=0.2):
+    """xy (base frame), dropping the points near an obstacle seen by the LiDAR --
     e.g. a wall-mounted sign the 2D mask mistook for tape."""
-    if len(points_cam) == 0 or len(obstacle_xy) == 0:
-        return points_cam
+    if len(xy) == 0 or len(obstacle_xy) == 0:
+        return xy
+    d2 = ((xy[:, None, :] - obstacle_xy[None, :, :]) ** 2).sum(axis=2)
+    return xy[d2.min(axis=1) >= radius ** 2]
 
-    p_lidar = np.array(points_cam) @ r_lidar_from_cam.T + t_lidar_from_cam
-    d2 = ((p_lidar[:, None, :2] - obstacle_xy[None, :, :]) ** 2).sum(axis=2)
-    near = d2.min(axis=1) < radius ** 2
-    return [p for p, bad in zip(points_cam, near) if not bad]
+
+class Camera:
+    """What the projector knows about one camera."""
+
+    def __init__(self, name):
+        self.name = name
+        self.info = None            # CameraInfo, the first one received
+        self.mount = None           # (r, t) of the optical frame in the base frame
+        self.frame_id = None
+        self.lookup = None          # (u, v, xy, mask shape)
+        self.stamp = None           # seconds, of the newest mask
+        self.lanes = np.zeros((0, 2))
+        self.holes = np.zeros((0, 2))
 
 
 class LaneProjection(Node):
     def __init__(self):
         super().__init__('lane_projection')
 
-        self.declare_parameter('mask_topic', 'perception/mask/compressed')
-        self.declare_parameter('camera_info_topic', '/camera/camera/color/camera_info')
-        self.declare_parameter('frame_id', 'camera_color_optical_frame')
-        self.declare_parameter('base_frame_id', 'base_footprint')
+        self.declare_parameter('camera_names', ['d435i'])
+        # {name} is replaced by each camera name
+        self.declare_parameter('mask_topic_pattern', '/perception/{name}/lane_mask/compressed')
+        self.declare_parameter('camera_info_topic_pattern', '/cameras/{name}/color/camera_info')
+        self.declare_parameter('base_frame', 'base_link')
+        self.declare_parameter('ground_frame', 'base_footprint')  # the ground plane is z of this frame
+        self.declare_parameter('output_height', 0.0)              # m above the ground the points are published at, see the docstring
+        self.declare_parameter('min_range', 0.5)                  # m along the ground from the camera
+        self.declare_parameter('max_range', 4.0)                  # beyond about 4 m one pixel covers too much ground
+        self.declare_parameter('max_line_width', 0.45)            # wider white areas are not lane tape
+        self.declare_parameter('max_camera_age', 0.5)             # s; another camera's points older than this are left out
         self.declare_parameter('detect_potholes', True)
         self.declare_parameter('lidar_topic', 'velodyne_points')
         self.declare_parameter('lidar_frame_id', 'velodyne')
@@ -174,10 +193,16 @@ class LaneProjection(Node):
         self.declare_parameter('lidar_min_range', 0.5)          # drop closer returns -- the sim LiDAR reports
                                                                   # degenerate (0,0,0) self-hits inside this radius
 
-        mask_topic = self.get_parameter('mask_topic').value
-        camera_info_topic = self.get_parameter('camera_info_topic').value
-        self.frame_id = self.get_parameter('frame_id').value
-        self.base_frame_id = self.get_parameter('base_frame_id').value
+        names = list(self.get_parameter('camera_names').value)
+        mask_pattern = self.get_parameter('mask_topic_pattern').value
+        info_pattern = self.get_parameter('camera_info_topic_pattern').value
+        self.base_frame = self.get_parameter('base_frame').value
+        self.ground_frame = self.get_parameter('ground_frame').value
+        self.output_height = self.get_parameter('output_height').value
+        self.min_range = self.get_parameter('min_range').value
+        self.max_range = self.get_parameter('max_range').value
+        self.max_line_width = self.get_parameter('max_line_width').value
+        self.max_camera_age = self.get_parameter('max_camera_age').value
         self.detect_potholes = self.get_parameter('detect_potholes').value
         lidar_topic = self.get_parameter('lidar_topic').value
         self.lidar_frame_id = self.get_parameter('lidar_frame_id').value
@@ -186,91 +211,55 @@ class LaneProjection(Node):
         self.obstacle_reject_radius = self.get_parameter('obstacle_reject_radius').value
         self.ground_plane_range = self.get_parameter('ground_plane_range').value
         self.lidar_min_range = self.get_parameter('lidar_min_range').value
-        self.max_range = 4.0
 
         self.bridge = CvBridge()
-
-        self.camera_matrix = None
-        self.have_intrinsics = False
-        self.height = None
-        self.theta = None
-        self.geometry_ready = False
-        self.u_valid = self.v_valid = self.Xg = self.Zg = None
-
-        self.r_lidar_from_cam = None
-        self.t_lidar_from_cam = None
-        self.lidar_extrinsic_ready = False
-        self.obstacle_xy = np.zeros((0, 2))
-
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+        self.static_tf = {}
+        self.ground_z = None
+        self.obstacle_xy = np.zeros((0, 2))
 
         self.add_on_set_parameters_callback(self.parameter_callback)
 
-        self.camera_info_sub = self.create_subscription(CameraInfo, camera_info_topic, self.camera_info_cb, 1)
-        self.mask_sub = self.create_subscription(CompressedImage, mask_topic, self.mask_cb, 1)
-        self.lidar_sub = self.create_subscription(PointCloud2, lidar_topic, self.lidar_cb, 1)
+        self.cameras = []
+        for name in names:
+            camera = Camera(name)
+            self.cameras.append(camera)
+            mask_topic = mask_pattern.format(name=name)
+            info_topic = info_pattern.format(name=name)
+            self.create_subscription(CameraInfo, info_topic, lambda m, c=camera: self.camera_info_cb(c, m), 1)
+            self.create_subscription(CompressedImage, mask_topic, lambda m, c=camera: self.mask_cb(c, m), 1)
+            self.get_logger().info(f'Camera {name}: waiting on {mask_topic} and {info_topic}')
+        self.create_subscription(PointCloud2, lidar_topic, self.lidar_cb, 1)
 
         self.lane_pointcloud = self.create_publisher(PointCloud2, 'perception/lane_points', 1)
         self.pothole_pointcloud = self.create_publisher(PointCloud2, 'perception/pothole_points', 1)
 
-        # the mounts are fixed, so these only have to succeed once; they retry because TF
-        # catches up after the drivers finish starting, which can be later than this node
-        self.geometry_timer = self.create_timer(0.5, self.try_update_geometry)
-        self.lidar_geometry_timer = self.create_timer(0.5, self.try_update_lidar_geometry)
-
-        self.get_logger().info(
-            f'Lane projection started. Waiting on {mask_topic}, {camera_info_topic}, '
-            f'and TF {self.base_frame_id} -> {self.frame_id}'
-        )
-
-    def camera_info_cb(self, msg: CameraInfo):
-        if self.have_intrinsics:
-            return
-        self.camera_matrix = np.array(msg.k).reshape(3, 3)
-        self.image_width = msg.width
-        self.image_height = msg.height
-        self.have_intrinsics = True
-        self.try_build_ground_grid()
-
-    def try_update_geometry(self):
-        if self.geometry_ready:
-            self.geometry_timer.cancel()
-            return
+    def lookup_static(self, child):
+        """(r, t) of a frame fixed to the robot, in the base frame, or None until TF has it. Cached."""
+        if child in self.static_tf:
+            return self.static_tf[child]
         try:
-            transform = self.tf_buffer.lookup_transform(self.base_frame_id, self.frame_id, Time())
+            transform = self.tf_buffer.lookup_transform(self.base_frame, child, Time())
         except tf2_ros.TransformException as ex:
-            self.get_logger().info(
-                f'Waiting on TF {self.base_frame_id} -> {self.frame_id}: {ex}', throttle_duration_sec=5.0)
-            return
+            self.get_logger().info(f'Waiting on TF {self.base_frame} -> {child}: {ex}', throttle_duration_sec=5.0)
+            return None
+        self.static_tf[child] = rotation_and_translation(transform)
+        return self.static_tf[child]
 
-        self.height, self.theta = height_and_angle_from_transform(transform)
-        self.geometry_ready = True
-        self.get_logger().info(f'Camera geometry from TF: height={self.height:.3f} m, angle={self.theta:.2f} deg')
-        self.try_build_ground_grid()
-        self.geometry_timer.cancel()
+    def parameter_callback(self, params):
+        for param in params:
+            if param.name == 'detect_potholes':
+                self.detect_potholes = param.value
+        return SetParametersResult(successful=True)
 
-    def try_build_ground_grid(self):
-        if self.have_intrinsics and self.geometry_ready:
-            self.recompute()
-
-    def try_update_lidar_geometry(self):
-        if self.lidar_extrinsic_ready:
-            self.lidar_geometry_timer.cancel()
-            return
-        try:
-            transform = self.tf_buffer.lookup_transform(self.lidar_frame_id, self.frame_id, Time())
-        except tf2_ros.TransformException as ex:
-            self.get_logger().info(
-                f'Waiting on TF {self.lidar_frame_id} -> {self.frame_id}: {ex}', throttle_duration_sec=5.0)
-            return
-
-        self.r_lidar_from_cam, self.t_lidar_from_cam = rotation_and_translation(transform)
-        self.lidar_extrinsic_ready = True
-        self.lidar_geometry_timer.cancel()
+    def camera_info_cb(self, camera, msg: CameraInfo):
+        if camera.info is None:
+            camera.info = msg
 
     def lidar_cb(self, msg: PointCloud2):
-        if not self.lidar_extrinsic_ready:
+        mount = self.lookup_static(self.lidar_frame_id)
+        if mount is None:
             return
         points = point_cloud2.read_points_numpy(msg, field_names=['x', 'y', 'z'], skip_nans=True)
         if len(points) == 0:
@@ -288,51 +277,74 @@ class LaneProjection(Node):
         plane = fit_ground_plane(points, distance_threshold=self.ground_plane_distance)
         if plane is None:
             return
-        self.obstacle_xy = classify_obstacles(points, plane, self.obstacle_height)
+        obstacles = classify_obstacles(points, plane, self.obstacle_height)
+        self.obstacle_xy = (obstacles @ mount[0].T + mount[1])[:, :2]
 
-    def parameter_callback(self, params):
-        for param in params:
-            if param.name == 'detect_potholes':
-                self.detect_potholes = param.value
-        return SetParametersResult(successful=True)
+    def ready(self, camera, msg, mask):
+        """Build the camera's ground lookup when everything it needs is known. True when it can be used."""
+        if camera.info is None:
+            self.get_logger().info(f'Camera {camera.name}: waiting on CameraInfo', throttle_duration_sec=5.0)
+            return False
+        if self.ground_z is None:
+            ground = self.lookup_static(self.ground_frame)
+            if ground is None:
+                return False
+            self.ground_z = float(ground[1][2])
+        if camera.mount is None or camera.frame_id != msg.header.frame_id:
+            mount = self.lookup_static(msg.header.frame_id)
+            if mount is None:
+                return False
+            camera.mount, camera.frame_id, camera.lookup = mount, msg.header.frame_id, None
+            height, pitch = camera_height_and_pitch(mount[0], mount[1], self.ground_z)
+            self.get_logger().info(f'Camera {camera.name}: {camera.frame_id} is {height:.3f} m above the ground, '
+                                   f'looking {pitch:.1f} deg down')
+        if camera.lookup is None or camera.lookup[3] != mask.shape:
+            intr = scaled_intrinsics(np.array(camera.info.k).reshape(3, 3), camera.info.width, camera.info.height,
+                                     mask.shape[1], mask.shape[0])
+            u, v, xy = build_ground_lookup(intr, mask.shape[1], mask.shape[0], camera.mount[0], camera.mount[1],
+                                           self.ground_z, self.min_range, self.max_range)
+            camera.lookup = (u, v, xy, mask.shape)
+        return True
 
-    def mask_cb(self, msg: CompressedImage):
-        if self.u_valid is None:
+    def mask_cb(self, camera, msg: CompressedImage):
+        mask = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        if mask.ndim == 3:
+            mask = mask[:, :, 0]
+        if not self.ready(camera, msg, mask):
             return
 
-        mask = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='passthrough')
-        xy = mask_to_ground_xy(mask, self.u_valid, self.v_valid, self.Xg, self.Zg)
-
-        lane_points = raycast(xy, self.max_range, self.height, self.theta)
-        if self.lidar_extrinsic_ready:
-            lane_points = reject_near_obstacles(
-                lane_points, self.r_lidar_from_cam, self.t_lidar_from_cam,
+        u, v, xy, _ = camera.lookup
+        white = mask_to_ground_xy(mask, u, v, xy)
+        camera.lanes = np.zeros((0, 2))
+        camera.holes = np.zeros((0, 2))
+        if len(white):
+            x_range, half_width = grid_bounds(xy)
+            camera.lanes = reject_near_obstacles(
+                st.thin_structures(white, cell=0.05, x_range=x_range, half_width=half_width,
+                                   max_width=self.max_line_width),
                 self.obstacle_xy, self.obstacle_reject_radius)
-        self.publish_point_cloud(self.lane_pointcloud, lane_points, msg.header.stamp)
+            if self.detect_potholes:
+                discs = st.find_white_discs(white, cell=0.05, x_range=x_range, half_width=half_width)
+                centers = np.array([[hx, hy] for hx, hy, _, _ in discs]).reshape(-1, 2)
+                camera.holes = reject_near_obstacles(centers, self.obstacle_xy, self.obstacle_reject_radius)
+        camera.stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
 
+        # every camera with a recent enough mask contributes to one cloud
+        fresh = [c for c in self.cameras
+                 if c.stamp is not None and abs(camera.stamp - c.stamp) <= self.max_camera_age]
+        self.publish_point_cloud(self.lane_pointcloud, np.concatenate([c.lanes for c in fresh]), msg.header.stamp)
         if self.detect_potholes:
-            pothole_points = find_potholes(xy, self.max_range, self.height, self.theta)
-            if self.lidar_extrinsic_ready:
-                pothole_points = reject_near_obstacles(
-                    pothole_points, self.r_lidar_from_cam, self.t_lidar_from_cam,
-                    self.obstacle_xy, self.obstacle_reject_radius)
-            self.publish_point_cloud(self.pothole_pointcloud, pothole_points, msg.header.stamp)
+            self.publish_point_cloud(self.pothole_pointcloud, np.concatenate([c.holes for c in fresh]),
+                                     msg.header.stamp)
 
-    def publish_point_cloud(self, publisher, points, stamp):
-        fields = [
-            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
-            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
-        ]
+    def publish_point_cloud(self, publisher, xy, stamp):
+        points = np.zeros((len(xy), 3), np.float32)
+        points[:, :2] = xy
+        points[:, 2] = self.ground_z + self.output_height   # ground_z is known: no mask is used before it is
         header = Header()
-        header.frame_id = self.frame_id
+        header.frame_id = self.base_frame
         header.stamp = stamp
-        publisher.publish(point_cloud2.create_cloud(header, fields, points))
-
-    def recompute(self):
-        self.u_valid, self.v_valid, self.Xg, self.Zg = build_ground_grid(
-            self.camera_matrix, self.image_width, self.image_height,
-            self.height, self.theta, self.max_range)
+        publisher.publish(point_cloud2.create_cloud_xyz32(header, points))
 
 
 def main(args=None):

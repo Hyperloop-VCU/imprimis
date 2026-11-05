@@ -1,4 +1,4 @@
-"""Start one camera's segmentation node on the Pi attached to that camera."""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -50,10 +50,12 @@ def generate_launch_description():
 
 
     return LaunchDescription([
-        DeclareLaunchArgument('camera_name', default_value='front'),
-        DeclareLaunchArgument('image_topic', default_value='/camera/camera/color/image_raw'),
-        DeclareLaunchArgument('mask_topic', default_value='/perception/front/lane_mask'),
-        DeclareLaunchArgument('raw_mask_topic', default_value='/perception/front/lane_mask_raw'),
+        # the topics follow from camera_name, so camera_name:=<name> is normally the only argument needed
+        DeclareLaunchArgument('camera_name', default_value='d435i'),
+        DeclareLaunchArgument('image_topic', default_value=['/cameras/', camera_name, '/color/image_raw']),
+        DeclareLaunchArgument('mask_topic', default_value=['/perception/', camera_name, '/lane_mask'],
+                              description='Base name; the PNG mask is published on <mask_topic>/compressed.'),
+        DeclareLaunchArgument('raw_mask_topic', default_value=['/perception/', camera_name, '/lane_mask_raw']),
         DeclareLaunchArgument('process_rate_hz', default_value='10.0'),
         DeclareLaunchArgument('publish_raw_mask', default_value='false'),
         DeclareLaunchArgument('processing_width', default_value='640',
