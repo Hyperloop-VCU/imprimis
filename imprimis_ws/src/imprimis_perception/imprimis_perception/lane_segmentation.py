@@ -8,17 +8,25 @@ import numpy as np
 from rcl_interfaces.msg import SetParametersResult
 
 
-def segment_lane_pixels(cv_image: np.ndarray, lower_white, upper_white, kernel: np.ndarray,
+def segment_lane_pixels(cv_image: np.ndarray, max_saturation, min_contrast, tophat_size: int, kernel: np.ndarray,
                         min_area: float, max_area: float):
-    
-    hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
-    hue, sat, val = cv2.split(hsv)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    val_enhanced = clahe.apply(val)
-    blurred = cv2.GaussianBlur(val_enhanced, (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
-    hsv_enhanced = cv2.merge([hue, sat, blurred])
 
-    raw_mask = cv2.inRange(hsv_enhanced, lower_white, upper_white)
+    hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+    sat = hsv[:, :, 1]
+    val = cv2.GaussianBlur(hsv[:, :, 2], (5, 5), 0) #0 controls the spread of the gaussian distribution, 0 is set to auto instead of choosing our own
+
+    # brightness above the local background, not absolute brightness: dim tape still stands out from the ground
+    # next to it, and white areas wider than tophat_size (walls, glare) drop out. Tape must be narrower than it.
+    tophat_size = max(3, tophat_size | 1)
+    disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tophat_size, tophat_size))
+    background = cv2.morphologyEx(val, cv2.MORPH_OPEN, disc)
+    # regrow the wide areas into the corners the round disc could not reach, so they leave no slivers
+    step = np.ones((3, 3), np.uint8)
+    for _ in range(tophat_size // 2):
+        background = np.minimum(cv2.dilate(background, step), val)
+    contrast = cv2.subtract(val, background)
+
+    raw_mask = ((contrast >= min_contrast) & (sat <= max_saturation)).astype(np.uint8) * 255
     raw_mask = cv2.morphologyEx(raw_mask, cv2.MORPH_OPEN, kernel)
 
     mask = np.zeros_like(raw_mask)
@@ -54,10 +62,11 @@ class LaneSegmentation(Node):
         self.declare_parameter('raw_mask_topic', '/perception/d435i/lane_mask_raw')
         self.declare_parameter('process_rate_hz', 10.0)
         self.declare_parameter('processing_width', 640) #shrink wider images to this before segmenting, saves Pi CPU and network; 0 keeps native size
-        self.declare_parameter('lower_white', (0, 0, 200))
-        self.declare_parameter('upper_white', (179, 60, 255))
-        self.declare_parameter('min_area', 400.0) #below this is mostly ceiling-light speckle, measured from real test footage
-        self.declare_parameter('max_area', 60000.0) #min_area and max_area are in pixels of the camera's native image, and are scaled when it is shrunk
+        self.declare_parameter('max_saturation', 80)
+        self.declare_parameter('min_contrast', 40.0) #how much brighter than its surroundings (0-255 value) a pixel must be
+        self.declare_parameter('tophat_size', 102) #wider than the widest the tape looks up close; walls and glare are wider
+        self.declare_parameter('min_area', 120.0) #far tape is small: 2.5 m out in lane_test_103026 it is 70-100 px at 640 wide
+        self.declare_parameter('max_area', 60000.0) #tophat_size, min_area and max_area are in pixels of the camera's native image, and are scaled when it is shrunk
         self.declare_parameter('publish_raw_mask', False) #publish the mask before the area filter, turn on for testing
 
         image_topic = self.get_parameter('image_topic').value
@@ -65,8 +74,9 @@ class LaneSegmentation(Node):
         raw_mask_topic = self.get_parameter('raw_mask_topic').value
         self.process_period = 1.0 / self.get_parameter('process_rate_hz').value
         self.processing_width = self.get_parameter('processing_width').value
-        self.lower_white = self.get_parameter('lower_white').value
-        self.upper_white = self.get_parameter('upper_white').value
+        self.max_saturation = self.get_parameter('max_saturation').value
+        self.min_contrast = self.get_parameter('min_contrast').value
+        self.tophat_size = self.get_parameter('tophat_size').value
         self.min_area = self.get_parameter('min_area').value
         self.max_area = self.get_parameter('max_area').value
         self.publish_raw_mask = self.get_parameter('publish_raw_mask').value
@@ -107,11 +117,16 @@ class LaneSegmentation(Node):
                     return SetParametersResult(successful=False, reason='process_rate_hz was 0 or lower')
                 self.process_period = 1.0 / param.value
 
-            if (param.name == 'lower_white'):
-                self.lower_white = param.value
+            if param.name == 'max_saturation':
+                self.max_saturation = param.value
 
-            if (param.name == 'upper_white'):
-                self.upper_white = param.value
+            if param.name == 'min_contrast':
+                self.min_contrast = param.value
+
+            if param.name == 'tophat_size':
+                if param.value < 3:
+                    return SetParametersResult(successful=False, reason='tophat_size was below 3')
+                self.tophat_size = param.value
 
             if param.name == 'min_area':
                 self.min_area = param.value
@@ -142,7 +157,7 @@ class LaneSegmentation(Node):
         # the projector rescales the camera intrinsics to whatever size the mask arrives at
         area_scale = scale * scale
         mask, raw_mask = segment_lane_pixels(
-            cv_image, self.lower_white, self.upper_white, self.kernel,
+            cv_image, self.max_saturation, self.min_contrast, int(round(self.tophat_size * scale)), self.kernel,
             self.min_area * area_scale, self.max_area * area_scale)
 
         mask_msg = self.bridge.cv2_to_compressed_imgmsg(mask, dst_format='png')

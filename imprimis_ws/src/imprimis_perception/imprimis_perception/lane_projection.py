@@ -1,23 +1,5 @@
-"""Lane projection: lane masks from one or more cameras, placed on the ground and published for the cost maps.
 
-Each camera's segmentation node sends a mono8 PNG mask. This node looks up where that camera sits on the
-robot (TF, from the URDF), works out once which ground point every mask pixel sees, and per mask keeps
-the ground points under white pixels. Only narrow marks survive (st.thin_structures), and points near
-something the LiDAR sees standing up are dropped.
-
-Output is in base_frame (base_link), which speed_governor expects. The points sit output_height above
-the ground: 0 puts them on it, for Lane2027.yaml's lane_layer (-0.3 to 0.1 m in odom). Course2027.yaml's
-lane_mark source (0.0 to 2.0 m) was tuned for the old lane_mapper's 0.5 m above base_link, about 0.62 here.
-
-Adding a camera: add its name to camera_names. Its topics and optical frame follow from the name by the
-patterns below, and its mount comes from TF, in any position or direction.
-
-Topics out:
-  perception/lane_points     (PointCloud2, base_frame)
-  perception/pothole_points  (PointCloud2, base_frame)
-"""
 import math
-
 import numpy as np
 import rclpy
 import tf2_ros
@@ -32,7 +14,7 @@ from std_msgs.msg import Header
 from imprimis_perception import surface_tools as st
 
 
-# ---------------------------------------------------------------------------------- ground geometry (no ROS)
+
 def scaled_intrinsics(k, info_width, info_height, mask_width, mask_height):
     """fx, fy, cx, cy of the camera for a mask that was resized from the CameraInfo resolution."""
     sx = mask_width / float(info_width)
@@ -42,15 +24,7 @@ def scaled_intrinsics(k, info_width, info_height, mask_width, mask_height):
 
 def build_ground_lookup(intr, width, height, r_base_cam, t_base_cam, ground_z,
                         min_range=0.5, max_range=4.0, cell=0.01):
-    """Which mask pixel sees each point of a fine ground grid around the camera.
-
-    r_base_cam, t_base_cam place the camera's OPTICAL frame (x right, y down, z forward) in the base
-    frame: p_base = r @ p_cam + t. The ground is the plane z = ground_z of the base frame. Grid points are
-    kept between min_range and max_range of the camera, measured along the ground, and only where they land
-    inside the image. Any mount works: tilted, rolled, turned sideways or backwards.
-
-    Returns u, v (pixel column and row per kept point) and xy (the points, base frame), all the same length.
-    """
+    
     fx, fy, cx, cy = intr
     gx = np.arange(t_base_cam[0] - max_range, t_base_cam[0] + max_range, cell)
     gy = np.arange(t_base_cam[1] - max_range, t_base_cam[1] + max_range, cell)
@@ -71,13 +45,11 @@ def build_ground_lookup(intr, width, height, r_base_cam, t_base_cam, ground_z,
 
 
 def mask_to_ground_xy(mask, u, v, xy):
-    """Ground points (base frame) whose pixel in the mask is white."""
     hits = mask[v, u] > 0
     return xy[hits]
 
 
 def grid_bounds(xy, cell=0.05):
-    """x_range and half_width for st.thin_structures / st.find_white_discs that cover all of xy."""
     x0 = math.floor(xy[:, 0].min() / cell) * cell
     x1 = math.ceil(xy[:, 0].max() / cell) * cell + cell
     half = math.ceil(np.abs(xy[:, 1]).max() / cell) * cell + cell
@@ -85,7 +57,6 @@ def grid_bounds(xy, cell=0.05):
 
 
 def camera_height_and_pitch(r_base_cam, t_base_cam, ground_z):
-    """Height of the camera above the ground (m) and how far its view points below horizontal (deg). For the log."""
     forward = r_base_cam[:, 2]
     return t_base_cam[2] - ground_z, math.degrees(math.asin(max(-1.0, min(1.0, -forward[2]))))
 
@@ -98,7 +69,7 @@ def rotation_and_translation(transform):
     return r, np.array([t.x, t.y, t.z])
 
 
-# ---------------------------------------------------------------------------------- LiDAR veto (no ROS)
+
 def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier_fraction=0.3):
     #basically draw a plane from three randomly selected points, and check how many points have less than the distance_threshold from that plane and use that to find the best plane
     n = len(points)
@@ -132,31 +103,52 @@ def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier
     return normal, -normal @ centroid
 
 
-def classify_obstacles(points, plane, obstacle_height=0.12):
-    """Points (x, y, z in the LiDAR's own frame) standing clearly above the fitted ground plane."""
-    normal, d = plane
-    height_above = points @ normal + d
-    obstacles = points[height_above > obstacle_height]
-    if len(obstacles) == 0:
+def obstacle_cells(points_lidar, r_base_lidar, t_base_lidar, ground_z, obstacle_height=0.12, max_height=1.0,
+                   plane_distance=0.05, cell=0.1):
+    if len(points_lidar) == 0:
         return np.zeros((0, 3))
-    # voxel-downsample so the proximity check below stays cheap
-    keys = np.round(obstacles[:, :2] / 0.1).astype(int)
-    _, idx = np.unique(keys, axis=0, return_index=True)
-    return obstacles[idx]
+    points = points_lidar @ r_base_lidar.T + t_base_lidar
+    plane = fit_ground_plane(points_lidar, distance_threshold=plane_distance)
+    if plane is None or (r_base_lidar @ plane[0])[2] < 0.95:     # none found, or it is a wall: tilted over 18 deg
+        height = points[:, 2] - ground_z
+    else:
+        height = points_lidar @ plane[0] + plane[1]
+    keep = (height > obstacle_height) & (height <= max_height)
+    if not keep.any():
+        return np.zeros((0, 3))
+    xy, height = points[keep, :2], height[keep]
+    keys = np.floor(xy / cell).astype(int)
+    order = np.argsort(-height)
+    _, first = np.unique(keys[order], axis=0, return_index=True)
+    idx = order[first]
+    return np.column_stack([xy[idx], height[idx]])
 
 
 def reject_near_obstacles(xy, obstacle_xy, radius=0.2):
-    """xy (base frame), dropping the points near an obstacle seen by the LiDAR --
-    e.g. a wall-mounted sign the 2D mask mistook for tape."""
     if len(xy) == 0 or len(obstacle_xy) == 0:
         return xy
     d2 = ((xy[:, None, :] - obstacle_xy[None, :, :]) ** 2).sum(axis=2)
     return xy[d2.min(axis=1) >= radius ** 2]
 
 
-class Camera:
-    """What the projector knows about one camera."""
+def reject_hidden(xy, camera_xy, camera_height, obstacles, cell=0.1):
+    if len(xy) == 0 or len(obstacles) == 0:
+        return xy
+    d = xy - camera_xy
+    r = np.hypot(d[:, 0], d[:, 1])
+    bearing = np.arctan2(d[:, 1], d[:, 0])
+    o = obstacles[:, :2] - camera_xy
+    r_o = np.hypot(o[:, 0], o[:, 1])
+    bearing_o = np.arctan2(o[:, 1], o[:, 0])
+    h = np.minimum(obstacles[:, 2], 0.98 * camera_height)
+    shadow_end = r_o * camera_height / (camera_height - h)
+    half_width = np.arctan2(0.75 * cell, r_o)
+    turn = np.abs((bearing[:, None] - bearing_o[None, :] + np.pi) % (2 * np.pi) - np.pi)
+    hidden = (turn <= half_width) & (r[:, None] > r_o) & (r[:, None] <= shadow_end)
+    return xy[~hidden.any(axis=1)]
 
+
+class Camera:
     def __init__(self, name):
         self.name = name
         self.info = None            # CameraInfo, the first one received
@@ -188,6 +180,7 @@ class LaneProjection(Node):
         self.declare_parameter('lidar_frame_id', 'velodyne')
         self.declare_parameter('ground_plane_distance', 0.05)   # RANSAC inlier threshold, meters
         self.declare_parameter('obstacle_height', 0.12)         # above the plane counts as an obstacle
+        self.declare_parameter('obstacle_max_height', 1.0)      # higher returns (a ceiling) do not stand on the ground
         self.declare_parameter('obstacle_reject_radius', 0.2)   # veto lane points this close to one
         self.declare_parameter('ground_plane_range', 6.0)       # only fit the plane to points within this far, meters
         self.declare_parameter('lidar_min_range', 0.5)          # drop closer returns -- the sim LiDAR reports
@@ -208,6 +201,7 @@ class LaneProjection(Node):
         self.lidar_frame_id = self.get_parameter('lidar_frame_id').value
         self.ground_plane_distance = self.get_parameter('ground_plane_distance').value
         self.obstacle_height = self.get_parameter('obstacle_height').value
+        self.obstacle_max_height = self.get_parameter('obstacle_max_height').value
         self.obstacle_reject_radius = self.get_parameter('obstacle_reject_radius').value
         self.ground_plane_range = self.get_parameter('ground_plane_range').value
         self.lidar_min_range = self.get_parameter('lidar_min_range').value
@@ -217,7 +211,7 @@ class LaneProjection(Node):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
         self.static_tf = {}
         self.ground_z = None
-        self.obstacle_xy = np.zeros((0, 2))
+        self.obstacles = np.zeros((0, 3))
 
         self.add_on_set_parameters_callback(self.parameter_callback)
 
@@ -259,37 +253,31 @@ class LaneProjection(Node):
 
     def lidar_cb(self, msg: PointCloud2):
         mount = self.lookup_static(self.lidar_frame_id)
-        if mount is None:
+        if mount is None or not self.know_ground():
             return
         points = point_cloud2.read_points_numpy(msg, field_names=['x', 'y', 'z'], skip_nans=True)
         if len(points) == 0:
             return
-        # skip_nans only drops NaN rows -- a no-return ray (out of range, e.g. sky) comes back as
-        # +/-Inf instead, so drop those too, and only fit the plane to nearby points: a point far
-        # enough away that the ground has curved or sloped out from under it shouldn't have to be
-        # coplanar with the ground right around the robot, and letting it count would just dilute
-        # the inlier fraction and make a good nearby plane look like a bad one.
         points = points[np.isfinite(points).all(axis=1)]
         r = np.linalg.norm(points, axis=1)
         points = points[(r > self.lidar_min_range) & (r < self.ground_plane_range)]
-        if len(points) == 0:
-            return
-        plane = fit_ground_plane(points, distance_threshold=self.ground_plane_distance)
-        if plane is None:
-            return
-        obstacles = classify_obstacles(points, plane, self.obstacle_height)
-        self.obstacle_xy = (obstacles @ mount[0].T + mount[1])[:, :2]
+        self.obstacles = obstacle_cells(points, mount[0], mount[1], self.ground_z, self.obstacle_height,
+                                        self.obstacle_max_height, self.ground_plane_distance)
 
-    def ready(self, camera, msg, mask):
-        """Build the camera's ground lookup when everything it needs is known. True when it can be used."""
-        if camera.info is None:
-            self.get_logger().info(f'Camera {camera.name}: waiting on CameraInfo', throttle_duration_sec=5.0)
-            return False
+    def know_ground(self):
         if self.ground_z is None:
             ground = self.lookup_static(self.ground_frame)
             if ground is None:
                 return False
             self.ground_z = float(ground[1][2])
+        return True
+
+    def ready(self, camera, msg, mask):
+        if camera.info is None:
+            self.get_logger().info(f'Camera {camera.name}: waiting on CameraInfo', throttle_duration_sec=5.0)
+            return False
+        if not self.know_ground():
+            return False
         if camera.mount is None or camera.frame_id != msg.header.frame_id:
             mount = self.lookup_static(msg.header.frame_id)
             if mount is None:
@@ -306,6 +294,12 @@ class LaneProjection(Node):
             camera.lookup = (u, v, xy, mask.shape)
         return True
 
+    def lidar_veto(self, camera, xy):
+        obstacles = self.obstacles
+        xy = reject_near_obstacles(xy, obstacles[:, :2], self.obstacle_reject_radius)
+        t = camera.mount[1]
+        return reject_hidden(xy, t[:2], t[2] - self.ground_z, obstacles)
+
     def mask_cb(self, camera, msg: CompressedImage):
         mask = self.bridge.compressed_imgmsg_to_cv2(msg, desired_encoding='passthrough')
         if mask.ndim == 3:
@@ -319,14 +313,12 @@ class LaneProjection(Node):
         camera.holes = np.zeros((0, 2))
         if len(white):
             x_range, half_width = grid_bounds(xy)
-            camera.lanes = reject_near_obstacles(
-                st.thin_structures(white, cell=0.05, x_range=x_range, half_width=half_width,
-                                   max_width=self.max_line_width),
-                self.obstacle_xy, self.obstacle_reject_radius)
+            camera.lanes = self.lidar_veto(camera, st.thin_structures(
+                white, cell=0.05, x_range=x_range, half_width=half_width, max_width=self.max_line_width))
             if self.detect_potholes:
                 discs = st.find_white_discs(white, cell=0.05, x_range=x_range, half_width=half_width)
                 centers = np.array([[hx, hy] for hx, hy, _, _ in discs]).reshape(-1, 2)
-                camera.holes = reject_near_obstacles(centers, self.obstacle_xy, self.obstacle_reject_radius)
+                camera.holes = self.lidar_veto(camera, centers)
         camera.stamp = msg.header.stamp.sec + msg.header.stamp.nanosec / 1e9
 
         # every camera with a recent enough mask contributes to one cloud

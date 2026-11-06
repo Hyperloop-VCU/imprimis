@@ -13,7 +13,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/lane_detection.launch.py',
                                                 'launch/lane_segmentation.launch.py',
                                                 'launch/lane_projection.launch.py',
-                                                'launch/course_perception.launch.py'])
+                                                'launch/course_perception.launch.py',
+                                                'launch/single_cam.launch.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
