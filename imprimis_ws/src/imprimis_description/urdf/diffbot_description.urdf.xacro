@@ -36,18 +36,11 @@
 <!-- Simulated caster wheels: two swivel casters at the rear corners, as on the real robot.
      Positions are from the SolidWorks assembly HyperLabs Robot(07-03-25). Each is a low-friction
      sphere whose lowest point touches the ground, so the deck sits level. -->
-<!-- Outline of the whole robot seen from above, measured from base_link (the drive axle).
-     The Nav2 footprint in config/nav2/FullFootprint.yaml must match these numbers.
-     Front edge +0.215 m (wheel_radius plus the camera). Rear edge -0.842 m (base_length minus wheel_radius).
-     Half width 0.486 m at the outer face of the tires (base_width/2 + wheel_yoff + wheel_len/2).
-     KEEP THESE COMMENTS DIRECTLY ABOVE AN XACRO TAG AND FREE OF COLONS. A comment that reaches the
-     generated URDF with a colon in it stops the launch (robot_description fails to parse as YAML). -->
 <xacro:property name="caster_mass" value="0.1"/>
 <xacro:property name="caster_radius" value="0.0445"/>  <!-- 03.500" diameter wheel -->
 <xacro:property name="caster_xoff" value="0.07"/>      <!-- 02.750" --> <!-- Back of robot to caster wheel center -->
 <xacro:property name="caster_yoff" value="0.272"/>     <!-- 10.700" --> <!-- Robot centerline to caster wheel center -->
 <xacro:property name="caster_zoff" value="${-(wheel_radius - wheel_zoff) + caster_radius}"/> <!-- Top of bottom plane down to caster center -->
-
 
 
 

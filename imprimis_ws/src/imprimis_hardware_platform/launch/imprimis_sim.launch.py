@@ -295,7 +295,7 @@ def generate_launch_description():
         gzbridge,
         spawn_imprimis_gazebo,
         gps_covariance_fixer,
-        controller_input_launch_include
+        controller_input_launch_include,
     ]
 
     return LaunchDescription(declared_arguments + things_to_launch)

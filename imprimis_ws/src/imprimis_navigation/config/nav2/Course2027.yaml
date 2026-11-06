@@ -41,14 +41,28 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_smac_planner::SmacPlannerLattice"
-      lattice_filepath: "/home/imprimis-pc/Desktop/imprimis/imprimis_ws/src/imprimis_navigation/config/nav2/diff_2.5cm.json"   # CHANGED: your generated file
+      lattice_filepath: "/home/imprimis-pc/Desktop/imprimis/imprimis_ws/src/imprimis_navigation/config/nav2/diff_4cm.json"   # CHANGED: your generated file
       tolerance: 1.0                      # ITER1: was 2.0. Matched to xy_goal_tolerance, so a plan that ends
                                           #   short still ends inside the distance at which the robot stops.
       allow_unknown: true                 # Plan through unknown space
       max_iterations: 1000000             # <= 0 disables the limit
       max_on_approach_iterations: 1000    # Extra iterations near goal to hit it exactly
-      terminal_checking_interval: 5000    # Iterations between cancel/timeout checks
-      max_planning_time: 2.0              # ITER1: was 5.0. Planning measured under 0.1 s in the real runs; a 5 s
+      # ITER5: was 5000. max_planning_time was NOT being honoured. The timeout is only
+      #   tested once every terminal_checking_interval node expansions, so the planner
+      #   overshoots the budget by however long the next 5000 expansions take. Measured
+      #   off the behaviour tree log on the iteration-5 bags, against a 450 ms budget:
+      #     real_bag10  9 failed plans, median 480 ms, individual 469/480/490/630/659/689 ms
+      #     real_bag2   2 failed plans, 760 ms and 869 ms
+      #   i.e. up to 1.9x the budget. 5000 expansions was cheap on the old 30x30 m map and
+      #   is not on 100x100 m, because a blocked query now fans out across far more free
+      #   space before it gives up. 1000 brings the overshoot back to ~1/5 of what it was;
+      #   the check itself is a clock read, so the search cost of checking 5x more often is
+      #   negligible next to the expansions between checks.
+      #   This LOWERS worst-case planning latency; it does not make any query succeed that
+      #   failed before. Whether the budget itself should be larger is a separate question -
+      #   see the iteration-5 report, it is deliberately left at 0.45 for now.
+      terminal_checking_interval: 1000    # Iterations between cancel/timeout checks
+      max_planning_time: 0.45              # ITER1: was 5.0. Planning measured under 0.1 s in the real runs; a 5 s
                                           #   budget only delays the failure report, and the tree replans at 2 Hz.
       analytic_expansion_ratio: 3.5       # How often to try a direct shot to the goal
       analytic_expansion_max_length: 3.0  # Max length (m) of that direct shot
@@ -64,7 +78,7 @@ planner_server:
                                           #   Spin is kept out of the recovery tree; the planner must not use them either.
       retrospective_penalty: 0.015        # Prefers later maneuvers; 0.0 = fully admissible
       lookup_table_size: 20.0             # Heuristic cache window (m)
-      cache_obstacle_heuristic: false     # true speeds replanning a lot on static maps
+      cache_obstacle_heuristic: true     # true speeds replanning a lot on static maps
       allow_reverse_expansion: false      # Allow reverse primitives
       goal_heading_mode: "ALL_DIRECTION"  # ITER1: was "DEFAULT". We do not care which way the robot faces at the goal,
                                           #   so let the planner finish on whichever heading is cheapest.
@@ -98,7 +112,18 @@ controller_server:
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
       required_movement_radius: 0.35
-      movement_time_allowance: 20.0
+      # ITER5: was 20.0. This is the ONLY clock that notices a robot which is stuck while
+      #   its plan is still valid, and it was the gate the team saw in run 8: the controller
+      #   did not report "Failed to make progress" (error 105) until t=47.7 s, meaning the
+      #   robot had failed to cover required_movement_radius since t=27.7 s - twenty seconds
+      #   of standing still with no recovery attempted. Every OTHER recovery episode in the
+      #   iteration-5 bags was triggered by a planner failure instead, and those reached the
+      #   recovery branch in 1.2-1.8 s, which is why this went unnoticed until now.
+      #   8.0 s still asks for only 0.35 m / 8 s = 0.044 m/s average. The slowest sustained
+      #   speed measured anywhere in these ten runs was 0.197 m/s (run 10, median while
+      #   moving), so there is a 4x margin before this fires on a legitimately crawling
+      #   robot. Do not take it much below 8 s without re-measuring that margin.
+      movement_time_allowance: 8.0
 
     # GOAL CHECKER
     goal_checker:
@@ -303,13 +328,13 @@ global_costmap:
       # ITER1: was 100 x 100 m. At 0.025 m that is 16 MILLION cells, rebuilt and re-centred 30 times a second
       # (it is a rolling window, so every update copies the whole grid). The planner never looks more than a
       # few metres out and the waypoints in these tests were 6.5-7.9 m away. 30 x 30 m is 1.44 M cells.
-      height: 30
-      width: 30
-      origin_x: -15.0
-      origin_y: -15.0
+      height: 100
+      width: 100
+      origin_x: -50.0
+      origin_y: -50.0
       publish_frequency: 5.0  # ITER1: was 5.0 and was only managing 1.9-3.4 Hz. This topic is for RViz and the
                               #   speed governor; nothing in the planning loop reads it.
-      update_frequency: 5.0   # ITER1: was 30.0. The tree replans at 2 Hz, so 5 Hz is already generous.
+      update_frequency: 2.0   # ITER1: was 30.0. The tree replans at 2 Hz, so 5 Hz is already generous.
       # ITER3: was false. With false, Costmap2DPublisher::publishCostmap only sends a full
       #   /costmap message when the resolution, the size or the ORIGIN changes; otherwise it
       #   sends a delta on /costmap_updates. Both maps roll, so the origin only moves while the
@@ -322,11 +347,38 @@ global_costmap:
       rolling_window: true
       global_frame: odom
       robot_base_frame: base_link
-      resolution: 0.025
+      resolution: 0.04
 
       # CHANGED: the real outline instead of a 0.54 m circle around the drive axle
       footprint_padding: 0.00 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
-      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.20, -0.33], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.33], [-0.20, 0.49] ]"
+      # ITER4Y: re-derived from the re-measured URDF properties. Every vertex below is a
+      #   derived quantity plus the SAME safety margin the previous footprint carried, so
+      #   nothing here trades away margin - it only moves the outline to where the body
+      #   actually is. Derivations, all in base_link (the drive axle), x forward:
+      #     chassis front face  = wheel_radius              = +0.175   (chassis_joint is at
+      #                                                                 -base_length + wheel_radius)
+      #     chassis rear face   = -(base_length - radius)   = -0.847
+      #     outer tire face     = track/2 + wheel_len/2     =  0.48141 from diffbot_controllers
+      #                                                        wheel_separation 0.85487; the URDF's
+      #                                                        own numbers give 0.48018, so the
+      #                                                        larger of the two is used
+      #     chassis half width  = base_width/2              =  0.3048
+      #   margins preserved from the old outline: front +0.005, half width +0.00385,
+      #   wide-section rear +0.035, tail half width +0.01885, rear +0.003.
+      #
+      #   THE IMPORTANT CHANGE IS NOT THE WIDTH. Width only drops 0.980 -> 0.970 m. But the
+      #   outline SHIFTS 10 mm forward relative to base_link, because the URDF derives the
+      #   chassis position from wheel_radius and that went 0.165 -> 0.175. Front +0.22 ->
+      #   +0.23 and rear -0.86 -> -0.85: the tail is 10 mm SHORTER than the planner has been
+      #   assuming. That matters most to DriveOnHeading's reverse check, which is exactly
+      #   what vetoed all eight BackUps in iteration 4.
+      #   See the note in the iteration-4 verification report: the URDF treats
+      #   wheel_xoff as equal to wheel_radius, which it calls a coincidence. The axle's real
+      #   distance from the chassis face does not change when a tire is re-measured, so that
+      #   10 mm shift should be confirmed with a tape before it is trusted.
+      #
+      #   Derived properties: inscribed radius 0.220 -> 0.230 m, circumscribed 0.921 -> 0.910 m.
+      footprint: "[ [0.230, 0.485], [0.230, -0.485], [-0.210, -0.485], [-0.210, -0.324], [-0.850, -0.324], [-0.850, 0.324], [-0.210, 0.324], [-0.210, 0.485] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -350,6 +402,34 @@ global_costmap:
       stvl_layer:
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled: true
+        # ITER6: BACK TO 30.0 for the first outdoor session, deliberately undoing the ITER5
+        #   change to 60.0. The reason is not that 60.0 was wrong indoors - it was not - but
+        #   that outdoor terrain is not planar, so returns that slip past ramp_detector's
+        #   surface_max_height get marked as obstacles, and at 60.0 a false ground mark
+        #   survives a full minute. That is the iteration-1 accumulation failure (marks pile
+        #   up until no route exists) in a new form, and it is not worth carrying into a
+        #   session whose whole purpose is to shake out GPS localisation. 30.0 also restores
+        #   the value five iterations of indoor runs were tuned against, which is what keeps
+        #   the outdoor runs comparable to them.
+        #   WHAT THIS RE-OPENS, stated plainly: run 8's collision chain. Measured from
+        #   real_bag8 - the robot stalls 1.02-1.15 m short of a goal whose tolerance is
+        #   1.00 m, with the last bin between it and the goal. The bin is ~0.6-0.9 m tall and
+        #   at that range the Velodyne's lowest ring is at 0.96 m (sensor 1.225 m up, -15 deg),
+        #   so the bin sits below EVERY ring and is never re-observed while the robot waits
+        #   there. Recovery cycles four times over 27 s. At t=93.8-95.4 s the lethal cells on
+        #   the line to the goal go 94 -> 72 -> 39 -> 0 and the peak cost falls 254 -> 223 ->
+        #   190: the bin is erased ~30 s after it was last seen, the planner returns a path
+        #   straight through where it was, and the robot drives into it. No ClearEntireCostmap
+        #   ran in that bag - this was decay alone.
+        #   The four recovery episodes spanned 33 s, which is LONGER than this 30 s memory, so
+        #   number_of_retries: 4 in recovery_nav_bt.xml can still outlive the map. The
+        #   companion change, NOT made here because it was not asked for, is
+        #   number_of_retries: 3 (~25 s), which puts the loop back inside the memory.
+        #   Two mitigations are real outdoors and were absent in run 8: IGVC 2027 rules II.2
+        #   guarantee a five-foot minimum passage width, so a waypoint with a barrel 1 m in
+        #   front of it is far less likely than on a hand-built lab course; and the mechanical
+        #   team is lowering the Velodyne, which closes the blind cone that made the bin
+        #   unobservable at all (at 0.60 m a 0.60 m obstacle never goes blind).
         voxel_decay: 30.0             # s. How long an UNSEEN voxel survives. This is the only thing
                                       #   that forgets an obstacle out of the sensor's view, so it is
                                       #   deliberately long: the robot passes a bin in about 4 s.
@@ -509,7 +589,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 1.7 # higher is more leniant (3.0 was tried on the course: the robot brushed barrels)
-        inflation_radius: 2.0 # ITER1: was 3.0. The furthest footprint corner is 0.92 m from base_link, so 2.0 m
+        inflation_radius: 2.0 # ITER1: was 3.0. The furthest footprint corner is 0.91 m from base_link (ITER4Y:
+                              #   was 0.92 before the footprint was re-derived), so 2.0 m
                               #   still leaves plenty of margin over the limit this note warns about. A 3 m radius
                               #   at 2.5 cm cells is a 240-cell-wide kernel, and in a 2.1 m corridor every cell is
                               #   inside it from both walls at once, which flattens the gradient we want.
@@ -529,7 +610,18 @@ local_costmap:
       width: 10
       origin_x: -5.0
       origin_y: -5.0
-      publish_frequency: 10.0  # ITER1: was 5.0, and was only managing 1.5-2.7 Hz.
+      # ITER5: was 10.0, equal to update_frequency, which ALIASES. Costmap2DROS gates the
+      #   publish with `last_publish_ + publish_cycle_ < now` - a strict less-than - so when
+      #   the publish period equals the update period the test fails on every other cycle.
+      #   Measured on the iteration-5 bags: published_footprint (published unconditionally,
+      #   once per update loop) came out at a median 100.0 ms, i.e. the update loop held 10 Hz
+      #   exactly, while /local_costmap/costmap came out at a median 197 ms with a 45/55 split
+      #   between 100 ms and 200 ms gaps - 6.4 Hz of jittery output from a 10 Hz loop.
+      #   20.0 makes publish_cycle_ (0.05 s) strictly shorter than the loop period (0.1 s), so
+      #   the gate passes every cycle and the topic is a true, even 10 Hz. It cannot publish
+      #   faster than the loop runs, so this does not add a single extra map build; it costs
+      #   160 kB x 3.6 extra messages/s on a topic rviz and the bag already subscribe to.
+      publish_frequency: 20.0  # ITER1: was 5.0, and was only managing 1.5-2.7 Hz.
       update_frequency: 10.0  # ITER1: was 30.0. This map lives in the controller server's process and was
                               #   competing with MPPI for the same core; it only ever managed 15-22 Hz anyway.
                               #   10 Hz matches controller_frequency, which is as often as the map is read.
@@ -549,7 +641,34 @@ local_costmap:
 
       footprint_padding: 0.00 # MARGIN: was 0.02. Scoring with the simulator's true position showed the robot brushing barrels; the cost map cells are 0.1 m, so 0.02 m was less than one cell of error.
       # CHANGED: same outline as the global costmap
-      footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.20, -0.33], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.33], [-0.20, 0.49] ]"
+      # ITER4Y: re-derived from the re-measured URDF properties. Every vertex below is a
+      #   derived quantity plus the SAME safety margin the previous footprint carried, so
+      #   nothing here trades away margin - it only moves the outline to where the body
+      #   actually is. Derivations, all in base_link (the drive axle), x forward:
+      #     chassis front face  = wheel_radius              = +0.175   (chassis_joint is at
+      #                                                                 -base_length + wheel_radius)
+      #     chassis rear face   = -(base_length - radius)   = -0.847
+      #     outer tire face     = track/2 + wheel_len/2     =  0.48141 from diffbot_controllers
+      #                                                        wheel_separation 0.85487; the URDF's
+      #                                                        own numbers give 0.48018, so the
+      #                                                        larger of the two is used
+      #     chassis half width  = base_width/2              =  0.3048
+      #   margins preserved from the old outline: front +0.005, half width +0.00385,
+      #   wide-section rear +0.035, tail half width +0.01885, rear +0.003.
+      #
+      #   THE IMPORTANT CHANGE IS NOT THE WIDTH. Width only drops 0.980 -> 0.970 m. But the
+      #   outline SHIFTS 10 mm forward relative to base_link, because the URDF derives the
+      #   chassis position from wheel_radius and that went 0.165 -> 0.175. Front +0.22 ->
+      #   +0.23 and rear -0.86 -> -0.85: the tail is 10 mm SHORTER than the planner has been
+      #   assuming. That matters most to DriveOnHeading's reverse check, which is exactly
+      #   what vetoed all eight BackUps in iteration 4.
+      #   See the note in the iteration-4 verification report: the URDF treats
+      #   wheel_xoff as equal to wheel_radius, which it calls a coincidence. The axle's real
+      #   distance from the chassis face does not change when a tire is re-measured, so that
+      #   10 mm shift should be confirmed with a tape before it is trusted.
+      #
+      #   Derived properties: inscribed radius 0.220 -> 0.230 m, circumscribed 0.921 -> 0.910 m.
+      footprint: "[ [0.230, 0.485], [0.230, -0.485], [-0.210, -0.485], [-0.210, -0.324], [-0.850, -0.324], [-0.850, 0.324], [-0.210, 0.324], [-0.210, 0.485] ]"
 
       track_unknown_space: false
       unknown_cost_value: 0
@@ -573,6 +692,34 @@ local_costmap:
       stvl_layer:
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled: true
+        # ITER6: BACK TO 30.0 for the first outdoor session, deliberately undoing the ITER5
+        #   change to 60.0. The reason is not that 60.0 was wrong indoors - it was not - but
+        #   that outdoor terrain is not planar, so returns that slip past ramp_detector's
+        #   surface_max_height get marked as obstacles, and at 60.0 a false ground mark
+        #   survives a full minute. That is the iteration-1 accumulation failure (marks pile
+        #   up until no route exists) in a new form, and it is not worth carrying into a
+        #   session whose whole purpose is to shake out GPS localisation. 30.0 also restores
+        #   the value five iterations of indoor runs were tuned against, which is what keeps
+        #   the outdoor runs comparable to them.
+        #   WHAT THIS RE-OPENS, stated plainly: run 8's collision chain. Measured from
+        #   real_bag8 - the robot stalls 1.02-1.15 m short of a goal whose tolerance is
+        #   1.00 m, with the last bin between it and the goal. The bin is ~0.6-0.9 m tall and
+        #   at that range the Velodyne's lowest ring is at 0.96 m (sensor 1.225 m up, -15 deg),
+        #   so the bin sits below EVERY ring and is never re-observed while the robot waits
+        #   there. Recovery cycles four times over 27 s. At t=93.8-95.4 s the lethal cells on
+        #   the line to the goal go 94 -> 72 -> 39 -> 0 and the peak cost falls 254 -> 223 ->
+        #   190: the bin is erased ~30 s after it was last seen, the planner returns a path
+        #   straight through where it was, and the robot drives into it. No ClearEntireCostmap
+        #   ran in that bag - this was decay alone.
+        #   The four recovery episodes spanned 33 s, which is LONGER than this 30 s memory, so
+        #   number_of_retries: 4 in recovery_nav_bt.xml can still outlive the map. The
+        #   companion change, NOT made here because it was not asked for, is
+        #   number_of_retries: 3 (~25 s), which puts the loop back inside the memory.
+        #   Two mitigations are real outdoors and were absent in run 8: IGVC 2027 rules II.2
+        #   guarantee a five-foot minimum passage width, so a waypoint with a barrel 1 m in
+        #   front of it is far less likely than on a hand-built lab course; and the mechanical
+        #   team is lowering the Velodyne, which closes the blind cone that made the bin
+        #   unobservable at all (at 0.60 m a 0.60 m obstacle never goes blind).
         voxel_decay: 30.0             # s. How long an UNSEEN voxel survives. This is the only thing
                                       #   that forgets an obstacle out of the sensor's view, so it is
                                       #   deliberately long: the robot passes a bin in about 4 s.
@@ -747,7 +894,30 @@ velocity_smoother:
     max_decel: [-2.0, 0.0, -2.5]     # ITER1: was [-3.0, 0.0, -2.0]; braking is allowed to be firmer than
                                      #   accelerating, and measured peak deceleration was 1.4 m/s^2
     deadband_velocity: [0.0, 0.0, 0.0]
-    velocity_timeout: 1.0
+    # ITER5: was 1.0, and it was manufacturing a burst of rejected commands at every gap in
+    #   the nav2 command stream. The smoother republishes on its own clock but carries its
+    #   INPUT's header stamp (see smoothing_frequency above), and diff_drive_controller rejects
+    #   any command whose stamp is older than its cmd_vel_timeout, which is 0.5 s
+    #   (diffbot_controllers.yaml). So from 0.5 s to 1.0 s after the last real command the
+    #   smoother is emitting messages the base throws away, and the base then brakes on its own
+    #   watchdog instead of following the smoother's ramp.
+    #   Measured on the iteration-5 bags, this is exact rather than approximate: every gap
+    #   produced exactly 24 smoother outputs of which exactly 10 were rejected - 0.5 s at
+    #   20 Hz - and the gaps are the 2 s unconditional Wait at the top of every recovery
+    #   episode. real_bag10 had 9 gaps and 100 rejected commands, real_bag8 4 gaps and 50,
+    #   real_bag2 3 gaps and 30. /cmd_vel_raw itself was clean throughout: median stamp age
+    #   0.1-0.2 ms.
+    #   Most of those gaps are a Wait, where a hard stop is harmless. One was not: the first
+    #   gap in real_bag2 begins while the wheels are still doing 0.72 m/s, so the ramp that
+    #   max_decel is there to shape was replaced by the base's own brake.
+    #   0.4 s keeps every output the smoother emits younger than the base's 0.5 s threshold,
+    #   so the ramp is honoured and nothing is discarded. It does shorten the ramp: from
+    #   0.72 m/s at max_decel 2.0 m/s^2 the stop needs 0.36 s and still fits, but from the
+    #   2.235 m/s cap it would not, and the base would brake as it does today.
+    #   The alternative fix is on the other side - raise cmd_vel_timeout in
+    #   diffbot_controllers.yaml - which I have NOT done, both because that file is outside
+    #   what I change and because it would loosen the base's own watchdog.
+    velocity_timeout: 0.4
     odom_topic: /odometry/filtered/local
     odom_duration: 0.1
 

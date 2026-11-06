@@ -27,6 +27,25 @@
       the lane points and the route corridor are all marked again before the next attempt, and
       number_of_retries is 8 rather than 6 so that there are attempts left after the clears
       instead of the clears being the last thing that ever happens.
+      ITERATION 5: that reason is void. It was about leaving list positions unspent, and after
+      the restructure the clear is no longer a list position - it is reached on exhaustion. The
+      count is now set by a different argument entirely, below.
+
+    - ITERATION 5: number_of_retries 8 -> 4, because an unbounded-enough recovery loop outlives
+      the cost map's memory and that is how run 8 ended in a collision. RecoveryNode::halt()
+      resets retry_count_ only when its first child SUCCEEDS, and the first child here is the
+      whole PipelineSequence, which succeeds only when the goal is reached - so this counts
+      recovery episodes for the whole goal, not consecutive ones. real_bag10 confirms the
+      semantics: 8 episodes, then "Goal failed error_code:208" at t=103.2 s.
+      In real_bag8 the four episodes ran 67.7 -> 100.8 s, 33 s in all, while the bin the robot
+      was stuck behind was erased by STVL decay at 93.8-95.4 s. With 8 retries the loop was
+      still running when the map forgot, and the robot drove through the gap that appeared. The
+      bound and the memory have to be set against each other: 4 episodes is ~35 s, voxel_decay
+      is now 60 s (Course2027.yaml), so the loop gives up with ~25 s of margin.
+      The cost is real and is accepted: a goal that 5-8 episodes would have rescued is now
+      abandoned, and map_goal_to_odom ends the waypoint sequence when nav2 aborts. The
+      judgement is that ending a run is recoverable by re-sending a goal and hitting a barrel
+      is not.
 
     - ITERATION 1: replanning raised from 1 Hz to 2 Hz. The cost maps now change meaningfully
       between ticks (they clear as well as mark), and at 0.5 m/s a 1 Hz plan was up to 1.1 s and
@@ -48,11 +67,11 @@
 -->
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="8" name="NavigateRecovery">
+    <RecoveryNode number_of_retries="4" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
         <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
         <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
-        <RateController hz="2.0">
+        <RateController hz="1.0">
           <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
         </RateController>
         <RecoveryNode number_of_retries="1" name="FollowPath">
@@ -93,6 +112,51 @@
         </Fallback>
         <ReactiveFallback name="RecoveryFallback">
           <GoalUpdated/>
+          <!-- ITERATION 5: THE ROUND ROBIN'S INDEX SURVIVES BETWEEN GOALS, SO LIST POSITION
+               CANNOT BE TRUSTED TO MEAN ANYTHING.
+               Measured directly across the two autonomous runs in YawDiscrepancies:
+                 real_bag3 (run 1) entered recovery at child[0], Wait, 2.02 s, robot moved 0.022 m.
+                 real_bag4 (run 2) entered recovery at child[1], BackUp, 3.72 s, reversed 0.311 m
+                                   at 0.107 m/s - the SECOND rung, on a fresh goal.
+                 real_bag4's second episode then ran child[2], Wait.
+               RoundRobinNode advances current_child_idx_ on any non-RUNNING child result and
+               resets it only in halt(). BehaviorTree.CPP halts a node only when that node is
+               RUNNING, and after a recovery returns SUCCESS the round robin is already IDLE, so
+               the halt at goal completion skips it and the index carries into the next goal. It
+               leaks by one per recovery episode.
+               The iteration-4 ordering put the two cost map clears last precisely so that
+               clearing would be a last resort. With a leaking index that guarantee is void: a
+               long session drifts toward the clears and can open a new goal by wiping the map.
+
+               THE FIX IS TO STOP ENCODING "LAST RESORT" AS LIST POSITION.
+                 * The 2 s wait is now unconditional and OUTSIDE the round robin, so it runs
+                   first on every episode no matter what the index is. That was the property
+                   iteration 4 wanted, and it is now structural rather than positional.
+                 * The round robin holds only the two reverses. Both are safe to run first, so
+                   a leaked index now only decides which distance is tried first. Harmless.
+                 * Clearing sits behind a Fallback and is reached only when the round robin
+                   RETURNS FAILURE, which RoundRobinNode does only once every child has failed.
+                   That is a real last resort, expressed in semantics instead of in order.
+               Wait had to come OUT of the round robin for this to work: Wait never fails, so
+               with it inside, the round robin could never exhaust and the clear would be
+               unreachable.
+
+               ACCEPTED TRADE: RoundRobinNode tries all remaining children within a single tick
+               when they fail, so if both reverses are vetoed the clear is reached in the FIRST
+               trouble episode rather than the fifth. Iteration 4 took 5.1-8.1 s to get there;
+               this takes the 2 s wait plus a few milliseconds. The 2 s of STVL decay still
+               happens first, every time, which was the point of the reorder, and bag 4 showed
+               the reverse now actually completes, so the all-fail path should be rare.
+
+               GLOBAL CLEARING IS DELIBERATELY NOT HERE ANY MORE - see the note on the clear. -->
+          <Sequence name="Recover">
+            <!-- Stand still FIRST, unconditionally, on every episode. Nothing moves, so it can
+                 never be refused. STVL's in-frustum decay clears an unseen voxel in about 1 s at
+                 decay_acceleration 5.0 (measured in iteration 3), so two seconds is enough to
+                 drop a transient mark before anything is asked to reverse into it. If the
+                 blockage was transient, the replan after this succeeds and nothing below runs. -->
+            <Wait wait_duration="2.0"/>
+            <Fallback name="EscalateToClearing">
           <RoundRobin name="RecoveryActions">
             <!-- ITERATION 4: THE GATE ABOVE NOW WORKS AND EVERY RUNG BELOW IT DID NOT.
                  Runs 3, 4 and 10 all entered this round robin. Between them they made
@@ -126,36 +190,32 @@
                  recovery that takes three seconds and works beats one that takes ten
                  milliseconds and fails.
 
-              1. Stand still FIRST. This used to be step 2. Nothing moves, so it can never
-                 be refused, and it is the one rung that was always going to run: STVL's
-                 in-frustum decay clears an unseen voxel in about 1 s at
-                 decay_acceleration 5.0 (measured in iteration 3), so two seconds is
-                 enough to drop a transient mark before anything is asked to reverse into
-                 it. If the blockage was transient, the replan after this rung succeeds
-                 and nothing else in the round robin is ever reached. -->
-            <Wait wait_duration="2.0"/>
-            <!-- 2. Back off a little and look again. 0.30 m at 0.10 m/s. -->
+               ITERATION 5: the two waits that used to separate these reverses are gone,
+                 because the unconditional wait above now runs before every episode and
+                 did the same job. Only failable rungs may live in here. -->
+            <!-- Back off a little and look again. 0.30 m at 0.10 m/s. -->
             <BackUp backup_dist="0.30" backup_speed="0.10" error_code_id="{backup_error_code}"/>
-            <!-- 3. Another full sweep's worth of standing still. -->
-            <Wait wait_duration="2.0"/>
-            <!-- 4. Back off further, same speed so the same 0.10 m veto window applies. -->
+            <!-- Back off further, same speed so the same 0.10 m veto window applies. -->
             <BackUp backup_dist="0.50" backup_speed="0.10" error_code_id="{backup_error_code}"/>
-            <Wait wait_duration="2.0"/>
-            <!-- 5. LAST RESORT, step one: forget the local map only. The global map keeps the
-                    route, so the robot cannot wander off it while the controller re-reads the
-                    space immediately around the robot. -->
-            <Sequence name="ClearLocalOnly">
-              <ClearEntireCostmap name="ClearLocalCostmap-LastResort" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <Wait wait_duration="2.0"/>
-            </Sequence>
-            <!-- 6. LAST RESORT, step two: forget both maps and rebuild from the sensors. The wall
-                    layer is not clearable, so the virtual wall at the start line survives this. -->
-            <Sequence name="ClearEverything">
-              <ClearEntireCostmap name="ClearLocalCostmap-Full" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Full" service_name="global_costmap/clear_entirely_global_costmap"/>
-              <Wait wait_duration="3.0"/>
-            </Sequence>
           </RoundRobin>
+              <!-- LAST RESORT, reached only when BOTH reverses have failed, i.e. when the
+                   round robin exhausts. Forget the LOCAL map only and look again.
+                   ITERATION 5: clearing the GLOBAL map was removed from the automatic path.
+                   It was defensible when the global cost map was 30x30 m and held a few
+                   seconds of rolling history; it is not now that it is 100x100 m and is
+                   becoming the robot's memory of the whole course. Wiping it mid-run throws
+                   away every lane and obstacle seen so far, which is exactly the state that
+                   lets the planner route back through "empty" space it has forgotten. The
+                   30 s STVL decay already removes stale marks on its own, so the iteration-1
+                   failure this was added for (marks accumulating until no route existed)
+                   cannot recur the way it did. If a global wipe is ever wanted again, add a
+                   ClearEntireCostmap on global_costmap/clear_entirely_global_costmap here. -->
+              <Sequence name="ClearLocalOnly">
+                <ClearEntireCostmap name="ClearLocalCostmap-LastResort" service_name="local_costmap/clear_entirely_local_costmap"/>
+                <Wait wait_duration="2.0"/>
+              </Sequence>
+            </Fallback>
+          </Sequence>
         </ReactiveFallback>
       </Sequence>
     </RecoveryNode>
