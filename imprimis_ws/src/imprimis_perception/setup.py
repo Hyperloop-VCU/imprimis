@@ -14,7 +14,8 @@ setup(
                                                 'launch/lane_segmentation.launch.py',
                                                 'launch/lane_projection.launch.py',
                                                 'launch/course_perception.launch.py',
-                                                'launch/single_cam.launch.py'])
+                                                'launch/single_cam.launch.py',
+                                                'launch/tripod.launch.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,

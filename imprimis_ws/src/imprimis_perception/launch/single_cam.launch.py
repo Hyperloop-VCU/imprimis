@@ -1,12 +1,16 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     launch_dir = PathJoinSubstitution([FindPackageShare('imprimis_perception'), 'launch'])
+    use_hardware = LaunchConfiguration('use_hardware')
+    use_nav = LaunchConfiguration('use_nav')
+    nav_mode = LaunchConfiguration('nav_mode')
 
     segmentation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(PathJoinSubstitution([launch_dir, 'lane_segmentation.launch.py'])),
@@ -16,4 +20,34 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(PathJoinSubstitution([launch_dir, 'lane_projection.launch.py'])),
     )
 
-    return LaunchDescription([segmentation, projection])
+    # use_cams stays false in both: their camera driver would fight the one lane_segmentation starts
+    # basic_nav already starts imprimis_hardware, so hardware on its own only runs without nav
+    hardware = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution(
+            [FindPackageShare('imprimis_hardware_platform'), 'launch', 'imprimis_hardware.launch.py'])),
+        launch_arguments={
+            'use_gps': PythonExpression(["'true' if '", nav_mode, "' == 'outdoor' else 'false'"]),
+            'use_cams': 'false',
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", use_hardware, "' == 'true' and '", use_nav, "' != 'true'"])),
+    )
+    nav = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution(
+            [FindPackageShare('imprimis_navigation'), 'launch', 'basic_nav.launch.py'])),
+        launch_arguments={
+            'nav_mode': nav_mode,
+            'nav2_params': 'Lane2027',
+            'use_cams': 'false',
+        }.items(),
+        condition=IfCondition(use_nav),
+    )
+
+    return LaunchDescription([
+        DeclareLaunchArgument('use_hardware', default_value='false', choices=('true', 'false'),
+                              description='Start imprimis_hardware (drive, LiDAR, IMU, GPS).'),
+        DeclareLaunchArgument('use_nav', default_value='false', choices=('true', 'false'),
+                              description='Start basic_nav with Lane2027. It starts the hardware itself.'),
+        DeclareLaunchArgument('nav_mode', default_value='indoor', choices=('indoor', 'outdoor'),
+                              description='indoor: SLAM map frame, no GPS. outdoor: GPS map frame.'),
+        segmentation, projection, hardware, nav,
+    ])
