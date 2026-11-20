@@ -39,7 +39,7 @@ def generate_launch_description():
             "ui_type": LaunchConfiguration("ui_type"),
             "use_recoveries": "true",
             "nav_mode": LaunchConfiguration("nav_mode"),
-            "use_cams": LaunchConfiguration("do_lanedetection")
+            "use_cams": "false"
         }.items(),
     )
 

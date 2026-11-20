@@ -11,6 +11,7 @@ def generate_launch_description():
     use_hardware = LaunchConfiguration('use_hardware')
     use_nav = LaunchConfiguration('use_nav')
     nav_mode = LaunchConfiguration('nav_mode')
+    record = LaunchConfiguration('record')
 
     segmentation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(PathJoinSubstitution([launch_dir, 'lane_segmentation.launch.py'])),
@@ -41,6 +42,21 @@ def generate_launch_description():
         }.items(),
         condition=IfCondition(use_nav),
     )
+    costmap = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution([launch_dir, 'lane_costmap.launch.py'])),
+        condition=IfCondition(PythonExpression(
+            ["'", LaunchConfiguration('standalone_costmap'), "' == 'true' and '", use_nav, "' != 'true'"])),
+    )
+    recorder = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution([launch_dir, 'lane_bag_record.launch.py'])),
+        launch_arguments={
+            'bag': record,
+            'duration': LaunchConfiguration('duration'),
+            'iteration': LaunchConfiguration('iteration'),
+            'camera_name': 'd435i',
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", record, "' != ''"])),
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument('use_hardware', default_value='false', choices=('true', 'false'),
@@ -49,5 +65,12 @@ def generate_launch_description():
                               description='Start basic_nav with Lane2027. It starts the hardware itself.'),
         DeclareLaunchArgument('nav_mode', default_value='indoor', choices=('indoor', 'outdoor'),
                               description='indoor: SLAM map frame, no GPS. outdoor: GPS map frame.'),
-        segmentation, projection, hardware, nav,
+        DeclareLaunchArgument('standalone_costmap', default_value='false', choices=('true', 'false'),
+                              description='Start a standalone Lane2027 local costmap when nav is not running.'),
+        DeclareLaunchArgument('record', default_value='',
+                              description='Bag name to record a lane bag under lane_iterations/<iteration>/RealBags; '
+                                          'empty to not record.'),
+        DeclareLaunchArgument('duration', default_value='30', description='Seconds to record.'),
+        DeclareLaunchArgument('iteration', default_value='1', description='lane_iterations folder to record into.'),
+        segmentation, projection, hardware, nav, costmap, recorder,
     ])

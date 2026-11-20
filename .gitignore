@@ -17,7 +17,6 @@ imprimis_ws/fastdds_shm_profiles.xml
 imprimis_ws/src/ntrip_client/ntrip_client/login_params.py
 imprimis_ws/src/Lattice_Generator/lattice_venv
 RealBags/
-OldFiles/
 claude_tools/
 
 # Lane harness (imprimis_perception/lane_iterations/README.md): raw replay output and harness scratch output stay

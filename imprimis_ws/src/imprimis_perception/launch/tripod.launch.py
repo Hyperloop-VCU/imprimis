@@ -33,6 +33,7 @@ def generate_launch_description():
     lanes = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([FindPackageShare('imprimis_perception'), 'launch', 'single_cam.launch.py'])),
+        launch_arguments={'standalone_costmap': 'true'}.items(),
     )
 
     return LaunchDescription([
