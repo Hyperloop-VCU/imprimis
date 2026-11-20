@@ -18,6 +18,7 @@ def generate_launch_description():
     process_rate = LaunchConfiguration('process_rate_hz')
     publish_raw = LaunchConfiguration('publish_raw_mask')
     processing_width = LaunchConfiguration('processing_width')
+    enable_imu = LaunchConfiguration('enable_imu')
 
     segmenter = Node(
         package='imprimis_perception',
@@ -45,6 +46,8 @@ def generate_launch_description():
         launch_arguments={
             'camera_name': camera_name,
             'camera_namespace': 'cameras',
+            'enable_accel': enable_imu,
+            'enable_gyro': enable_imu,
         }.items(),
     )
 
@@ -60,5 +63,7 @@ def generate_launch_description():
         DeclareLaunchArgument('publish_raw_mask', default_value='false'),
         DeclareLaunchArgument('processing_width', default_value='640',
                               description='Maximum mask width sent over the network; zero keeps native resolution.'),
+        DeclareLaunchArgument('enable_imu', default_value='false', choices=('true', 'false'),
+                              description='Enable the D435i IMU (needs the RealSense udev rules).'),
         segmenter,realsense
     ])

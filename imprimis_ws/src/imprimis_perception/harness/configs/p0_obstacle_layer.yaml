@@ -1,0 +1,36 @@
+# P0 clearing study: the lane layer exactly as Lane2027.yaml (lanemerge) has it, alone in a cost map.
+# No inflation, no LiDAR: a lethal cell here is a lane mark and nothing else.
+# Values copied from imprimis_navigation/config/nav2/Lane2027.yaml, local_costmap.lane_layer, on 2026-11-14.
+costmap:
+  ros__parameters:
+    global_frame: odom
+    robot_base_frame: base_link
+    rolling_window: true
+    width: 10
+    height: 10
+    resolution: 0.1                 # Lane2027 local and global
+    update_frequency: 10.0
+    publish_frequency: 10.0
+    always_send_full_costmap: true
+    track_unknown_space: false
+    transform_tolerance: 0.3
+    footprint: "[ [0.22, 0.49], [0.22, -0.49], [-0.20, -0.49], [-0.86, -0.33], [-0.86, 0.33], [-0.20, 0.49] ]"
+    plugins: ["lane_layer"]
+    lane_layer:
+      plugin: "nav2_costmap_2d::ObstacleLayer"
+      enabled: true
+      observation_sources: lane_points
+      max_obstacle_height: 0.1
+      min_obstacle_height: -0.3
+      lane_points:
+        topic: /perception/lane_points
+        data_type: "PointCloud2"
+        sensor_frame: d435i_color_optical_frame
+        clearing: true
+        marking: true
+        max_obstacle_height: 0.1
+        min_obstacle_height: -0.3
+        raytrace_max_range: 6.0
+        raytrace_min_range: 0.0
+        obstacle_max_range: 6.0
+        obstacle_min_range: 0.0

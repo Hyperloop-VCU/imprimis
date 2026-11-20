@@ -1,0 +1,66 @@
+# P0 clearing study, ABLATION of p0_stvl.yaml: the same STVL lane_mark with the Velodyne frustum clearing source
+# removed, to tell whether LiDAR frustum clearing is what erases remembered lane voxels.
+# Otherwise: the lane source as main's Course2027.yaml has it (STVL lane_mark, marking only, 30 s decay),
+# together with the Velodyne frustum clearing source that shares the same voxel grid. No Velodyne marking and no
+# inflation: a lethal cell here is a lane mark and nothing else.
+# Values copied from origin/main imprimis_navigation/config/nav2/Course2027.yaml, local_costmap.stvl_layer,
+# on 2026-11-14 (commit 6bd5dd2).
+costmap:
+  ros__parameters:
+    global_frame: odom
+    robot_base_frame: base_link
+    rolling_window: true
+    width: 10
+    height: 10
+    resolution: 0.025               # main local cost map
+    update_frequency: 10.0
+    publish_frequency: 10.0
+    always_send_full_costmap: true
+    track_unknown_space: false
+    transform_tolerance: 0.3
+    footprint: "[ [0.230, 0.485], [0.230, -0.485], [-0.210, -0.485], [-0.210, -0.324], [-0.850, -0.324], [-0.850, 0.324], [-0.210, 0.324], [-0.210, 0.485] ]"
+    plugins: ["stvl_layer"]
+    stvl_layer:
+      plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+      enabled: true
+      voxel_decay: 30.0
+      decay_model: 0
+      voxel_size: 0.025
+      track_unknown_space: false
+      mark_threshold: 0
+      update_footprint_enabled: true
+      combination_method: 1
+      origin_z: 0.0
+      publish_voxel_map: false
+      transform_tolerance: 0.2
+      mapping_mode: false
+      map_save_duration: 60.0
+      observation_sources: lane_mark
+      velodyne_clear:
+        enabled: true
+        data_type: PointCloud2
+        topic: /velodyne_points_nav
+        marking: false
+        clearing: true
+        sensor_frame: velodyne
+        min_z: 1.0
+        max_z: 6.0
+        vertical_fov_angle: 0.5236
+        vertical_fov_padding: 0.0
+        horizontal_fov_angle: 6.29
+        decay_acceleration: 5.0
+        model_type: 1
+      lane_mark:
+        data_type: PointCloud2
+        topic: /perception/lane_points
+        marking: true
+        clearing: false
+        obstacle_range: 6.0
+        min_obstacle_height: 0.0
+        max_obstacle_height: 2.0
+        expected_update_rate: 0.0
+        observation_persistence: 0.0
+        inf_is_valid: false
+        filter: "voxel"
+        voxel_min_points: 0
+        clear_after_reading: true

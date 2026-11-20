@@ -19,3 +19,12 @@ imprimis_ws/src/Lattice_Generator/lattice_venv
 RealBags/
 OldFiles/
 claude_tools/
+
+# Lane harness (imprimis_perception/lane_iterations/README.md): raw replay output and harness scratch output stay
+# local; the figures, CSV summaries and PDFs that the reports cite are committed.
+imprimis_ws/src/imprimis_perception/lane_iterations/*/Replays/*
+!imprimis_ws/src/imprimis_perception/lane_iterations/*/Replays/*.png
+!imprimis_ws/src/imprimis_perception/lane_iterations/*/Replays/*.svg
+!imprimis_ws/src/imprimis_perception/lane_iterations/*/Replays/*.csv
+!imprimis_ws/src/imprimis_perception/lane_iterations/*/Replays/*.pdf
+imprimis_ws/src/imprimis_perception/harness/out/

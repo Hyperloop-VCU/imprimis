@@ -1,0 +1,104 @@
+# GENERATED from imprimis_navigation/config/nav2/Lane2027.yaml (local_costmap) on 2026-11-14 by the
+# lane harness, for clearing_study.py. Everything as Lane2027 has it, except: no inflation layer (so a
+# lethal cell is a mark), always_send_full_costmap true. Regenerate when Lane2027 changes.
+costmap:
+  ros__parameters:
+    plugins:
+    - stvl_layer
+    - lane_layer
+    - pothole_layer
+    height: 10
+    width: 10
+    origin_x: -5.0
+    origin_y: -5.0
+    publish_frequency: 20.0
+    update_frequency: 10.0
+    always_send_full_costmap: true
+    rolling_window: true
+    global_frame: odom
+    robot_base_frame: base_link
+    resolution: 0.025
+    footprint_padding: 0.0
+    footprint: '[ [0.230, 0.485], [0.230, -0.485], [-0.210, -0.485], [-0.210, -0.324],
+      [-0.850, -0.324], [-0.850, 0.324], [-0.210, 0.324], [-0.210, 0.485] ]'
+    track_unknown_space: false
+    unknown_cost_value: 0
+    stvl_layer:
+      plugin: spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer
+      enabled: true
+      voxel_decay: 30.0
+      decay_model: 0
+      voxel_size: 0.025
+      track_unknown_space: false
+      mark_threshold: 0
+      update_footprint_enabled: true
+      combination_method: 1
+      origin_z: 0.0
+      publish_voxel_map: false
+      transform_tolerance: 0.2
+      mapping_mode: false
+      map_save_duration: 60.0
+      observation_sources: velodyne_mark velodyne_clear
+      velodyne_mark:
+        data_type: PointCloud2
+        topic: /velodyne_points_nav
+        marking: true
+        clearing: false
+        obstacle_range: 6.0
+        min_obstacle_height: 0.2
+        max_obstacle_height: 3.0
+        expected_update_rate: 0.0
+        observation_persistence: 0.0
+        inf_is_valid: false
+        filter: voxel
+        voxel_min_points: 0
+        clear_after_reading: true
+      velodyne_clear:
+        enabled: true
+        data_type: PointCloud2
+        topic: /velodyne_points_nav
+        marking: false
+        clearing: true
+        sensor_frame: velodyne
+        min_z: 1.0
+        max_z: 6.0
+        vertical_fov_angle: 0.5236
+        vertical_fov_padding: 0.0
+        horizontal_fov_angle: 6.29
+        decay_acceleration: 5.0
+        model_type: 1
+    lane_layer:
+      plugin: nav2_costmap_2d::ObstacleLayer
+      enabled: true
+      observation_sources: lane_points
+      max_obstacle_height: 0.1
+      min_obstacle_height: -0.3
+      lane_points:
+        topic: /perception/lane_points
+        data_type: PointCloud2
+        sensor_frame: d435i_color_optical_frame
+        clearing: true
+        marking: true
+        max_obstacle_height: 0.1
+        min_obstacle_height: -0.3
+        raytrace_max_range: 6.0
+        raytrace_min_range: 0.0
+        obstacle_max_range: 6.0
+        obstacle_min_range: 0.0
+    pothole_layer:
+      plugin: nav2_costmap_2d::ObstacleLayer
+      enabled: true
+      observation_sources: pothole_points
+      max_obstacle_height: 0.1
+      min_obstacle_height: -0.3
+      pothole_points:
+        topic: /perception/pothole_points
+        data_type: PointCloud2
+        clearing: false
+        marking: true
+        max_obstacle_height: 0.1
+        min_obstacle_height: -0.3
+        raytrace_max_range: 6.0
+        raytrace_min_range: 0.0
+        obstacle_max_range: 6.0
+        obstacle_min_range: 0.0

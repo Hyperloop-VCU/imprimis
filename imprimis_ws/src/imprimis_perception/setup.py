@@ -15,7 +15,12 @@ setup(
                                                 'launch/lane_projection.launch.py',
                                                 'launch/course_perception.launch.py',
                                                 'launch/single_cam.launch.py',
-                                                'launch/tripod.launch.py'])
+                                                'launch/tripod.launch.py',
+                                                'launch/lane_sim_robot_mission.launch.py']),
+        ('share/' + package_name + '/sim/ramp_lanes', ['sim/ramp_lanes/model.config',
+                                                       'sim/ramp_lanes/model.sdf']),
+        ('share/' + package_name + '/sim/ramp_lanes/meshes', ['sim/ramp_lanes/meshes/ramp_lanes.obj',
+                                                              'sim/ramp_lanes/meshes/ramp_lanes.mtl']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
