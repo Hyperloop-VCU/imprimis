@@ -312,7 +312,7 @@ class NTRIPClient(Node):
 
         gga_msg = Sentence()
         gga_msg.header.stamp = self.get_clock().now().to_msg()
-        gga_msg.header.frame_id = 'gps'
+        gga_msg.header.frame_id = 'gps_link' # TODO parameterize
         gga_msg.sentence = sentence
         self.gga_publisher.publish(gga_msg)
 

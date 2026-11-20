@@ -20,3 +20,6 @@ RealBags/
 OldFiles/
 claude_tools/
 viz/
+localization_test/
+bad_gps/
+bad_gps_bags/

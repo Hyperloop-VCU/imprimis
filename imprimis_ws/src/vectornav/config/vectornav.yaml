@@ -1,0 +1,119 @@
+# commonField bit mask (Common group). Add the hex values of the fields you want.
+      # Fields appear in the packet in bit order, lowest first.
+      #
+      # bit  hex     field         contents                                   bytes  VN-100
+      # ---  ------  ------------  -----------------------------------------  -----  --------
+      #  0   0x0001  TimeStartup   Time since power-on (ns)                     8    yes
+      #  1   0x0002  TimeGps       GPS time                                     8    reserved
+      #  2   0x0004  TimeSyncIn    Time since last SyncIn trigger               8    yes
+      #  3   0x0008  YawPitchRoll  Estimated attitude as yaw, pitch, roll      12    yes
+      #  4   0x0010  Quaternion    Estimated attitude as a quaternion          16    yes
+      #  5   0x0020  AngularRate   Bias-compensated angular rate               12    yes
+      #  6   0x0040  Position      Latitude, longitude, altitude               24    reserved
+      #  7   0x0080  Velocity      Estimated velocity                          12    reserved
+      #  8   0x0100  Accel         Compensated acceleration (body frame)       12    yes
+      #  9   0x0200  Imu           Uncompensated accel and gyro                24    yes
+      # 10   0x0400  MagPres       Compensated mag, temperature, pressure      20    yes
+      # 11   0x0800  DeltaTheta    Delta time, delta angle, delta velocity     28    yes
+      # 12   0x1000  Status        Attitude filter status                       2    yes
+      # 13   0x2000  SyncInCnt     Count of SyncIn triggers                     4    yes
+      # 14   0x4000  TimeGpsPps    Time since last GPS PPS                      8    reserved
+      # 15   -       unused
+      #
+      # Examples:
+      #   0x0201  TimeStartup + Imu (raw gyro/accel only, no orientation)
+      #   0x0331  TimeStartup + Quaternion + AngularRate + Accel + Imu
+      #           (fills in orientation on vectornav/imu)
+      #   0x3F3D  every field a VN-100 supports
+      #
+      # Leave the reserved bits off on a VN-100.
+      #
+      # Baud budget: packet bytes = sum of field bytes + 6.
+      #   baud needed = packet bytes x output rate (Hz) x 10
+      #   0x0201 = 38 bytes  -> 304,000 baud at 800 Hz
+      #   0x0331 = 78 bytes  -> 624,000 baud at 800 Hz
+      #   0x3F3D = 152 bytes -> too big for 921600 at 800 Hz; use rateDivisor >= 2
+      #
+      # Source: field names and sizes from the bundled vnproglib; VN-100 support
+      # from the original comments in this file. Not checked against the VN-100 manual.
+
+vectornav:
+  ros__parameters:
+    port: "/dev/ttyUSB1"
+    baud: 921600
+    adjust_ros_timestamp: True
+    reconnect_ms: 500
+    # Reference vnproglib-1.2.0.0 headers for enum definitions
+    # Async Output Type (ASCII)
+    # leave this at zero to select binary format
+    AsyncDataOutputType: 0           # VNOFF
+    # Async output Frequency (Hz)
+    # Not sure why this has to be 1Hz to make it work. Very strange.
+    AsyncDataOutputFrequency: 1
+    # Sync control
+    syncInMode: 3                    # SYNCINMODE_COUNT
+    syncInEdge: 0                    # SYNCINEDGE_RISING
+    syncInSkipFactor: 0
+    syncOutMode: 0                   # SYNCOUTMODE_NONE
+    syncOutPolarity: 0               # SYNCOUTPOLARITY_NEGATIVE
+    syncOutSkipFactor: 0
+    syncOutPulseWidth_ns: 100000000
+    # Communication protocol control
+    serialCount: 0                   # COUNTMODE_NONE
+    serialStatus: 0                  # STATUSMODE_OFF
+    spiCount: 0                      # COUNTMODE_NONE
+    spiStatus: 0                     # STATUSMODE_OFF
+    serialChecksum: 1                # CHECKSUMMODE_CHECKSUM
+    spiChecksum: 0                   # CHECKSUMMODE_OFF
+    errorMode: 1                     # ERRORMODE_SEND
+    # Binary output register 1
+    BO1:
+      asyncMode: 1                   # send only on port 1 to save serial bandwidth
+      rateDivisor: 16                 
+      commonField: 0x3F3D             
+      timeField: 0x0000              # TIMEGROUP_NONE
+      imuField: 0x0000               # IMUGROUP_NONE
+      # set gpsField directly in source to enforce or condition
+      attitudeField: 0x0000          # ATTITUDEGROUP_NONE
+      # set insField directly in source to enforce or condition
+      gps2Field: 0x0000              # GPSGROUP_NONE
+      gpsField: 0x0000
+      insField: 0x0000
+    # Binary output register 2
+    BO2:
+      asyncMode: 0                   # ASYNCMODE_NONE
+      rateDivisor: 0
+      commonField: 0x0000            # COMMONGROUP_NONE
+      timeField: 0x0000              # TIMEGROUP_NONE
+      imuField: 0x0000               # IMUGROUP_NONE
+      gpsField: 0x0000               # GPSGROUP_NONE
+      attitudeField: 0x0000          # ATTITUDEGROUP_NONE
+      insField: 0x0000               # INSGROUP_NONE
+      gps2Field: 0x0000              # GPSGROUP_NONE
+    # Binary output register 3
+    BO3:
+      asyncMode: 0                   # ASYNCMODE_NONE
+      rateDivisor: 0
+      commonField: 0x0000            # COMMONGROUP_NONE
+      timeField: 0x0000              # TIMEGROUP_NONE
+      imuField: 0x0000               # IMUGROUP_NONE
+      gpsField: 0x0000               # GPSGROUP_NONE
+      attitudeField: 0x0000          # ATTITUDEGROUP_NONE
+      insField: 0x0000               # INSGROUP_NONE
+      gps2Field: 0x0000              # GPSGROUP_NONE
+    frame_id: "imu_link"
+
+vn_sensor_msgs:
+  ros__parameters:
+    orientation_covariance: [0.01,  0.0,   0.0,
+                            0.0,   0.01,  0.0,
+                            0.0,   0.0,   0.01]
+    angular_velocity_covariance: [0.01,  0.0,   0.0,
+                         0.0,   0.01,  0.0,
+                         0.0,   0.0,   0.01]
+    linear_acceleration_covariance: [0.01,  0.0,   0.0,
+                         0.0,   0.01,  0.0,
+                         0.0,   0.0,   0.01]
+    magnetic_covariance: [0.01,  0.0,   0.0,
+                         0.0,   0.01,  0.0,
+                         0.0,   0.0,   0.01]

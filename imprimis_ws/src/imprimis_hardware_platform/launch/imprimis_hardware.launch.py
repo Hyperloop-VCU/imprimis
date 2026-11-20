@@ -229,33 +229,8 @@ def generate_launch_description():
     )
     
     # IMU driver, after a delay
-    imu_driver = TimerAction(
-        period = 2.0,
-        actions = [
-            Node(
-                package="umx_driver",
-                executable="um7_driver",
-                parameters=[{"port": "/dev/ttyUSB1", "update_rate": 40}], # 60 Hz is the maximum that 115200 baud supports. 115200 is the max baud the driver supports
-                arguments=["--ros-args", "--log-level", "warn"]
-            )
-        ],
-        condition=IfCondition(use_imu)
-    )
-
-    # Calibrate IMU after a delay
-    imu_calibrator = TimerAction(
-        period=3.0,
-        actions=[
-            ExecuteProcess(
-                    cmd=[
-                        'ros2', 'service', 'call',
-                        '/imu/reset',
-                        'umx_driver/srv/Um7Reset',
-                        '{zero_gyros: true, reset_ekf: true, set_mag_ref: true}'
-                    ],
-                    output='screen'
-                )
-        ],
+    imu_launch_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('vectornav'), 'launch', 'vectornav.launch.py'])]),
         condition=IfCondition(use_imu)
     )
 
@@ -306,8 +281,7 @@ def generate_launch_description():
         gpio_controller_spawner,
 
         # Not always
-        imu_driver,
-        imu_calibrator,
+        imu_launch_include,
         ntrip_launch_include,
         velodyne_driver_node,
         velodyne_transform_node,

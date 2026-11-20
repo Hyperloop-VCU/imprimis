@@ -80,9 +80,13 @@ def generate_launch_description():
             executable='nmea_topic_driver',
             name='nmea_topic_driver',
             output='screen',
+            
             remappings=[
                 ('fix', 'gps/fix')
             ],
+            parameters=[{
+                'frame_id': 'gps_link'
+            }],
             condition=IfCondition(LaunchConfiguration('use_rtk'))
         ),
         Node(
@@ -94,7 +98,8 @@ def generate_launch_description():
                 ('fix', 'gps/fix')
             ],
             parameters=[{
-                'port': '/dev/ttyACM0'
+                'port': '/dev/ttyACM0',
+                'frame_id': 'gps_link'
             }],
             condition=UnlessCondition(LaunchConfiguration('use_rtk'))
         ),

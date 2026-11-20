@@ -32,6 +32,10 @@
 
 <xacro:property name="lidar_scan_angle" value="0.05"/>
 
+<!-- GPS-->
+<xacro:property name="gps_xoff" value="-0.23"/>
+<xacro:property name="gps_yoff" value="0.2"/>
+
 <!-- TOTAL ROBOT HEIGHT: 1.1173 m-->
 <!-- Simulated caster wheels: two swivel casters at the rear corners, as on the real robot.
      Positions are from the SolidWorks assembly HyperLabs Robot(07-03-25). Each is a low-friction
@@ -272,7 +276,7 @@
 <joint name="imu_joint" type="fixed">
   <parent link="base_link"/>
   <child link="imu_link"/>
-  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <origin xyz="0 0 0" rpy="0 0 1.5708"/>
 </joint>
 
 <!-- imu link -->
@@ -284,9 +288,9 @@
 
 <!-- gps joint-->
 <joint name="gps_joint" type="fixed">
-  <parent link="base_footprint"/>
+  <parent link="base_link"/>
   <child link="gps_link"/>
-  <origin xyz="0 0 0"/>
+  <origin xyz="${gps_xoff} ${gps_yoff} ${base_height+top_section_height}"/>
 </joint>
 
 <!-- gps link -->
