@@ -75,28 +75,28 @@ def fit_ground_plane(points, iterations=150, distance_threshold=0.05, min_inlier
     n = len(points)
     if n < 50:
         return None
-
     rng = np.random.default_rng()
+    sample = points[rng.choice(n, min(n, 2000),replace=False)]
     best_count, best_normal, best_d = 0, None, None
     for _ in range(iterations):
-        p0, p1, p2 = points[rng.choice(n, 3, replace=False)]
+        p0, p1, p2 = sample[rng.choice(len(sample),3, replace=False)]
         normal = np.cross(p1 - p0, p2 - p0)
         norm = np.linalg.norm(normal)
         if norm < 1e-6:
             continue
         normal = normal / norm
         d = -normal @ p0
-        count = int((np.abs(points @ normal + d) < distance_threshold).sum())
+        count = int((np.abs(sample @ normal + d) < distance_threshold).sum())
         if count > best_count:
             best_count, best_normal, best_d = count, normal, d
 
-    if best_normal is None or best_count < min_inlier_fraction * n:
+    if best_normal is None or best_count < min_inlier_fraction * len(sample):
         return None
 
     # refine with a least-squares fit over the inliers
     inliers = points[np.abs(points @ best_normal + best_d) < distance_threshold]
     centroid = inliers.mean(axis=0)
-    _, _, vh = np.linalg.svd(inliers - centroid)
+    _, _, vh = np.linalg.svd(inliers - centroid, full_matrices=False)
     normal = vh[-1]
     if normal[2] < 0:
         normal = -normal
