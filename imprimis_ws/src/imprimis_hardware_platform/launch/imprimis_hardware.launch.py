@@ -34,7 +34,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "lidar_rpm",
-            default_value="600.0",
+            default_value="300.0",
             choices=("300.0", "600.0", "1200.0"),
             description="Velodyne LIDAR RPM. Keep at 600.0"
         )
