@@ -10,5 +10,6 @@ velodyne_driver_node:
         frame_id: velodyne
         model: VLP16
         rpm: 300.0
+        cut_angle: 3.14159
         port: 2368
         timestamp_first_packet: false

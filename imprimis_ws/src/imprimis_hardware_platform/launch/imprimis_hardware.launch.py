@@ -214,6 +214,8 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource([PathJoinSubstitution([FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'])]),
                 launch_arguments={
                     'pointcloud.enable': 'true',
+                    'rgb_camera.color_profile': '1280,720,15',
+                    'depth_module.depth_profile': '848,480,15',
                     #'diagnostics_period': '1.0',
                     #'log_level': 'error',
                     #'camera_namespace': 'cameras',
