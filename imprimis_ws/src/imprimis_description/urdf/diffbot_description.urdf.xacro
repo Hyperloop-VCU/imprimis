@@ -33,8 +33,8 @@
 <xacro:property name="lidar_scan_angle" value="0.05"/>
 
 <!-- GPS-->
-<xacro:property name="gps_xoff" value="-0.23"/>
-<xacro:property name="gps_yoff" value="0.2"/>
+<xacro:property name="gps_xoff" value="-0.16"/>
+<xacro:property name="gps_yoff" value="0.24"/>
 
 <!-- TOTAL ROBOT HEIGHT: 1.1173 m-->
 <!-- Simulated caster wheels: two swivel casters at the rear corners, as on the real robot.
